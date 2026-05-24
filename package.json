@@ -1,0 +1,32 @@
+{
+  "name": "smatway",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "api:dev": "npm run --workspace @smatway/api dev",
+    "api:start": "npm run --workspace @smatway/api start",
+    "api:prisma:migrate:dev": "npm run --workspace @smatway/api prisma:migrate:dev --",
+    "studio": "npm run --workspace @smatway/api prisma:studio --",
+    "web:dev": "npm run --workspace @smatway/web dev",
+    "web:start": "npm run --workspace @smatway/web start",
+    "admin:dev": "npm run --workspace @smatway/admin dev",
+    "admin:start": "npm run --workspace @smatway/admin start",
+    "ensure:docker": "node scripts/ensure-docker.js",
+    "infra:up": "npm run ensure:docker && docker compose -f docker-compose.infra.yml up -d",
+    "infra:down": "docker compose -f docker-compose.infra.yml down --remove-orphans",
+    "infra:logs": "docker compose -f docker-compose.infra.yml logs -f",
+    "infra:reset": "npm run ensure:docker && docker compose -f docker-compose.infra.yml down -v --remove-orphans"
+  },
+  "packageManager": "npm@11.11.0",
+  "devDependencies": {
+    "turbo": "latest"
+  }
+}

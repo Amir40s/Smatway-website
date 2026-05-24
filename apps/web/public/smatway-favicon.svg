@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="carGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Car body -->
+  <path d="M12 32 L18 24 L28 24 L34 18 L50 18 L56 24 L60 32 L60 42 L56 42 L54 38 L10 38 L8 42 L4 42 L4 32 Z"
+        fill="url(#carGradient)" stroke="#059669" stroke-width="1.5" stroke-linejoin="round"/>
+
+  <!-- Car windows -->
+  <path d="M20 24 L26 20 L38 20 L44 24 Z" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="1"/>
+
+  <!-- Front wheel -->
+  <circle cx="16" cy="42" r="6" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <circle cx="16" cy="42" r="3" fill="#475569"/>
+
+  <!-- Back wheel -->
+  <circle cx="48" cy="42" r="6" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <circle cx="48" cy="42" r="3" fill="#475569"/>
+
+  <!-- Headlight -->
+  <circle cx="58" cy="30" r="2" fill="#fbbf24"/>
+
+  <!-- Door line -->
+  <line x1="32" y1="24" x2="32" y2="38" stroke="#059669" stroke-width="1.5"/>
+</svg>

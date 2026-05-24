@@ -1,0 +1,33 @@
+export default {
+  "nav.home":           "Accueil",
+  "nav.howItWorks":     "Comment ça marche",
+  "nav.getStarted":     "Commencer",
+  "nav.signIn":         "Connexion",
+  "nav.openMenu":       "Ouvrir le menu",
+  "nav.closeMenu":      "Fermer le menu",
+
+  "hero.trustChip":     "Adopté par plus de 50 000 voyageurs dans le monde",
+  "hero.title.line1":   "Voyagez comme",
+  "hero.title.line2":   "il se doit.",
+  "hero.subtitle":      "Connectez-vous avec des transporteurs vérifiés. Réservez des trajets abordables dans le monde entier — en toute sécurité, instantanément, avec une visibilité totale à chaque étape.",
+  "hero.feature.verified":  "Chauffeurs vérifiés",
+  "hero.feature.tracking":  "Suivi en direct",
+  "hero.feature.support":   "Support 24/7",
+  "hero.cta.start":     "Commencer gratuitement",
+  "hero.cta.howItWorks":"Voir comment ça marche",
+
+  "footer.tagline":     "Nous connectons voyageurs et transporteurs à travers le monde. Sûr, fiable, abordable.",
+  "footer.company":     "Entreprise",
+  "footer.legal":       "Mentions légales",
+  "footer.contact":     "Nous contacter",
+  "footer.privacy":     "Politique de confidentialité",
+  "footer.terms":       "Conditions d'utilisation",
+  "footer.copyright":   "© 2026 SmatWay. Tous droits réservés.",
+
+  "cta.eyebrow":        "↓ Prêt quand vous l'êtes",
+  "cta.title.before":   "Votre prochain voyage",
+  "cta.title.accent":   "commence ici.",
+  "cta.subtitle":       "Inscrivez-vous en moins d'une minute. Parcourez les trajets, réservez un siège, et prenez la route — avec un chauffeur vérifié et un lien à partager.",
+  "cta.primary":        "Créer un compte gratuit",
+  "cta.secondary":      "J'ai déjà un compte",
+};

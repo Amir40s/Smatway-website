@@ -1,0 +1,11 @@
+[variables]
+NODE_ENV = "production"
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start -- -H 0.0.0.0 -p ${PORT:-3000}"

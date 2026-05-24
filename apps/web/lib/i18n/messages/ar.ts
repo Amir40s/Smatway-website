@@ -1,0 +1,33 @@
+export default {
+  "nav.home":           "الرئيسية",
+  "nav.howItWorks":     "كيف يعمل",
+  "nav.getStarted":     "ابدأ الآن",
+  "nav.signIn":         "تسجيل الدخول",
+  "nav.openMenu":       "فتح القائمة",
+  "nav.closeMenu":      "إغلاق القائمة",
+
+  "hero.trustChip":     "موثوق به من قبل أكثر من 50,000 مسافر حول العالم",
+  "hero.title.line1":   "سافر بالطريقة",
+  "hero.title.line2":   "التي تستحقها.",
+  "hero.subtitle":      "تواصل مع ناقلين موثوقين. احجز مسارات بأسعار معقولة حول العالم — بأمان وفوريّة ورؤية كاملة في كل خطوة.",
+  "hero.feature.verified":  "سائقون موثوقون",
+  "hero.feature.tracking":  "تتبع مباشر",
+  "hero.feature.support":   "دعم على مدار الساعة",
+  "hero.cta.start":     "ابدأ مجانًا",
+  "hero.cta.howItWorks":"شاهد كيف يعمل",
+
+  "footer.tagline":     "نربط بين المسافرين والناقلين في جميع أنحاء العالم. آمن، موثوق، وبأسعار معقولة.",
+  "footer.company":     "الشركة",
+  "footer.legal":       "قانوني",
+  "footer.contact":     "تواصل معنا",
+  "footer.privacy":     "سياسة الخصوصية",
+  "footer.terms":       "شروط الخدمة",
+  "footer.copyright":   "© 2026 سمات واي. جميع الحقوق محفوظة.",
+
+  "cta.eyebrow":        "↓ جاهز عندما تكون مستعدًا",
+  "cta.title.before":   "رحلتك القادمة",
+  "cta.title.accent":   "تبدأ هنا.",
+  "cta.subtitle":       "سجّل في أقل من ستين ثانية. استعرض المسارات، احجز مقعدًا، وانطلق — مع سائق موثوق ورابط للمشاركة.",
+  "cta.primary":        "إنشاء حساب مجاني",
+  "cta.secondary":      "لديّ حساب بالفعل",
+};

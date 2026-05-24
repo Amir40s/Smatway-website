@@ -1,0 +1,33 @@
+export default {
+  "nav.home":           "Inicio",
+  "nav.howItWorks":     "Cómo funciona",
+  "nav.getStarted":     "Comenzar",
+  "nav.signIn":         "Iniciar sesión",
+  "nav.openMenu":       "Abrir menú",
+  "nav.closeMenu":      "Cerrar menú",
+
+  "hero.trustChip":     "La confianza de más de 50.000 viajeros en todo el mundo",
+  "hero.title.line1":   "Viaja como",
+  "hero.title.line2":   "debe ser.",
+  "hero.subtitle":      "Conéctate con transportistas verificados. Reserva rutas asequibles en todo el mundo — con seguridad, al instante y con visibilidad total en cada paso del camino.",
+  "hero.feature.verified":  "Conductores verificados",
+  "hero.feature.tracking":  "Seguimiento en vivo",
+  "hero.feature.support":   "Soporte 24/7",
+  "hero.cta.start":     "Empieza gratis",
+  "hero.cta.howItWorks":"Ver cómo funciona",
+
+  "footer.tagline":     "Conectando viajeros y transportistas en todo el mundo. Seguro, confiable, asequible.",
+  "footer.company":     "Empresa",
+  "footer.legal":       "Legal",
+  "footer.contact":     "Contáctanos",
+  "footer.privacy":     "Política de Privacidad",
+  "footer.terms":       "Términos del Servicio",
+  "footer.copyright":   "© 2026 SmatWay. Todos los derechos reservados.",
+
+  "cta.eyebrow":        "↓ Listo cuando lo estés",
+  "cta.title.before":   "Tu próximo viaje",
+  "cta.title.accent":   "comienza aquí.",
+  "cta.subtitle":       "Regístrate en menos de sesenta segundos. Explora rutas, reserva un asiento y sal a la carretera — con un conductor verificado y un enlace para compartir.",
+  "cta.primary":        "Crear cuenta gratis",
+  "cta.secondary":      "Ya tengo una cuenta",
+};

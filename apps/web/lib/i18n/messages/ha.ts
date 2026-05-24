@@ -1,0 +1,33 @@
+export default {
+  "nav.home":           "Gida",
+  "nav.howItWorks":     "Yadda Yake Aiki",
+  "nav.getStarted":     "Fara",
+  "nav.signIn":         "Shiga",
+  "nav.openMenu":       "Buɗe menu",
+  "nav.closeMenu":      "Rufe menu",
+
+  "hero.trustChip":     "Amintacce ga matafiya sama da 50,000 a duniya",
+  "hero.title.line1":   "Tafi yadda",
+  "hero.title.line2":   "ya kamata.",
+  "hero.subtitle":      "Haɗa da masu jigilar da aka tantance. Yi rajistar tafiyoyi masu sauƙin biyayya a duniya — cikin aminci, kai tsaye, tare da cikakkiyar gani a kowane mataki.",
+  "hero.feature.verified":  "Direbobi tantance",
+  "hero.feature.tracking":  "Bibiya kai tsaye",
+  "hero.feature.support":   "Tallafi 24/7",
+  "hero.cta.start":     "Fara kyauta",
+  "hero.cta.howItWorks":"Duba yadda yake aiki",
+
+  "footer.tagline":     "Haɗa matafiya da masu jigila a duk faɗin duniya. Mai aminci, abin dogaro, mai sauƙi.",
+  "footer.company":     "Kamfani",
+  "footer.legal":       "Doka",
+  "footer.contact":     "Tuntube mu",
+  "footer.privacy":     "Manufar Sirri",
+  "footer.terms":       "Sharuɗɗan Hidima",
+  "footer.copyright":   "© 2026 SmatWay. Duk haƙƙoƙi an kiyaye.",
+
+  "cta.eyebrow":        "↓ A shirye lokacin da kuke shirye",
+  "cta.title.before":   "Tafiyar ku ta gaba",
+  "cta.title.accent":   "tana farawa anan.",
+  "cta.subtitle":       "Yi rajista a cikin ƙasa da daƙiƙa sittin. Kalli tafiyoyi, yi rajistar wuri, kuma fara tafiya — tare da direba mai tantance da hanyar haɗi don rabawa.",
+  "cta.primary":        "Buɗe asusu kyauta",
+  "cta.secondary":      "Ina da asusu da",
+};

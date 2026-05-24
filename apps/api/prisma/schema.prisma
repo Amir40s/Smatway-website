@@ -1,0 +1,335 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AccountType {
+  TRAVELER
+  TRANSPORTER
+}
+
+enum TransportType {
+  CAR
+  BUS
+  VAN
+  MINIBUS
+  TRAIN
+}
+
+enum TransportStatus {
+  ACTIVE
+  INACTIVE
+  FULL
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum PaymentMethod {
+  PAYSTACK
+  FLUTTERWAVE
+  MPAISA
+}
+
+model User {
+  id             String       @id @default(uuid())
+  email          String       @unique
+  name           String?
+  phoneNumber    String?
+  country        String?
+  avatarUrl      String?
+  profileImageUrl String?      // For transporters
+  passwordHash   String?
+  role           Role         @default(USER)
+  accountType    AccountType?
+  emailVerified     Boolean   @default(false)
+  emailVerifiedAt   DateTime?
+  preferredCurrency String?   // ISO 4217 code (e.g. "NGN", "GHS", "USD")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  authProviders  AuthProvider[]
+  refreshTokens  RefreshToken[]
+  passwordResets PasswordResetToken[]
+  verificationOtps EmailVerificationOtp[]
+  profile        UserProfile?
+  transports     Transport[]
+  bookings       Booking[]            @relation("TravelerBookings")
+  vehicles       Vehicle[]
+  reviewsGiven   Review[]             @relation("TravelerReviews")
+  reviewsReceived Review[]            @relation("TransporterReviews")
+  travelerChats  Chat[]               @relation("TravelerChats")
+  transporterChats Chat[]             @relation("TransporterChats")
+  messages       Message[]
+  siteFeedback   SiteFeedback[]
+  announcements  Announcement[]
+}
+
+model AuthProvider {
+  id         String   @id @default(uuid())
+  provider   String
+  providerId String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([provider, providerId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model EmailVerificationOtp {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash   String
+  expiresAt  DateTime
+  used       Boolean  @default(false)
+  attempts   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+model UserProfile {
+  id                      String   @id @default(uuid())
+  userId                  String   @unique
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bio                     String?
+  dateOfBirth             DateTime?
+
+  travelerBio             String?
+  emergencyContactName    String?
+  emergencyContactPhone   String?
+
+  companyName             String?
+  licenseNumber           String?
+  licenseExpiry           DateTime?
+  vehicleType             String?
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  emergencyContacts       EmergencyContact[]
+  notificationPreferences NotificationPreferences?
+}
+
+model EmergencyContact {
+  id        String   @id @default(uuid())
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name      String
+  relation  String
+  phone     String
+  verified  Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Vehicle {
+  id            String   @id @default(uuid())
+  transporterId String
+  transporter   User     @relation(fields: [transporterId], references: [id], onDelete: Cascade)
+
+  name          String
+  model         String
+  plateNumber   String
+  transportType TransportType
+  imageUrl      String?
+  deleted       Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  transports    Transport[]
+}
+
+model Transport {
+  id                 String          @id @default(uuid())
+  transporterId      String
+  transporter        User            @relation(fields: [transporterId], references: [id], onDelete: Cascade)
+  vehicleId          String
+  vehicle            Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+
+  departureCountry   String
+  departureCity      String
+  destinationCountry String
+  destinationCity    String
+  transportType      TransportType
+
+  price              Decimal         @db.Decimal(10, 2)
+  currency           String          @default("USD") // ISO 4217 code — what the `price` is denominated in
+  availableSeats     Int
+  departureDateTime  DateTime
+  maxReachDateTime   DateTime
+
+  status             TransportStatus @default(ACTIVE)
+
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  bookings           Booking[]
+  announcements      Announcement[]
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  travelerId    String
+  traveler      User          @relation("TravelerBookings", fields: [travelerId], references: [id], onDelete: Cascade)
+  transportId   String
+  transport     Transport     @relation(fields: [transportId], references: [id], onDelete: Cascade)
+
+  seatsBooked   Int
+  totalPrice    Decimal       @db.Decimal(10, 2)
+
+  status        BookingStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentMethod PaymentMethod?
+
+  review        Review?
+  chat          Chat?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model NotificationPreferences {
+  id                    String   @id @default(uuid())
+  profileId             String   @unique
+  profile               UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  pushEnabled           Boolean  @default(true)
+  bookingUpdates        Boolean  @default(true)
+  paymentUpdates        Boolean  @default(true)
+  routeUpdates          Boolean  @default(true)
+  vehicleUpdates        Boolean  @default(true)
+  systemAnnouncements   Boolean  @default(true)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Review {
+  id            String   @id @default(uuid())
+  bookingId     String   @unique
+  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  travelerId    String
+  traveler      User     @relation("TravelerReviews", fields: [travelerId], references: [id], onDelete: Cascade)
+
+  transporterId String
+  transporter   User     @relation("TransporterReviews", fields: [transporterId], references: [id], onDelete: Cascade)
+
+  rating        Int
+  feedback      String?
+
+  createdAt     DateTime @default(now())
+
+  @@index([transporterId])
+  @@index([travelerId])
+}
+
+// Site-wide feedback about SmatWay itself (distinct from per-booking Review).
+// Submitted from the dashboard /feedback page; surfaced on the marketing
+// homepage Testimonials rotator alongside trip reviews.
+model SiteFeedback {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rating    Int      // 1..5
+  comment   String
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model Chat {
+  id            String    @id @default(uuid())
+  bookingId     String    @unique
+  booking       Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  travelerId    String
+  traveler      User      @relation("TravelerChats", fields: [travelerId], references: [id], onDelete: Cascade)
+
+  transporterId String
+  transporter   User      @relation("TransporterChats", fields: [transporterId], references: [id], onDelete: Cascade)
+
+  messages      Message[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([bookingId])
+  @@index([travelerId])
+  @@index([transporterId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([chatId])
+  @@index([senderId])
+}
+
+model Announcement {
+  id            String    @id @default(uuid())
+  transporterId String
+  transporter   User      @relation(fields: [transporterId], references: [id], onDelete: Cascade)
+  transportId   String?
+  transport     Transport? @relation(fields: [transportId], references: [id], onDelete: Cascade)
+  title         String
+  content       String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([transporterId])
+  @@index([transportId])
+}

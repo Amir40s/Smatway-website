@@ -1,0 +1,47 @@
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { ReviewService } from './review.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '@prisma/client';
+
+class CreateReviewDto {
+  bookingId!: string;
+  rating!: number;
+  feedback?: string;
+}
+
+@Controller('review')
+export class ReviewController {
+  constructor(private readonly reviewService: ReviewService) {}
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  createReview(@CurrentUser() user: User, @Body() dto: CreateReviewDto) {
+    return this.reviewService.createReview(dto.bookingId, user.id, dto.rating, dto.feedback);
+  }
+
+  @Get('transporter/:transporterId/stats')
+  getStats(@Param('transporterId') transporterId: string) {
+    return this.reviewService.getTransporterStats(transporterId);
+  }
+
+  @Get('transporter/:transporterId/reviews')
+  getReviews(
+    @Param('transporterId') transporterId: string,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '5',
+  ) {
+    return this.reviewService.getTransporterReviews(transporterId, parseInt(page), parseInt(limit));
+  }
+
+  @Get('transporter/:transporterId/profile')
+  getFullProfile(@Param('transporterId') transporterId: string) {
+    return this.reviewService.getTransporterFullProfile(transporterId);
+  }
+
+  /** Public — latest platform-wide reviews for the marketing homepage Testimonials section. */
+  @Get('recent')
+  getRecent(@Query('limit') limit: string = '6') {
+    return this.reviewService.getRecentPlatformReviews(parseInt(limit, 10) || 6);
+  }
+}

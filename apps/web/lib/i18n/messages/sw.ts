@@ -1,0 +1,33 @@
+export default {
+  "nav.home":           "Nyumbani",
+  "nav.howItWorks":     "Jinsi Inavyofanya Kazi",
+  "nav.getStarted":     "Anza",
+  "nav.signIn":         "Ingia",
+  "nav.openMenu":       "Fungua menyu",
+  "nav.closeMenu":      "Funga menyu",
+
+  "hero.trustChip":     "Inaaminika na zaidi ya wasafiri 50,000 kote duniani",
+  "hero.title.line1":   "Safiri jinsi",
+  "hero.title.line2":   "inavyopaswa.",
+  "hero.subtitle":      "Unganisha na wasafirishaji walioidhinishwa. Hifadhi njia za bei nafuu kote duniani — kwa usalama, papo hapo, na mwonekano kamili kila hatua ya njia.",
+  "hero.feature.verified":  "Madereva walioidhinishwa",
+  "hero.feature.tracking":  "Ufuatiliaji wa moja kwa moja",
+  "hero.feature.support":   "Msaada 24/7",
+  "hero.cta.start":     "Anza bure",
+  "hero.cta.howItWorks":"Ona inavyofanya kazi",
+
+  "footer.tagline":     "Kuunganisha wasafiri na wasafirishaji kote ulimwenguni. Salama, ya kuaminika, ya bei nafuu.",
+  "footer.company":     "Kampuni",
+  "footer.legal":       "Kisheria",
+  "footer.contact":     "Wasiliana nasi",
+  "footer.privacy":     "Sera ya Faragha",
+  "footer.terms":       "Masharti ya Huduma",
+  "footer.copyright":   "© 2026 SmatWay. Haki zote zimehifadhiwa.",
+
+  "cta.eyebrow":        "↓ Tayari ukiwa tayari",
+  "cta.title.before":   "Safari yako ifuatayo",
+  "cta.title.accent":   "huanza hapa.",
+  "cta.subtitle":       "Jisajili kwa chini ya sekunde sitini. Vinjari njia, hifadhi kiti, na anza safari — na dereva aliyeidhinishwa na kiungo cha kushiriki.",
+  "cta.primary":        "Fungua akaunti bure",
+  "cta.secondary":      "Tayari nina akaunti",
+};

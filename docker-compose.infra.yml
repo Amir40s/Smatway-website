@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smatway-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: smatway
+      POSTGRES_PASSWORD: smatway
+      POSTGRES_DB: smatway
+    ports:
+      - "5435:5432"
+    volumes:
+      - smatway-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U smatway -d smatway" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # RAM limits for PostgreSQL
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  redis:
+    image: redis:7-alpine
+    container_name: smatway-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - smatway-redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # RAM limits for Redis
+    mem_limit: 256m
+    mem_reservation: 128m
+
+  garage:
+    image: minio/minio:latest
+    container_name: smatway-garage
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - smatway-garage-data:/data
+    command: minio server /data --console-address ":9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # RAM limits for MinIO
+    mem_limit: 512m
+    mem_reservation: 256m
+
+volumes:
+  smatway-postgres-data:
+  smatway-redis-data:
+  smatway-garage-data:
