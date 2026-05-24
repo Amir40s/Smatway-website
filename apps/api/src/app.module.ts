@@ -17,6 +17,7 @@ import { ChatModule } from './modules/chat/chat.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { AnnouncementModule } from './modules/announcement/announcement.module';
+import { PaymentModule } from './modules/payment/payment.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AnnouncementModule } from './modules/announcement/announcement.module';
     PlatformModule,
     FeedbackModule,
     AnnouncementModule,
+    PaymentModule,
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
   ],
   controllers: [AppController],

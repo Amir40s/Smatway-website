@@ -13,6 +13,7 @@ import {
   PrimaryButton, StatusPill, spring,
 } from "@/app/dashboard/_Components/ui";
 import { getMyVehicles, getMyRoutes, getTransportBookings } from "@/lib/api";
+import { formatPrice, convertToUSD } from "@/lib/currencies";
 
 export default function TransporterDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -35,9 +36,24 @@ export default function TransporterDashboardPage() {
   const pendingBookings = bookings.filter((b) => b.status === "PENDING").length;
   const confirmedBookings = bookings.filter((b) => b.status === "CONFIRMED").length;
   const completedBookings = bookings.filter((b) => b.status === "COMPLETED").length;
-  const revenue = bookings
-    .filter((b) => b.status !== "CANCELLED")
-    .reduce((sum, b) => sum + Number(b.totalPrice || 0), 0);
+  // Filter out cancelled bookings
+  const validBookings = bookings.filter((b) => b.status !== "CANCELLED");
+  // Group revenue by original currency
+  const revenueByCurrency = validBookings.reduce((acc, b) => {
+    const cur = b.transport?.currency || "USD";
+    const amount = Number(b.totalPrice || 0);
+    acc[cur] = (acc[cur] || 0) + amount;
+    return acc;
+  }, {} as Record<string, number>);
+  // Convert each currency to USD and sum
+  const totalRevenueUSD = Object.entries(revenueByCurrency).reduce((sum, [cur, amt]) => {
+    return sum + convertToUSD(amt as number, cur);
+  }, 0);
+  const formattedRevenueUSD = formatPrice(totalRevenueUSD, "USD");
+  // For display, pick the primary currency (first available) as the original revenue label
+  const primaryCurrency = Object.keys(revenueByCurrency)[0] || "USD";
+  const originalRevenue = revenueByCurrency[primaryCurrency] || 0;
+  const formattedOriginalRevenue = formatPrice(originalRevenue, primaryCurrency);
 
   const isEmpty = !loading && vehicles.length === 0 && routes.length === 0;
   const recentBookings = bookings.slice(0, 4);
@@ -84,11 +100,18 @@ export default function TransporterDashboardPage() {
                 tone: "amber",
               },
               {
-                label: "Revenue",
-                value: `$${revenue.toFixed(0)}`,
+                label: "Revenue (Original)",
+                value: formattedOriginalRevenue,
                 hint: `${completedBookings} completed`,
                 icon: <CreditCardIcon className="w-4 h-4" />,
                 tone: "rose",
+              },
+              {
+                label: "Revenue (USD)",
+                value: formattedRevenueUSD,
+                hint: `${completedBookings} completed`,
+                icon: <CreditCardIcon className="w-4 h-4" />,
+                tone: "emerald",
               },
             ]}
           />

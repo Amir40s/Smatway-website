@@ -312,6 +312,14 @@ export async function updatePaymentMethod(id: string, paymentMethod: string): Pr
   return apiPatch<any>(`/booking/${id}/payment-method`, { paymentMethod });
 }
 
+export async function initializePayment(bookingId: string): Promise<{ authorization_url: string; access_code: string; reference: string }> {
+  return apiPost<any>('/payment/initialize', { bookingId });
+}
+
+export async function verifyPayment(reference: string): Promise<{ success: boolean; status: string; bookingId?: string }> {
+  return apiGet<any>(`/payment/verify/${reference}`);
+}
+
 export async function getTransportBookings(transportId?: string): Promise<any[]> {
   if (transportId) {
     return apiGet<any[]>(`/booking/transport/${transportId}`);

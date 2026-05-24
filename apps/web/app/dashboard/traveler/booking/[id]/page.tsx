@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useParams } from "next/navigation";
-import { getBooking, cancelBooking, updatePaymentMethod, createReview, initChat, getChatByBooking, getMessages, sendMessage, getTransporterProfile } from "@/lib/api";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { getBooking, cancelBooking, updatePaymentMethod, createReview, initChat, getChatByBooking, getMessages, sendMessage, getTransporterProfile, initializePayment, verifyPayment } from "@/lib/api";
 import { formatPrice } from "@/lib/currencies";
 
 const paymentMethods = [
@@ -59,12 +59,36 @@ export default function BookingDetailPage() {
   const [showProfile, setShowProfile] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
+  const [initializingPayment, setInitializingPayment] = useState(false);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => { setPortalReady(true); }, []);
 
   useEffect(() => {
     getBooking(id).then(setBooking).catch(() => setError("Booking not found")).finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    const reference = searchParams.get("reference");
+    if (reference && booking && booking.paymentStatus !== "PAID" && !verifyingPayment) {
+      setVerifyingPayment(true);
+      verifyPayment(reference)
+        .then((res) => {
+          if (res.success) {
+            setBooking((b: any) => ({ ...b, paymentStatus: "PAID", paymentMethod: "PAYSTACK" }));
+            // Remove reference from URL
+            router.replace(`/dashboard/traveler/booking/${id}`);
+          } else {
+            setError(`Payment verification failed: ${res.status}`);
+          }
+        })
+        .catch((e) => setError(e?.message || "Payment verification failed"))
+        .finally(() => setVerifyingPayment(false));
+    }
+  }, [searchParams, booking, id, router]);
 
   // Fetch the transporter profile once the booking loads so we can show a rich card
   useEffect(() => {
@@ -100,6 +124,29 @@ export default function BookingDetailPage() {
       // silent fail — selection saved locally
     } finally {
       setSavingMethod(false);
+    }
+  }
+
+  async function handleProceedToPayment() {
+    const method = selectedMethod || booking?.paymentMethod;
+    if (method !== 'PAYSTACK') {
+      setError("Only Paystack is currently supported");
+      return;
+    }
+
+    setInitializingPayment(true);
+    setError("");
+    try {
+      const response = await initializePayment(id);
+      if (response.authorization_url) {
+        window.open(response.authorization_url, "_blank");
+        setInitializingPayment(false); // Reset loading state since we stay on this page
+      } else {
+        throw new Error("Failed to get checkout URL");
+      }
+    } catch (e: any) {
+      setError(e?.message || "Failed to initialize payment");
+      setInitializingPayment(false);
     }
   }
 
@@ -354,7 +401,7 @@ export default function BookingDetailPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-zinc-900">{method.name}</span>
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Coming Soon</span>
+                      {method.id !== 'PAYSTACK' && <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Coming Soon</span>}
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">{method.description}</p>
                   </div>
@@ -369,10 +416,11 @@ export default function BookingDetailPage() {
           </div>
 
           <button
-            disabled
-            className="mt-4 w-full bg-slate-100 text-slate-400 text-sm font-semibold py-3 rounded-xl cursor-not-allowed"
+            onClick={handleProceedToPayment}
+            disabled={initializingPayment || verifyingPayment || ((selectedMethod || booking.paymentMethod) !== 'PAYSTACK')}
+            className="mt-4 w-full bg-zinc-900 text-white text-sm font-semibold py-3 rounded-xl hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Proceed to Payment — Coming Soon
+            {initializingPayment || verifyingPayment ? "Processing..." : "Proceed to Payment"}
           </button>
         </div>
       )}

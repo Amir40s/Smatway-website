@@ -8,7 +8,7 @@ import { Menu as MenuIcon, X as CloseIcon } from "lucide-react";
 import {
   MapPinIcon, DashboardIcon, CarIcon,
   BookOpenIcon, MegaphoneIcon, UserIcon, SettingsIcon, LogOutIcon,
-  ChevronDownIcon, StarIcon,
+  ChevronDownIcon, StarIcon, CreditCardIcon,
 } from "@/app/dashboard/_Components/Icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCurrentUser, logout, isTokenExpired, clearAuthData } from "@/lib/auth";
@@ -33,6 +33,7 @@ const transporterNav = [
   { key: "/dashboard/bookings", label: "Bookings", icon: BookOpenIcon },
   { key: "/dashboard/t-announcements", label: "Announcements", icon: MegaphoneIcon },
   { key: "/dashboard/feedback", label: "Feedback", icon: StarIcon },
+  { key: "/dashboard/payments", label: "Payments", icon: CreditCardIcon },
   { key: "/dashboard/profile", label: "Profile", icon: UserIcon },
   { key: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
 ];
@@ -54,6 +55,7 @@ const transporterTitles: Record<string, string> = {
   "/dashboard/bookings": "Bookings",
   "/dashboard/t-announcements": "Announcements",
   "/dashboard/feedback": "Feedback",
+  "/dashboard/payments": "Payments",
   "/dashboard/profile": "Profile",
   "/dashboard/settings": "Settings",
 };
@@ -64,6 +66,7 @@ const transporterOnlyPaths = new Set([
   "/dashboard/routes",
   "/dashboard/bookings",
   "/dashboard/t-announcements",
+  "/dashboard/payments",
 ]);
 
 const travelerOnlyPaths = new Set([

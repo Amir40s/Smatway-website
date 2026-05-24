@@ -69,3 +69,40 @@ export function formatPrice(amount: number | string, code: string | null | undef
     return `${cur.symbol} ${safe.toFixed(2)}`;
   }
 }
+
+// ─── Simple Static Exchange Rates (to USD) ──────────────────────────────────
+// Note: In a real app, these should be fetched from an API (e.g., OpenExchangeRates)
+const exchangeRatesToUSD: Record<string, number> = {
+  USD: 1.0,
+  NGN: 0.00067, // Example: 1 NGN = 0.00067 USD
+  GHS: 0.071,
+  KES: 0.0075,
+  UGX: 0.00026,
+  TZS: 0.00039,
+  RWF: 0.00078,
+  ZAR: 0.053,
+  EGP: 0.021,
+  ETB: 0.017,
+  ZMW: 0.038,
+  MWK: 0.00057,
+  MZN: 0.016,
+  SLE: 0.000044,
+  XOF: 0.0017,
+  XAF: 0.0017,
+  MAD: 0.10,
+  DZD: 0.0074,
+  TND: 0.32,
+  AED: 0.27,
+  SAR: 0.27,
+  PKR: 0.0036,
+  INR: 0.012,
+  EUR: 1.08,
+  GBP: 1.26,
+};
+
+export function convertToUSD(amount: number | string, fromCurrency: string | null | undefined): number {
+  const n = typeof amount === "string" ? parseFloat(amount) : amount;
+  const safe = Number.isFinite(n) ? n : 0;
+  const rate = exchangeRatesToUSD[fromCurrency || "USD"] || 1;
+  return safe * rate;
+}
