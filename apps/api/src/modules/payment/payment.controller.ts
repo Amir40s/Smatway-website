@@ -33,4 +33,11 @@ export class PaymentController {
     this.paymentService.handleWebhook(signature, req.body);
     return { received: true };
   }
+
+  @Post('webhook/flutterwave')
+  @HttpCode(200)
+  handleFlutterwaveWebhook(@Headers('verif-hash') signature: string, @Req() req: any) {
+    this.paymentService.handleFlutterwaveWebhook(signature, req.body);
+    return { received: true };
+  }
 }

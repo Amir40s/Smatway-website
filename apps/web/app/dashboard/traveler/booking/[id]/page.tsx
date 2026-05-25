@@ -17,7 +17,7 @@ const paymentMethods = [
     id: "FLUTTERWAVE",
     name: "Flutterwave",
     description: "Pay with Card, Bank Transfer, or M-Pesa / Mobile Money",
-    available: false,
+    available: true,
   },
 ];
 
@@ -72,7 +72,8 @@ export default function BookingDetailPage() {
       verifyPayment(reference)
         .then((res) => {
           if (res.success) {
-            setBooking((b: any) => ({ ...b, paymentStatus: "PAID", paymentMethod: "PAYSTACK" }));
+            const methodUsed = reference.startsWith("flw_") ? "FLUTTERWAVE" : "PAYSTACK";
+            setBooking((b: any) => ({ ...b, paymentStatus: "PAID", paymentMethod: methodUsed }));
              router.replace(`/dashboard/traveler/booking/${id}`);
           } else {
             setError(`Payment verification failed: ${res.status}`);
@@ -122,8 +123,8 @@ export default function BookingDetailPage() {
 
   async function handleProceedToPayment() {
     const method = selectedMethod || booking?.paymentMethod;
-    if (method !== 'PAYSTACK') {
-      setError("Only Paystack is currently supported");
+    if (method !== 'PAYSTACK' && method !== 'FLUTTERWAVE') {
+      setError("Only Paystack and Flutterwave are currently supported");
       return;
     }
 
@@ -394,7 +395,7 @@ export default function BookingDetailPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-zinc-900">{method.name}</span>
-                      {method.id !== 'PAYSTACK' && <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Coming Soon</span>}
+                      {!['PAYSTACK', 'FLUTTERWAVE'].includes(method.id) && <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Coming Soon</span>}
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">{method.description}</p>
                   </div>
@@ -410,7 +411,7 @@ export default function BookingDetailPage() {
 
           <button
             onClick={handleProceedToPayment}
-            disabled={initializingPayment || verifyingPayment || ((selectedMethod || booking.paymentMethod) !== 'PAYSTACK')}
+            disabled={initializingPayment || verifyingPayment || !['PAYSTACK', 'FLUTTERWAVE'].includes(selectedMethod || booking.paymentMethod)}
             className="mt-4 w-full bg-zinc-900 text-white text-sm font-semibold py-3 rounded-xl hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {initializingPayment || verifyingPayment ? "Processing..." : "Proceed to Payment"}

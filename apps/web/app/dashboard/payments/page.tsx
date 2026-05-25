@@ -14,7 +14,7 @@ export default function PaymentsPage() {
       try {
         const bookings = await getTransportBookings();
         // Filter only paid bookings for the payments history
-        const paidBookings = bookings.filter((b: any) => b.paymentStatus === "PAID" || b.paymentMethod === "PAYSTACK");
+        const paidBookings = bookings.filter((b: any) => b.paymentStatus === "PAID" || b.paymentMethod === "PAYSTACK" || b.paymentMethod === "FLUTTERWAVE");
         // Sort by most recent
         paidBookings.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setPayments(paidBookings);
@@ -31,7 +31,7 @@ export default function PaymentsPage() {
     <div className="max-w-4xl space-y-5">
       <div className="mb-2">
         <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Payments</h1>
-        <p className="text-sm text-slate-400 mt-0.5">View your Paystack payment history and transactions.</p>
+        <p className="text-sm text-slate-400 mt-0.5">View your payment history and transactions.</p>
       </div>
 
       {loading ? (
@@ -50,7 +50,7 @@ export default function PaymentsPage() {
             </svg>
           </div>
           <h3 className="text-sm font-semibold text-zinc-900 mb-1">No payments yet</h3>
-          <p className="text-xs text-slate-500">Your Paystack payment history will appear here once travelers complete their payments.</p>
+          <p className="text-xs text-slate-500">Your payment history will appear here once travelers complete their payments.</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
