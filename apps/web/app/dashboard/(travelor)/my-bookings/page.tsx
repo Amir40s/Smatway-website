@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import io from "socket.io-client";
 import { getMyBookings, cancelBooking, initChat, getMessages } from "@/lib/api";
+import { formatPrice } from "@/lib/currencies";
 import { getCurrentUser } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -265,7 +266,7 @@ function BookingCard({
 
           <div className="flex flex-row sm:flex-col items-end justify-between gap-3 sm:min-w-[140px]">
             <p className="text-[18px] font-semibold text-zinc-950 tabular-nums">
-              ${Number(booking.totalPrice).toFixed(2)}
+              {formatPrice(booking.totalPrice, booking.transport?.currency)}
             </p>
             <div className="flex gap-1.5 flex-wrap justify-end">
               {booking.status === "CONFIRMED" && (

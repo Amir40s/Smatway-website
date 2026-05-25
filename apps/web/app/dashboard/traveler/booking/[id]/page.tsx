@@ -10,19 +10,13 @@ const paymentMethods = [
   {
     id: "PAYSTACK",
     name: "Paystack",
-    description: "Pay with card, bank transfer, or USSD",
-    available: false,
+    description: "Pay with Card, Bank Transfer, USSD, or M-Pesa / Mobile Money",
+    available: true,
   },
   {
     id: "FLUTTERWAVE",
     name: "Flutterwave",
-    description: "Pay with card, mobile money, or bank",
-    available: false,
-  },
-  {
-    id: "MPAISA",
-    name: "MPaisa",
-    description: "Pay with mobile wallet",
+    description: "Pay with Card, Bank Transfer, or M-Pesa / Mobile Money",
     available: false,
   },
 ];
@@ -79,8 +73,7 @@ export default function BookingDetailPage() {
         .then((res) => {
           if (res.success) {
             setBooking((b: any) => ({ ...b, paymentStatus: "PAID", paymentMethod: "PAYSTACK" }));
-            // Remove reference from URL
-            router.replace(`/dashboard/traveler/booking/${id}`);
+             router.replace(`/dashboard/traveler/booking/${id}`);
           } else {
             setError(`Payment verification failed: ${res.status}`);
           }

@@ -99,18 +99,41 @@ export class BookingService {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: {
+        traveler: { select: { id: true, name: true, phoneNumber: true, email: true, avatarUrl: true } },
         transport: {
-          include: { transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } } },
+          include: { 
+            vehicle: true,
+            transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } } 
+          },
         },
       },
     });
     if (!booking) throw new NotFoundException('Booking not found');
     if (booking.travelerId !== userId && booking.transport.transporterId !== userId)
       throw new ForbiddenException();
+      
     if (booking.transport?.transporter) {
       booking.transport.transporter.name = booking.transport.transporter.profile?.companyName || booking.transport.transporter.name;
     }
-    return booking;
+
+    let resolvedVehicle = booking.transport.vehicle;
+    if (resolvedVehicle?.imageUrl) {
+      resolvedVehicle.imageUrl = await this.storageService.resolveImageUrl(resolvedVehicle.imageUrl);
+    }
+    
+    let resolvedTraveler = booking.traveler;
+    if (resolvedTraveler?.avatarUrl) {
+      resolvedTraveler.avatarUrl = await this.storageService.resolveImageUrl(resolvedTraveler.avatarUrl);
+    }
+
+    return {
+      ...booking,
+      traveler: resolvedTraveler,
+      transport: {
+        ...booking.transport,
+        vehicle: resolvedVehicle,
+      }
+    };
   }
 
   async allTransporterBookings(transporterId: string) {

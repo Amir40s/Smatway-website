@@ -144,6 +144,7 @@ export class ReviewService {
   async getTransporterFullProfile(transporterId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: transporterId },
+      include: { profile: { select: { companyName: true } } },
     });
 
     if (!user) throw new NotFoundException('Transporter not found');
@@ -159,6 +160,7 @@ export class ReviewService {
 
     return {
       ...user,
+      name: user.profile?.companyName || user.name,
       profileImageUrl,
       ...stats,
       vehicleCount,

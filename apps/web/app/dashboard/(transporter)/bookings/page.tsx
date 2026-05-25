@@ -9,6 +9,7 @@ import {
   getTransportBookings, confirmBooking, rejectBooking,
   initChat, getMessages,
 } from "@/lib/api";
+import { formatPrice } from "@/lib/currencies";
 import { getCurrentUser } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -313,7 +314,7 @@ function BookingRow({
           {/* Amount + actions */}
           <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 sm:gap-2 sm:min-w-[160px]">
             <p className="text-[18px] font-semibold text-zinc-950 tabular-nums">
-              ${Number(booking.totalPrice).toFixed(2)}
+              {formatPrice(booking.totalPrice, booking.transport?.currency)}
             </p>
 
             {booking.status === "PENDING" ? (
