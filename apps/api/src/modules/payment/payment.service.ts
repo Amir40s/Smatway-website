@@ -37,7 +37,26 @@ export class PaymentService {
     if (booking.paymentStatus === PaymentStatus.PAID) {
       throw new BadRequestException('Booking is already paid');
     }
-  const amountInMinorUnits = Math.round(Number(booking.totalPrice) * 100);
+    const PAYSTACK_SUPPORTED_CURRENCIES = ['NGN', 'GHS', 'ZAR', 'KES', 'RWF', 'UGX', 'USD'];
+    let paymentCurrency = booking.transport.currency || 'NGN';
+    let paymentAmount = Number(booking.totalPrice);
+
+    if (!PAYSTACK_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
+      // Convert to USD using simple static rates if currency not supported by Paystack
+      const exchangeRatesToUSD: Record<string, number> = {
+        PKR: 0.0036, INR: 0.012, EUR: 1.08, GBP: 1.26, AED: 0.27, SAR: 0.27,
+        EGP: 0.021, ETB: 0.017, ZMW: 0.038, MWK: 0.00057, MZN: 0.016, SLE: 0.000044,
+        XOF: 0.0017, XAF: 0.0017, MAD: 0.10, DZD: 0.0074, TND: 0.32,
+      };
+      const rateToUSD = exchangeRatesToUSD[paymentCurrency] || 1;
+      const amountInUSD = paymentAmount * rateToUSD;
+      // Convert USD to NGN
+      const rateUSDToNGN = 1 / (exchangeRatesToUSD['NGN'] || 0.00067);
+      paymentAmount = amountInUSD * rateUSDToNGN;
+      paymentCurrency = 'NGN';
+    }
+
+    const amountInMinorUnits = Math.round(paymentAmount * 100);
 
     const fallbackCallbackUrl = `${process.env.WEB_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/traveler/booking/${booking.id}`;
 
@@ -45,7 +64,7 @@ export class PaymentService {
       amount: amountInMinorUnits,
       email: booking.traveler.email,
       reference: `${booking.id}_${Date.now()}`, // Using unique reference to avoid duplicate transaction errors
-      currency: booking.transport.currency || 'NGN',
+      currency: paymentCurrency,
       callback_url: callbackUrl || fallbackCallbackUrl,
       metadata: {
         bookingId: booking.id,
@@ -54,6 +73,8 @@ export class PaymentService {
     };
 
     try {
+      this.logger.log(`Paystack payload: ${JSON.stringify(payload)}`);
+
       const response = await firstValueFrom(
         this.httpService.post(`${this.paystackApiUrl}/transaction/initialize`, payload, {
           headers: {

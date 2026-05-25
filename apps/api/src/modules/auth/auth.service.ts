@@ -272,8 +272,8 @@ export class AuthService {
       const cleanOrigin = origin.replace(/\/$/, '');
       const allowedUrls = (process.env.ALLOWED_REDIRECT_URLS ?? '').split(',');
       const isAllowed = allowedUrls.some(u => cleanOrigin.startsWith(u.trim().replace(/\/$/, ''))) ||
-                        cleanOrigin.includes('localhost') ||
-                        cleanOrigin.includes('smatway.com');
+        cleanOrigin.includes('localhost') ||
+        cleanOrigin.includes('smatway.com');
       if (isAllowed) {
         baseUrl = cleanOrigin;
       }
