@@ -16,7 +16,7 @@ export class PaymentService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async initializePayment(bookingId: string, userId: string) {
+  async initializePayment(bookingId: string, userId: string, callbackUrl?: string) {
     if (!this.paystackSecretKey) {
       throw new InternalServerErrorException('Paystack secret key is not configured');
     }
@@ -39,12 +39,14 @@ export class PaymentService {
     }
   const amountInMinorUnits = Math.round(Number(booking.totalPrice) * 100);
 
+    const fallbackCallbackUrl = `${process.env.WEB_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/traveler/booking/${booking.id}`;
+
     const payload = {
       amount: amountInMinorUnits,
       email: booking.traveler.email,
       reference: `${booking.id}_${Date.now()}`, // Using unique reference to avoid duplicate transaction errors
       currency: booking.transport.currency || 'NGN',
-      callback_url: `${process.env.WEB_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/traveler/booking/${booking.id}`,
+      callback_url: callbackUrl || fallbackCallbackUrl,
       metadata: {
         bookingId: booking.id,
         travelerId: booking.travelerId,

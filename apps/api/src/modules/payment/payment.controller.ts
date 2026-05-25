@@ -10,8 +10,12 @@ export class PaymentController {
 
   @UseGuards(JwtAuthGuard)
   @Post('initialize')
-  initializePayment(@CurrentUser() user: User, @Body('bookingId') bookingId: string) {
-    return this.paymentService.initializePayment(bookingId, user.id);
+  initializePayment(
+    @CurrentUser() user: User,
+    @Body('bookingId') bookingId: string,
+    @Body('callbackUrl') callbackUrl?: string,
+  ) {
+    return this.paymentService.initializePayment(bookingId, user.id, callbackUrl);
   }
 
   @UseGuards(JwtAuthGuard)

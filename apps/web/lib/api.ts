@@ -312,8 +312,9 @@ export async function updatePaymentMethod(id: string, paymentMethod: string): Pr
   return apiPatch<any>(`/booking/${id}/payment-method`, { paymentMethod });
 }
 
-export async function initializePayment(bookingId: string): Promise<{ authorization_url: string; access_code: string; reference: string }> {
-  return apiPost<any>('/payment/initialize', { bookingId });
+export async function initializePayment(bookingId: string, callbackUrl?: string): Promise<{ authorization_url: string; access_code: string; reference: string }> {
+  const finalCallbackUrl = callbackUrl || (typeof window !== 'undefined' ? window.location.href.split('?')[0] : undefined);
+  return apiPost<any>('/payment/initialize', { bookingId, callbackUrl: finalCallbackUrl });
 }
 
 export async function verifyPayment(reference: string): Promise<{ success: boolean; status: string; bookingId?: string }> {
