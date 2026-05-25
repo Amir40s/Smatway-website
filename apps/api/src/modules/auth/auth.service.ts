@@ -64,8 +64,8 @@ export class AuthService {
         // Ensure the UserProfile row exists — older accounts may not have one.
         await this.prisma.userProfile.upsert({
           where: { userId: existing.id },
-          update: {},
-          create: { userId: existing.id },
+          update: { companyName: dto.businessName ?? undefined },
+          create: { userId: existing.id, companyName: dto.businessName ?? undefined },
         });
         await this.issueVerificationOtp(updated);
         return { email: updated.email, pendingVerification: true };
@@ -84,7 +84,7 @@ export class AuthService {
         passwordHash,
         accountType: this.normalizeAccountType(dto.accountType),
         // Auto-create an empty profile so Settings pages work immediately after signup.
-        profile: { create: {} },
+        profile: { create: { companyName: dto.businessName ?? undefined } },
       },
     });
 

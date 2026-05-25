@@ -67,7 +67,7 @@ export class AnnouncementService {
     const transportIds = Array.from(new Set(bookings.map((b) => b.transportId)));
 
     // 3. Query announcements
-    return this.prisma.announcement.findMany({
+    const announcements = await this.prisma.announcement.findMany({
       where: {
         transporterId: {
           in: transporterIds,
@@ -87,6 +87,7 @@ export class AnnouncementService {
             id: true,
             name: true,
             avatarUrl: true,
+            profile: { select: { companyName: true } }
           },
         },
         transport: true,
@@ -95,6 +96,14 @@ export class AnnouncementService {
         createdAt: 'desc',
       },
     });
+
+    return announcements.map((ann: any) => ({
+      ...ann,
+      transporter: ann.transporter ? {
+        ...ann.transporter,
+        name: ann.transporter.profile?.companyName || ann.transporter.name,
+      } : null,
+    }));
   }
 
   async remove(id: string, transporterId: string) {

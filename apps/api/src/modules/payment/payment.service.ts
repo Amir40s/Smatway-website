@@ -37,17 +37,14 @@ export class PaymentService {
     if (booking.paymentStatus === PaymentStatus.PAID) {
       throw new BadRequestException('Booking is already paid');
     }
-
-    // Convert total price to minor units (e.g., kobo for NGN)
-    // Assuming totalPrice is stored as decimal, multiplying by 100
-    const amountInMinorUnits = Math.round(Number(booking.totalPrice) * 100);
+  const amountInMinorUnits = Math.round(Number(booking.totalPrice) * 100);
 
     const payload = {
       amount: amountInMinorUnits,
       email: booking.traveler.email,
-      reference: booking.id, // Using bookingId directly as reference
+      reference: `${booking.id}_${Date.now()}`, // Using unique reference to avoid duplicate transaction errors
       currency: booking.transport.currency || 'NGN',
-      callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/traveler/booking/${booking.id}`,
+      callback_url: `${process.env.WEB_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/traveler/booking/${booking.id}`,
       metadata: {
         bookingId: booking.id,
         travelerId: booking.travelerId,
@@ -66,8 +63,14 @@ export class PaymentService {
 
       return response.data.data;
     } catch (error: any) {
-      this.logger.error('Failed to initialize Paystack payment', error.response?.data || error.message);
-      throw new InternalServerErrorException('Payment initialization failed');
+      const paystackError = error.response?.data;
+      const status = error.response?.status;
+      this.logger.error(
+        `Paystack /transaction/initialize failed — HTTP ${status ?? 'N/A'}: ${JSON.stringify(paystackError ?? error.message)}`
+      );
+      throw new InternalServerErrorException(
+        paystackError?.message || 'Payment initialization failed'
+      );
     }
   }
 
@@ -88,7 +91,7 @@ export class PaymentService {
       const data = response.data.data;
 
       if (data.status === 'success') {
-        const bookingId = data.reference;
+        const bookingId = data.reference.split('_')[0];
 
         const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
         if (!booking) {
@@ -137,7 +140,7 @@ export class PaymentService {
     const data = payload.data;
 
     if (event === 'charge.success') {
-      const bookingId = data.reference;
+      const bookingId = data.reference.split('_')[0];
       
       const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
       if (booking && booking.paymentStatus !== PaymentStatus.PAID) {

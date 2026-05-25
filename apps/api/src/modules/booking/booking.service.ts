@@ -64,7 +64,7 @@ export class BookingService {
         transport: {
           include: {
             vehicle: true,
-            transporter: { select: { id: true, name: true, phoneNumber: true } },
+            transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } },
           },
         },
       },
@@ -84,6 +84,12 @@ export class BookingService {
                 : null,
             }
             : null,
+          transporter: booking.transport.transporter
+            ? {
+                ...booking.transport.transporter,
+                name: booking.transport.transporter.profile?.companyName || booking.transport.transporter.name,
+              }
+            : null,
         },
       })),
     );
@@ -94,13 +100,16 @@ export class BookingService {
       where: { id },
       include: {
         transport: {
-          include: { transporter: { select: { id: true, name: true, phoneNumber: true } } },
+          include: { transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } } },
         },
       },
     });
     if (!booking) throw new NotFoundException('Booking not found');
     if (booking.travelerId !== userId && booking.transport.transporterId !== userId)
       throw new ForbiddenException();
+    if (booking.transport?.transporter) {
+      booking.transport.transporter.name = booking.transport.transporter.profile?.companyName || booking.transport.transporter.name;
+    }
     return booking;
   }
 

@@ -29,6 +29,7 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState("");
   const [preferredCurrency, setPreferredCurrency] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -52,6 +53,7 @@ export default function ProfilePage() {
       setPhone(data.user.phoneNumber || "");
       setCountry(data.user.country || "");
       setPreferredCurrency((data.user as any).preferredCurrency || "");
+      setBusinessName(data.profile?.companyName || "");
       setBio(data.profile?.bio || "");
       setAvatarUrl(data.user.avatarUrl || null);
     } catch (err) {
@@ -82,7 +84,7 @@ export default function ProfilePage() {
     try {
       setSaving(true);
       setError(null);
-      await updateProfile({ name: fullName, phoneNumber: phone, country, preferredCurrency: preferredCurrency || undefined, bio });
+      await updateProfile({ name: fullName, phoneNumber: phone, country, preferredCurrency: preferredCurrency || undefined, bio, companyName: isTransporter ? businessName : undefined });
       setSuccess("Profile updated");
       setTimeout(() => window.location.reload(), 900);
     } catch (err) {
@@ -243,6 +245,18 @@ export default function ProfilePage() {
                   />
                 </Field>
               </div>
+
+              {isTransporter && (
+                <Field label="Business name">
+                  <input
+                    type="text"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    placeholder="e.g. Star Travels"
+                    className="input"
+                  />
+                </Field>
+              )}
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Country">

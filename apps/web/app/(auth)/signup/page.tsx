@@ -132,6 +132,7 @@ export default function SignUpPage() {
   const [accountType, setAccountType] = useState<"traveler" | "transporter">("traveler");
   const [formData, setFormData] = useState({
     name: "",
+    businessName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -187,6 +188,7 @@ export default function SignUpPage() {
     
     const payload = {
       name: formData.name,
+      businessName: accountType === "transporter" ? formData.businessName : undefined,
       email: formData.email,
       password: formData.password ? "[HIDDEN]" : "",
       phoneNumber: formData.phoneNumber,
@@ -213,6 +215,7 @@ export default function SignUpPage() {
       const startTime = Date.now();
       const response = await api.post<RegisterResponse>("/auth/register", {
         name: formData.name,
+        businessName: accountType === "transporter" ? formData.businessName : undefined,
         email: formData.email,
         password: formData.password,
         phoneNumber: formData.phoneNumber,
@@ -349,6 +352,20 @@ export default function SignUpPage() {
               />
             </div>
           </div>
+
+          {accountType === "transporter" && (
+            <div className="animate-fade-in-up">
+              <label htmlFor="businessName" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Business name</label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 pointer-events-none"><TruckIcon className="w-4 h-4 text-zinc-400" /></span>
+                <input
+                  id="businessName" type="text" placeholder="e.g. Star Travels" required
+                  value={formData.businessName} onChange={handleInputChange}
+                  className={inputBase}
+                />
+              </div>
+            </div>
+          )}
 
           <div>
             <label htmlFor="email" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Email</label>

@@ -90,7 +90,7 @@ export class TransportService {
     const transports = await this.prisma.transport.findMany({
       where,
       include: {
-        transporter: { select: { id: true, name: true, phoneNumber: true, profileImageUrl: true, avatarUrl: true } },
+        transporter: { select: { id: true, name: true, phoneNumber: true, profileImageUrl: true, avatarUrl: true, profile: { select: { companyName: true } } } },
         vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, imageUrl: true } },
       },
       orderBy: { departureDateTime: 'asc' },
@@ -103,6 +103,7 @@ export class TransportService {
           ...transport,
           transporter: {
             ...transport.transporter,
+            name: transport.transporter.profile?.companyName || transport.transporter.name,
             profileImageUrl: await this.storageService.resolveImageUrl(transport.transporter.profileImageUrl || transport.transporter.avatarUrl),
             ...stats,
           },
@@ -121,7 +122,7 @@ export class TransportService {
     const transport = await this.prisma.transport.findUnique({
       where: { id },
       include: {
-        transporter: { select: { id: true, name: true, phoneNumber: true, profileImageUrl: true, avatarUrl: true } },
+        transporter: { select: { id: true, name: true, phoneNumber: true, profileImageUrl: true, avatarUrl: true, profile: { select: { companyName: true } } } },
         vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, imageUrl: true } },
       },
     });
@@ -133,6 +134,7 @@ export class TransportService {
       ...transport,
       transporter: {
         ...transport.transporter,
+        name: transport.transporter.profile?.companyName || transport.transporter.name,
         profileImageUrl: await this.storageService.resolveImageUrl(transport.transporter.profileImageUrl),
         ...stats,
       },
