@@ -821,7 +821,7 @@ function Hero() {
                 
                   <img
                     ref={posterRef}
-                    src="/car.png"
+                    src="/car.jpg"
                     alt=""
                     onLoad={() => setPosterReady(true)}
                     className={`absolute inset-0 w-full h-full object-contain object-center transition-opacity duration-300 ${posterReady && !videoReady ? "opacity-100" : "opacity-0"}`}
