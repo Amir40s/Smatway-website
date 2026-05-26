@@ -97,7 +97,7 @@ export default function SignInPage() {
 
       if (result?.accessToken) {
         console.log("%cSetting auth token in memory/localStorage and cookies...", "color: #10b981;");
-        setAuthToken(result.accessToken, 15 * 60);
+        setAuthToken(result.accessToken, 60 * 60);
       } else {
         console.warn("%cWarning: No accessToken returned in login response body.", "color: #f59e0b;");
       }

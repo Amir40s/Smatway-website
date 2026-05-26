@@ -101,7 +101,7 @@ export default function VerifyEmailForm() {
 
       if (result?.accessToken) {
         console.log("%cSetting verified auth token in memory/localStorage...", "color: #10b981;");
-        setAuthToken(result.accessToken, 15 * 60);
+        setAuthToken(result.accessToken, 60 * 60);
       } else {
         console.warn("%cWarning: No accessToken returned in verification response.", "color: #f59e0b;");
       }
