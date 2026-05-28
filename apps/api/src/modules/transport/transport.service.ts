@@ -97,11 +97,41 @@ export class TransportService {
       maxReachDateTime: { gte: now },
     };
 
-    if (dto.departureCity) where.departureCity = { contains: dto.departureCity.trim(), mode: 'insensitive' };
-    if (dto.departureCountry) where.departureCountry = { contains: dto.departureCountry.trim(), mode: 'insensitive' };
-    if (dto.destinationCity) where.destinationCity = { contains: dto.destinationCity.trim(), mode: 'insensitive' };
-    if (dto.destinationCountry) where.destinationCountry = { contains: dto.destinationCountry.trim(), mode: 'insensitive' };
     if (dto.transportType) where.transportType = dto.transportType;
+
+    const andFilters: any[] = [];
+
+    if (dto.departureCity) {
+      const depCityTrim = dto.departureCity.trim();
+      andFilters.push({
+        OR: [
+          { departureCity: { contains: depCityTrim, mode: 'insensitive' } },
+          { stops: { some: { city: { contains: depCityTrim, mode: 'insensitive' } } } },
+        ],
+      });
+    }
+
+    if (dto.departureCountry) {
+      where.departureCountry = { contains: dto.departureCountry.trim(), mode: 'insensitive' };
+    }
+
+    if (dto.destinationCity) {
+      const destCityTrim = dto.destinationCity.trim();
+      andFilters.push({
+        OR: [
+          { destinationCity: { contains: destCityTrim, mode: 'insensitive' } },
+          { stops: { some: { city: { contains: destCityTrim, mode: 'insensitive' } } } },
+        ],
+      });
+    }
+
+    if (dto.destinationCountry) {
+      where.destinationCountry = { contains: dto.destinationCountry.trim(), mode: 'insensitive' };
+    }
+
+    if (andFilters.length > 0) {
+      where.AND = andFilters;
+    }
     if (dto.date) {
       const d = new Date(dto.date);
       const next = new Date(d);

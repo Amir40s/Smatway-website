@@ -131,7 +131,10 @@ export default function AddRoutePage() {
         departureDateTime: form.departureDateTime,
         maxReachDateTime: form.maxReachDateTime,
         vehicleId: form.vehicleId,
-        stops: stops.filter(s => s.city.trim() !== "" && s.address.trim() !== ""),
+        stops: stops.filter(s => s.city.trim() !== "").map(s => ({
+          city: s.city.trim(),
+          address: s.address.trim(),
+        })),
       });
       router.push("/dashboard/routes");
     } catch (e: any) {
@@ -256,9 +259,8 @@ export default function AddRoutePage() {
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Physical Terminal Address</label>
+                      <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Physical Terminal Address (Optional)</label>
                       <input
-                        required
                         type="text"
                         placeholder="e.g. Faisalabad Motorway Toll Plaza Terminal"
                         value={stop.address}

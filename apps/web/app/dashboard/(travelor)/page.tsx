@@ -86,43 +86,45 @@ export default function SearchRidesPage() {
 
             {/* Search grid */}
             <div className="bg-white rounded-2xl p-4 md:p-5 shadow-2xl">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                <Field label="From" icon={<MapPinIcon className="w-4 h-4" />}>
-                  <div className="space-y-1.5">
-                    <input
-                      type="text"
-                      placeholder="City"
-                      value={depCity}
-                      onChange={(e) => setDepCity(e.target.value)}
-                      className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none font-medium"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Country"
-                      value={depCountry}
-                      onChange={(e) => setDepCountry(e.target.value)}
-                      className="w-full bg-transparent text-[11px] text-slate-900 placeholder:text-slate-400 focus:outline-none"
-                    />
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+                <Field label="From Country" icon={<MapPinIcon className="w-4 h-4" />}>
+                  <input
+                    type="text"
+                    placeholder="e.g. Nigeria"
+                    value={depCountry}
+                    onChange={(e) => setDepCountry(e.target.value)}
+                    className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none font-medium mt-1"
+                  />
                 </Field>
 
-                <Field label="To" icon={<MapPinIcon className="w-4 h-4" />}>
-                  <div className="space-y-1.5">
-                    <input
-                      type="text"
-                      placeholder="City"
-                      value={destCity}
-                      onChange={(e) => setDestCity(e.target.value)}
-                      className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none font-medium"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Country"
-                      value={destCountry}
-                      onChange={(e) => setDestCountry(e.target.value)}
-                      className="w-full bg-transparent text-[11px] text-slate-900 placeholder:text-slate-400 focus:outline-none"
-                    />
-                  </div>
+                <Field label="From City" icon={<MapPinIcon className="w-4 h-4" />}>
+                  <input
+                    type="text"
+                    placeholder="e.g. Lagos"
+                    value={depCity}
+                    onChange={(e) => setDepCity(e.target.value)}
+                    className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none font-medium mt-1"
+                  />
+                </Field>
+
+                <Field label="To Country" icon={<MapPinIcon className="w-4 h-4" />}>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ghana"
+                    value={destCountry}
+                    onChange={(e) => setDestCountry(e.target.value)}
+                    className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none font-medium mt-1"
+                  />
+                </Field>
+
+                <Field label="To City" icon={<MapPinIcon className="w-4 h-4" />}>
+                  <input
+                    type="text"
+                    placeholder="e.g. Accra"
+                    value={destCity}
+                    onChange={(e) => setDestCity(e.target.value)}
+                    className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none font-medium mt-1"
+                  />
                 </Field>
 
                 <Field label="Departure" icon={<CalendarIcon className="w-4 h-4" />}>
@@ -131,12 +133,12 @@ export default function SearchRidesPage() {
                     value={date}
                     min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-transparent text-sm text-zinc-900 focus:outline-none font-medium"
+                    className="w-full bg-transparent text-sm text-zinc-900 focus:outline-none font-medium mt-1"
                   />
                 </Field>
 
                 <Field label="Type" icon={<CarIcon className="w-4 h-4" />}>
-                  <div className="relative">
+                  <div className="relative mt-1">
                     <select
                       value={transportType}
                       onChange={(e) => setTransportType(e.target.value as any)}

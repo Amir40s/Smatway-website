@@ -27,10 +27,14 @@ export class MailService {
       );
     }
 
+    const smtpHost = process.env.SMTP_HOST ?? 'smtp.gmail.com';
+    const smtpPort = parseInt(process.env.SMTP_PORT ?? '587');
+    const isSecure = smtpPort === 465;
+
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST ?? 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT ?? '587'),
-      secure: false, // true for port 465, false for 587 (STARTTLS)
+      host: smtpHost,
+      port: smtpPort,
+      secure: isSecure,
       auth: {
         user: smtpUser,
         pass: smtpPass,
