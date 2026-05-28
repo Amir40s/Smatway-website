@@ -33,6 +33,11 @@ export default function ProfilePage() {
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
+  // NEW Transporter Bank Details
+  const [bankName, setBankName] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const [bankAccountHolderName, setBankAccountHolderName] = useState("");
+
   const [addingContact, setAddingContact] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", relation: "family", phone: "" });
 
@@ -56,6 +61,9 @@ export default function ProfilePage() {
       setBusinessName(data.profile?.companyName || "");
       setBio(data.profile?.bio || "");
       setAvatarUrl(data.user.avatarUrl || null);
+      setBankName(data.profile?.bankName || "");
+      setBankAccountNumber(data.profile?.bankAccountNumber || "");
+      setBankAccountHolderName(data.profile?.bankAccountHolderName || "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load profile");
     } finally {
@@ -84,7 +92,17 @@ export default function ProfilePage() {
     try {
       setSaving(true);
       setError(null);
-      await updateProfile({ name: fullName, phoneNumber: phone, country, preferredCurrency: preferredCurrency || undefined, bio, companyName: isTransporter ? businessName : undefined });
+      await updateProfile({
+        name: fullName,
+        phoneNumber: phone,
+        country,
+        preferredCurrency: preferredCurrency || undefined,
+        bio,
+        companyName: isTransporter ? businessName : undefined,
+        bankName: isTransporter ? bankName : undefined,
+        bankAccountNumber: isTransporter ? bankAccountNumber : undefined,
+        bankAccountHolderName: isTransporter ? bankAccountHolderName : undefined,
+      });
       setSuccess("Profile updated");
       setTimeout(() => window.location.reload(), 900);
     } catch (err) {
@@ -247,15 +265,50 @@ export default function ProfilePage() {
               </div>
 
               {isTransporter && (
-                <Field label="Business name">
-                  <input
-                    type="text"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="e.g. Star Travels"
-                    className="input"
-                  />
-                </Field>
+                <>
+                  <Field label="Business name">
+                    <input
+                      type="text"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      placeholder="e.g. Star Travels"
+                      className="input"
+                    />
+                  </Field>
+
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-4 mb-4">
+                    <p className="text-[11px] font-bold text-zinc-900 uppercase tracking-wider">Bank Details (for offline payouts)</p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <Field label="Bank Name">
+                        <input
+                          type="text"
+                          value={bankName}
+                          onChange={(e) => setBankName(e.target.value)}
+                          placeholder="e.g. GTBank / Habib Bank"
+                          className="input bg-white"
+                        />
+                      </Field>
+                      <Field label="Account Holder Name">
+                        <input
+                          type="text"
+                          value={bankAccountHolderName}
+                          onChange={(e) => setBankAccountHolderName(e.target.value)}
+                          placeholder="e.g. John Doe / Wick"
+                          className="input bg-white"
+                        />
+                      </Field>
+                    </div>
+                    <Field label="Account Number">
+                      <input
+                        type="text"
+                        value={bankAccountNumber}
+                        onChange={(e) => setBankAccountNumber(e.target.value)}
+                        placeholder="e.g. 0123456789"
+                        className="input bg-white"
+                      />
+                    </Field>
+                  </div>
+                </>
               )}
 
               <div className="grid gap-4 sm:grid-cols-2">

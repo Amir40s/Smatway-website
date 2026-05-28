@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { getMyRoutes, deleteTransport } from "@/lib/api";
+import { formatPrice } from "@/lib/currencies";
 import {
   MapPinIcon, PlusIcon, CarIcon, ArrowRightIcon,
   TrashIcon, CalendarIcon, UsersIcon,
 } from "@/app/dashboard/_Components/Icons";
 import {
   Page, Reveal, PageHeader, EmptyState, SkeletonList, StatusPill,
-  PrimaryButton, GhostButton, SurfaceCard, spring,
+  PrimaryButton, GhostButton, SurfaceCard, spring, RouteTimeline,
 } from "@/app/dashboard/_Components/ui";
 
 type RouteStatus = "ACTIVE" | "INACTIVE" | "FULL";
@@ -118,18 +119,19 @@ export default function TransporterRoutesPage() {
                           </span>
                         </div>
 
-                        <h3 className="text-[15px] font-semibold text-zinc-950 flex items-center gap-2 flex-wrap">
-                          <span>{route.departureCity}</span>
-                          <ArrowRightIcon className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{route.destinationCity}</span>
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {route.departureCountry} → {route.destinationCountry}
-                        </p>
+                        <div className="mt-3 mb-4">
+                          <RouteTimeline
+                            departureCity={`${route.departureCity}, ${route.departureCountry}`}
+                            departureAddress={route.departureAddress}
+                            destinationCity={`${route.destinationCity}, ${route.destinationCountry}`}
+                            destinationAddress={route.destinationAddress}
+                            stops={route.stops}
+                          />
+                        </div>
                       </div>
 
                       <p className="text-[15px] font-semibold text-zinc-950 tabular-nums shrink-0">
-                        ${Number(route.price).toFixed(2)}
+                        {formatPrice(route.price, route.currency)}
                         <span className="text-[10px] font-normal text-slate-400 ml-0.5">/seat</span>
                       </p>
                     </div>

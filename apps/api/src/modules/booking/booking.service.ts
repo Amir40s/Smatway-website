@@ -5,7 +5,7 @@ import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../../common/services/storage.service';
 import { ChatGateway } from '../chat/chat.gateway';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { BookingStatus, PaymentMethod } from '@prisma/client';
+import { BookingStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
 
 @Injectable()
 export class BookingService {
@@ -65,6 +65,7 @@ export class BookingService {
           include: {
             vehicle: true,
             transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } },
+            stops: { orderBy: { stopOrder: 'asc' } },
           },
         },
       },
@@ -103,7 +104,8 @@ export class BookingService {
         transport: {
           include: { 
             vehicle: true,
-            transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } } 
+            transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } },
+            stops: { orderBy: { stopOrder: 'asc' } }
           },
         },
       },
@@ -142,7 +144,7 @@ export class BookingService {
         transport: { transporterId },
       },
       include: {
-        transport: { include: { vehicle: true } },
+        transport: { include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } } } },
         traveler: { select: { id: true, name: true, phoneNumber: true, email: true, avatarUrl: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -182,7 +184,7 @@ export class BookingService {
     const bookings = await this.prisma.booking.findMany({
       where: { transportId },
       include: {
-        transport: { include: { vehicle: true } },
+        transport: { include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } } } },
         traveler: { select: { id: true, name: true, phoneNumber: true, email: true, avatarUrl: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -226,6 +228,8 @@ export class BookingService {
     if (booking.travelerId !== travelerId) throw new ForbiddenException();
     if (booking.status === BookingStatus.CANCELLED)
       throw new BadRequestException('Already cancelled');
+    if (booking.paymentStatus === PaymentStatus.PAID)
+      throw new BadRequestException('Paid bookings cannot be cancelled');
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({

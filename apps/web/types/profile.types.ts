@@ -18,6 +18,9 @@ export interface ProfileData {
   licenseNumber?: string;
   licenseExpiry?: string;
   vehicleType?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountHolderName?: string;
 }
 
 export interface EmergencyContact {

@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  ForbiddenException,
   HttpCode,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -31,6 +32,22 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly storageService: StorageService,
   ) {}
+
+  @Get('transporters')
+  async getTransporters(@CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can access transporters details');
+    }
+    return this.usersService.getAllTransporters();
+  }
+
+  @Get('admin/stats')
+  async getAdminStats(@CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can access SmatWay dashboard stats');
+    }
+    return this.usersService.getAdminStats();
+  }
 
   @Get('profile')
   async getProfile(@CurrentUser() user: User) {

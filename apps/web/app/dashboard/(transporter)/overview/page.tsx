@@ -50,10 +50,28 @@ export default function TransporterDashboardPage() {
     return sum + convertToUSD(amt as number, cur);
   }, 0);
   const formattedRevenueUSD = formatPrice(totalRevenueUSD, "USD");
-  // For display, pick the primary currency (first available) as the original revenue label
-  const primaryCurrency = Object.keys(revenueByCurrency)[0] || "USD";
-  const originalRevenue = revenueByCurrency[primaryCurrency] || 0;
-  const formattedOriginalRevenue = formatPrice(originalRevenue, primaryCurrency);
+  // Generate dynamic stats cards for each currency
+  const currencyKeys = Object.keys(revenueByCurrency);
+  const revenueStats = currencyKeys.length > 0
+    ? currencyKeys.map((cur) => {
+        const completedCount = bookings.filter((b) => b.status === "COMPLETED" && (b.transport?.currency || "USD").toUpperCase() === cur.toUpperCase()).length;
+        return {
+          label: `Revenue (${cur})`,
+          value: formatPrice(revenueByCurrency[cur], cur),
+          hint: `${completedCount} completed`,
+          icon: <CreditCardIcon className="w-4 h-4" />,
+          tone: "rose" as const,
+        };
+      })
+    : [
+        {
+          label: "Revenue",
+          value: formatPrice(0, "USD"),
+          hint: "0 completed",
+          icon: <CreditCardIcon className="w-4 h-4" />,
+          tone: "rose" as const,
+        }
+      ];
 
   const isEmpty = !loading && vehicles.length === 0 && routes.length === 0;
   const recentBookings = bookings.slice(0, 4);
@@ -99,20 +117,7 @@ export default function TransporterDashboardPage() {
                 icon: <ClockIcon className="w-4 h-4" />,
                 tone: "amber",
               },
-              {
-                label: "Revenue (Original)",
-                value: formattedOriginalRevenue,
-                hint: `${completedBookings} completed`,
-                icon: <CreditCardIcon className="w-4 h-4" />,
-                tone: "rose",
-              },
-              {
-                label: "Revenue (USD)",
-                value: formattedRevenueUSD,
-                hint: `${completedBookings} completed`,
-                icon: <CreditCardIcon className="w-4 h-4" />,
-                tone: "emerald",
-              },
+              ...revenueStats,
             ]}
           />
         )}

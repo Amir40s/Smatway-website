@@ -8,13 +8,14 @@ import {
   getBooking, confirmBooking, rejectBooking, completeBooking,
   initChat, getMessages,
 } from "@/lib/api";
+import { formatPrice } from "@/lib/currencies";
 import { getCurrentUser } from "@/lib/auth";
 import {
   CarIcon, CalendarIcon, UsersIcon, ArrowRightIcon, SendIcon,
   CreditCardIcon, PhoneIcon, MailIcon,
 } from "@/app/dashboard/_Components/Icons";
 import {
-  Page, Reveal, PageHeader, StatusPill, SkeletonCard, spring,
+  Page, Reveal, PageHeader, StatusPill, SkeletonCard, spring, RouteTimeline,
 } from "@/app/dashboard/_Components/ui";
 
 export default function BookingDetailPage() {
@@ -190,14 +191,15 @@ export default function BookingDetailPage() {
                     {booking.paymentStatus === "PAID" ? "Paid" : "Unpaid"}
                   </StatusPill>
                 </div>
-                <h3 className="text-[15px] font-semibold text-zinc-950 flex items-center gap-1.5 flex-wrap">
-                  <span>{booking.transport.departureCity}</span>
-                  <ArrowRightIcon className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{booking.transport.destinationCity}</span>
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {booking.transport.departureCountry} → {booking.transport.destinationCountry}
-                </p>
+                <div className="mt-3 mb-4">
+                  <RouteTimeline
+                    departureCity={`${booking.transport.departureCity}, ${booking.transport.departureCountry}`}
+                    departureAddress={booking.transport.departureAddress}
+                    destinationCity={`${booking.transport.destinationCity}, ${booking.transport.destinationCountry}`}
+                    destinationAddress={booking.transport.destinationAddress}
+                    stops={booking.transport.stops}
+                  />
+                </div>
                 <div className="flex items-center gap-4 text-[11px] text-slate-500 mt-3 flex-wrap">
                   <span className="inline-flex items-center gap-1">
                     <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
@@ -213,8 +215,8 @@ export default function BookingDetailPage() {
 
             <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100">
               <MiniStat label="Seats" value={booking.seatsBooked} />
-              <MiniStat label="Per seat" value={`$${(Number(booking.totalPrice) / booking.seatsBooked).toFixed(2)}`} />
-              <MiniStat label="Total" value={`$${Number(booking.totalPrice).toFixed(2)}`} accent />
+              <MiniStat label="Per seat" value={formatPrice(Number(booking.totalPrice) / booking.seatsBooked, booking.transport?.currency)} />
+              <MiniStat label="Total" value={formatPrice(booking.totalPrice, booking.transport?.currency)} accent />
             </div>
           </div>
 
@@ -245,91 +247,9 @@ export default function BookingDetailPage() {
             </div>
           )}
 
-          {booking.status === "CONFIRMED" && (
-            <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-white border border-blue-100 p-5">
-              <p className="text-[13px] font-semibold text-zinc-950 mb-1">Ready to complete?</p>
-              <p className="text-[12px] text-slate-600 mb-4">
-                Mark the booking as complete once the trip has finished.
-              </p>
-              <button
-                onClick={handleComplete}
-                disabled={actionLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl disabled:opacity-50 transition-all active:scale-[0.98]"
-              >
-                {actionLoading ? "Completing..." : "Complete booking"}
-              </button>
-            </div>
-          )}
 
-          {/* Chat */}
-          {booking.status === "CONFIRMED" && (
-            <div className="rounded-2xl bg-white border border-slate-200/80 overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-100">
-                <h3 className="text-[13px] font-semibold text-zinc-950">Chat with traveler</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">Coordinate pickup and trip details</p>
-              </div>
 
-              {chatLoading ? (
-                <div className="p-10 text-center text-sm text-slate-400">Loading chat...</div>
-              ) : chatId ? (
-                <>
-                  <div className="bg-slate-50/60 h-72 overflow-y-auto p-4 space-y-2">
-                    {messages.length === 0 ? (
-                      <p className="text-[13px] text-slate-400 text-center mt-20">
-                        No messages yet. Say hello.
-                      </p>
-                    ) : (
-                      messages.map((msg, i) => {
-                        const mine = msg.senderId === currentUser?.id;
-                        return (
-                          <motion.div
-                            key={msg.id ?? i}
-                            initial={{ opacity: 0, y: 4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={`flex ${mine ? "justify-end" : "justify-start"}`}
-                          >
-                            <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-[13px] ${mine ? "bg-zinc-950 text-white rounded-br-md" : "bg-white border border-slate-200 text-zinc-900 rounded-bl-md"}`}>
-                              <p>{msg.content}</p>
-                              <p className={`text-[10px] mt-1 ${mine ? "text-white/50" : "text-slate-400"}`}>
-                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                              </p>
-                            </div>
-                          </motion.div>
-                        );
-                      })
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                  <div className="p-3 border-t border-slate-100 flex gap-2">
-                    <input
-                      type="text"
-                      value={messageText}
-                      onChange={(e) => setMessageText(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
-                      placeholder="Type a message..."
-                      className="flex-1 border border-slate-200 rounded-xl px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                    />
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={sendingMessage || !messageText.trim()}
-                      className="bg-zinc-950 text-white px-3.5 rounded-xl hover:bg-zinc-800 disabled:opacity-40 active:scale-[0.97] flex items-center"
-                    >
-                      <SendIcon className="w-4 h-4" />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="p-5">
-                  <button
-                    onClick={initializeChat}
-                    className="w-full bg-zinc-950 text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-zinc-800 active:scale-[0.98] transition-all"
-                  >
-                    Start conversation
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+
         </Reveal>
 
         {/* Sidebar */}
@@ -351,14 +271,7 @@ export default function BookingDetailPage() {
                 </div>
               </div>
 
-              <div className="space-y-2 pt-3 border-t border-slate-100">
-                {traveler?.email && (
-                  <DetailRow icon={<MailIcon className="w-3.5 h-3.5" />} label="Email" value={traveler.email} />
-                )}
-                {traveler?.phoneNumber && (
-                  <DetailRow icon={<PhoneIcon className="w-3.5 h-3.5" />} label="Phone" value={traveler.phoneNumber} accent />
-                )}
-              </div>
+
             </div>
           </div>
 

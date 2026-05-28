@@ -122,12 +122,15 @@ export class PaymentService {
     let paymentCurrency = booking.transport.currency || 'NGN';
     let paymentAmount = Number(booking.totalPrice);
 
-    const PAYSTACK_SUPPORTED_CURRENCIES = ['NGN', 'GHS', 'ZAR', 'KES', 'RWF', 'UGX', 'USD'];
+    // Standard Paystack merchant accounts only support NGN, GHS, and USD directly.
+    // Other currencies will be converted to NGN to prevent "Currency not supported by merchant" errors.
+    const PAYSTACK_SUPPORTED_CURRENCIES = ['NGN', 'GHS', 'USD'];
     if (!PAYSTACK_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
        const exchangeRatesToUSD: Record<string, number> = {
         PKR: 0.0036, INR: 0.012, EUR: 1.08, GBP: 1.26, AED: 0.27, SAR: 0.27,
         EGP: 0.021, ETB: 0.017, ZMW: 0.038, MWK: 0.00057, MZN: 0.016, SLE: 0.000044,
         XOF: 0.0017, XAF: 0.0017, MAD: 0.10, DZD: 0.0074, TND: 0.32,
+        KES: 0.0076, ZAR: 0.054, RWF: 0.00077, UGX: 0.00026, GHS: 0.071, NGN: 0.00067,
       };
       const rateToUSD = exchangeRatesToUSD[paymentCurrency] || 1;
       const amountInUSD = paymentAmount * rateToUSD;

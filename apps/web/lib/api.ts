@@ -267,14 +267,17 @@ export async function getTransport(id: string): Promise<any> {
 export async function createTransport(data: {
   departureCountry: string;
   departureCity: string;
+  departureAddress: string;
   destinationCountry: string;
   destinationCity: string;
+  destinationAddress: string;
   price: number;
   currency?: string;
   availableSeats: number;
   departureDateTime: string;
   maxReachDateTime: string;
   vehicleId: string;
+  stops?: { city: string; address: string }[];
 }): Promise<any> {
   return apiPost<any>('/transport', data);
 }

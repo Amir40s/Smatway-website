@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getTransportBookings, confirmBooking, rejectBooking, completeBooking, initChat, getMessages, sendMessage } from "@/lib/api";
+import { formatPrice } from "@/lib/currencies";
 import Link from "next/link";
 
 const statusColors: Record<string, string> = {
@@ -122,8 +123,7 @@ export default function RouteBookingsPage() {
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusColors[booking.status]}`}>{booking.status}</span>
                   </div>
                   <p className="font-semibold text-zinc-900 text-sm">{booking.traveler?.name || "Unknown Traveler"}</p>
-                  <p className="text-xs text-slate-500">{booking.traveler?.email} · {booking.traveler?.phoneNumber || "No phone"}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{booking.seatsBooked} seat{booking.seatsBooked > 1 ? "s" : ""} · ${Number(booking.totalPrice).toFixed(2)}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{booking.seatsBooked} seat{booking.seatsBooked > 1 ? "s" : ""} · {formatPrice(booking.totalPrice, booking.transport?.currency)}</p>
                   <p className="text-xs text-slate-400 mt-0.5">Ref: #{booking.id.slice(0, 8).toUpperCase()} · Booked {new Date(booking.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
@@ -150,23 +150,7 @@ export default function RouteBookingsPage() {
                       </button>
                     </div>
                   )}
-                  {booking.status === "CONFIRMED" && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleComplete(booking.id)}
-                        disabled={actionInProgress === booking.id}
-                        className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        {actionInProgress === booking.id ? "..." : "Complete"}
-                      </button>
-                      <button
-                        onClick={() => openChat(booking)}
-                        className="bg-slate-500 hover:bg-slate-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
-                      >
-                        Chat
-                      </button>
-                    </div>
-                  )}
+
                 </div>
               </div>
             </div>
@@ -174,57 +158,7 @@ export default function RouteBookingsPage() {
         </div>
       )}
 
-      {/* Chat Modal */}
-      {chatModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <h2 className="font-semibold text-zinc-900">Chat with {chatModal.booking.traveler?.name}</h2>
-                <p className="text-xs text-slate-500 mt-0.5">{chatModal.booking.traveler?.phoneNumber}</p>
-              </div>
-              <button onClick={() => { setChatModal(null); setChatId(null); setMessages([]); }} className="text-2xl text-slate-400">×</button>
-            </div>
 
-            {/* Messages */}
-            <div className="p-4 h-64 overflow-y-auto space-y-2 bg-slate-50">
-              {messages.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-8">Start the conversation</p>
-              ) : (
-                messages.map(msg => (
-                  <div key={msg.id} className={`text-xs ${msg.senderId !== chatModal.booking.travelerId ? 'text-right' : ''}`}>
-                    <p className="text-slate-500 mb-0.5">{msg.sender?.name}</p>
-                    <div className={`inline-block max-w-xs px-3 py-1.5 rounded ${msg.senderId !== chatModal.booking.travelerId ? 'bg-zinc-900 text-white' : 'bg-white border border-slate-200'}`}>
-                      {msg.content}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Input */}
-            <div className="p-4 border-t border-slate-200 space-y-2">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Type message..."
-                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-zinc-900"
-                />
-                <button
-                  onClick={handleSendMessage}
-                  disabled={sendingMessage || !messageText.trim()}
-                  className="bg-zinc-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-zinc-800 disabled:opacity-50"
-                >
-                  Send
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

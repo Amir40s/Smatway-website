@@ -143,6 +143,10 @@ model UserProfile {
   licenseExpiry           DateTime?
   vehicleType             String?
 
+  bankName                String?
+  bankAccountNumber       String?
+  bankAccountHolderName   String?
+
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
@@ -191,8 +195,10 @@ model Transport {
 
   departureCountry   String
   departureCity      String
+  departureAddress   String          @default("")
   destinationCountry String
   destinationCity    String
+  destinationAddress String          @default("")
   transportType      TransportType
 
   price              Decimal         @db.Decimal(10, 2)
@@ -208,6 +214,21 @@ model Transport {
 
   bookings           Booking[]
   announcements      Announcement[]
+  stops              RouteStop[]
+}
+
+model RouteStop {
+  id          String    @id @default(uuid())
+  transportId String
+  transport   Transport @relation(fields: [transportId], references: [id], onDelete: Cascade)
+  city        String
+  address     String
+  stopOrder   Int
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([transportId])
 }
 
 model Booking {

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getBooking, initChat, getMessages, sendMessage, completeBooking } from "@/lib/api";
 import Link from "next/link";
+import { RouteTimeline } from "@/app/dashboard/_Components/ui";
 
 export default function TransporterBookingDetailPage() {
   const params = useParams<{ id: string; bookingId: string }>();
@@ -104,18 +105,19 @@ export default function TransporterBookingDetailPage() {
           </span>
         </div>
 
-        <h3 className="font-semibold text-zinc-900 mb-1">
-          {booking.transport.departureCity} → {booking.transport.destinationCity}
-        </h3>
-        <p className="text-sm text-slate-500">
-          {dep.toLocaleDateString()} at {dep.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </p>
+        <div className="mt-3 mb-4">
+          <RouteTimeline
+            departureCity={`${booking.transport.departureCity}, ${booking.transport.departureCountry}`}
+            departureAddress={booking.transport.departureAddress}
+            destinationCity={`${booking.transport.destinationCity}, ${booking.transport.destinationCountry}`}
+            destinationAddress={booking.transport.destinationAddress}
+            stops={booking.transport.stops}
+          />
+        </div>
 
         <div className="border-t border-slate-100 mt-4 pt-4">
           <p className="text-sm text-slate-600 mb-2">Traveler</p>
           <p className="font-semibold text-zinc-900">{booking.traveler?.name}</p>
-          <p className="text-sm text-slate-500">{booking.traveler?.email}</p>
-          <p className="text-sm text-emerald-600 font-semibold">{booking.traveler?.phoneNumber}</p>
         </div>
 
         <div className="border-t border-slate-100 mt-4 pt-4 flex justify-between">
@@ -140,74 +142,9 @@ export default function TransporterBookingDetailPage() {
         </div>
       )}
 
-      {booking.status === "CONFIRMED" && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <p className="text-xs text-slate-400 mb-3">Mark as complete when trip finishes</p>
-          <button
-            onClick={handleCompleteBooking}
-            disabled={completingBooking}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50"
-          >
-            {completingBooking ? "Completing..." : "Complete Booking"}
-          </button>
-        </div>
-      )}
 
-      {/* Chat */}
-      {booking.status === "CONFIRMED" && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h3 className="text-sm font-semibold text-zinc-900 mb-1">Chat with Traveler</h3>
-          <p className="text-xs text-slate-400 mb-4">Share details and confirm trip</p>
 
-          {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
 
-          {chatId ? (
-            <div className="space-y-3">
-              {/* Messages */}
-              <div className="bg-slate-50 rounded-lg p-3 h-64 overflow-y-auto space-y-2 mb-3">
-                {messages.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-8">No messages yet. Start the conversation!</p>
-                ) : (
-                  messages.map(msg => (
-                    <div key={msg.id} className={`text-xs ${msg.senderId !== booking.travelerId ? 'text-right' : ''}`}>
-                      <p className="text-slate-500 mb-0.5">{msg.sender?.name}</p>
-                      <div className={`inline-block max-w-xs px-3 py-1.5 rounded ${msg.senderId !== booking.travelerId ? 'bg-zinc-900 text-white' : 'bg-white border border-slate-200'}`}>
-                        {msg.content}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Input */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                  placeholder="Type message..."
-                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-zinc-900"
-                />
-                <button
-                  onClick={handleSendMessage}
-                  disabled={sendingMessage || !messageText.trim()}
-                  className="bg-zinc-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-zinc-800 disabled:opacity-50"
-                >
-                  {sendingMessage ? "..." : "Send"}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={initializeChat}
-              className="w-full bg-zinc-900 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-zinc-800"
-            >
-              Start Chat
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }

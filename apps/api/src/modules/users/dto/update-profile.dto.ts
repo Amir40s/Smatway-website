@@ -63,4 +63,19 @@ export class UpdateProfileDto {
   @IsString()
   @MaxLength(50)
   vehicleType?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  bankName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  bankAccountNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  bankAccountHolderName?: string;
 }

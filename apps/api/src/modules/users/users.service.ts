@@ -52,6 +52,42 @@ export class UsersService {
     };
   }
 
+  async getAllTransporters() {
+    const transporters = await this.prisma.user.findMany({
+      where: { accountType: 'TRANSPORTER' },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phoneNumber: true,
+        country: true,
+        avatarUrl: true,
+        createdAt: true,
+        profile: {
+          select: {
+            companyName: true,
+            licenseNumber: true,
+            licenseExpiry: true,
+            vehicleType: true,
+            bankName: true,
+            bankAccountNumber: true,
+            bankAccountHolderName: true,
+          },
+        },
+      },
+    });
+
+    return Promise.all(
+      transporters.map(async (t) => {
+        const avatarUrl = await this.storageService.resolveImageUrl(t.avatarUrl);
+        return {
+          ...t,
+          avatarUrl,
+        };
+      }),
+    );
+  }
+
   async updateProfileAvatarPath(userId: string, avatarPath: string) {
     await this.prisma.user.update({
       where: { id: userId },
@@ -81,6 +117,9 @@ export class UsersService {
         licenseNumber: dto.licenseNumber,
         licenseExpiry: dto.licenseExpiry ? new Date(dto.licenseExpiry) : undefined,
         vehicleType: dto.vehicleType,
+        bankName: dto.bankName,
+        bankAccountNumber: dto.bankAccountNumber,
+        bankAccountHolderName: dto.bankAccountHolderName,
       },
       create: {
         userId,
@@ -91,6 +130,9 @@ export class UsersService {
         licenseNumber: dto.licenseNumber,
         licenseExpiry: dto.licenseExpiry ? new Date(dto.licenseExpiry) : undefined,
         vehicleType: dto.vehicleType,
+        bankName: dto.bankName,
+        bankAccountNumber: dto.bankAccountNumber,
+        bankAccountHolderName: dto.bankAccountHolderName,
       },
     });
 
@@ -206,5 +248,65 @@ export class UsersService {
     });
 
     return { ok: true };
+  }
+
+  async getAdminStats() {
+    const totalUsers = await this.prisma.user.count();
+
+    const activeBookings = await this.prisma.booking.count({
+      where: {
+        status: { in: ['PENDING', 'CONFIRMED'] },
+      },
+    });
+
+    const revenueBookings = await this.prisma.booking.findMany({
+      where: {
+        paymentStatus: 'PAID',
+      },
+      select: {
+        totalPrice: true,
+      },
+    });
+
+    const totalRevenue = revenueBookings.reduce((sum: number, b: any) => sum + Number(b.totalPrice), 0);
+
+    const supportTickets = await this.prisma.siteFeedback.count();
+
+    // Fetch recent registrations
+    const recentUsers = await this.prisma.user.findMany({
+      take: 2,
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, name: true, createdAt: true },
+    });
+
+    // Fetch recent bookings
+    const recentBookings = await this.prisma.booking.findMany({
+      take: 2,
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, totalPrice: true, status: true, createdAt: true },
+    });
+
+    const activities = [
+      ...recentUsers.map(u => ({
+        type: 'user_registration',
+        title: 'New user registration',
+        description: `User ID: ${u.id.slice(0, 8).toUpperCase()} (${u.name || 'Anonymous'})`,
+        time: u.createdAt,
+      })),
+      ...recentBookings.map(b => ({
+        type: 'booking_created',
+        title: `Booking ${b.status.toLowerCase()}`,
+        description: `Booking ID: ${b.id.slice(0, 8).toUpperCase()} (Amount: $${Number(b.totalPrice).toFixed(2)})`,
+        time: b.createdAt,
+      })),
+    ].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 5);
+
+    return {
+      totalUsers,
+      activeBookings,
+      totalRevenue,
+      supportTickets,
+      activities,
+    };
   }
 }

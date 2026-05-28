@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../../common/services/storage.service';
 import { CreateTransportDto } from './dto/create-transport.dto';
@@ -39,6 +39,19 @@ export class TransportService {
     if (!vehicle) throw new NotFoundException('Vehicle not found');
     if (vehicle.transporterId !== transporterId) throw new ForbiddenException('Vehicle does not belong to you');
 
+    const depDate = new Date(dto.departureDateTime);
+    if (depDate < new Date()) {
+      throw new BadRequestException('Departure date cannot be in the past');
+    }
+
+    const maxDate = new Date(dto.maxReachDateTime);
+    if (maxDate < new Date()) {
+      throw new BadRequestException('Max reach date cannot be in the past');
+    }
+    if (maxDate <= depDate) {
+      throw new BadRequestException('Max reach date must be after departure date');
+    }
+
     // Fallback currency resolution: DTO → transporter's preferredCurrency → USD
     let currency = (dto.currency || '').toUpperCase();
     if (!currency) {
@@ -53,18 +66,27 @@ export class TransportService {
       data: {
         transporterId,
         vehicleId: dto.vehicleId,
-        departureCountry: dto.departureCountry,
-        departureCity: dto.departureCity,
-        destinationCountry: dto.destinationCountry,
-        destinationCity: dto.destinationCity,
+        departureCountry: dto.departureCountry.trim(),
+        departureCity: dto.departureCity.trim(),
+        departureAddress: dto.departureAddress.trim(),
+        destinationCountry: dto.destinationCountry.trim(),
+        destinationCity: dto.destinationCity.trim(),
+        destinationAddress: dto.destinationAddress.trim(),
         transportType: vehicle.transportType,
         price: dto.price,
         currency,
         availableSeats: dto.availableSeats,
         departureDateTime: new Date(dto.departureDateTime),
         maxReachDateTime: new Date(dto.maxReachDateTime),
+        stops: {
+          create: (dto.stops || []).map((s, index) => ({
+            city: s.city.trim(),
+            address: s.address.trim(),
+            stopOrder: index,
+          })),
+        },
       },
-      include: { vehicle: true },
+      include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } } },
     });
   }
 
@@ -75,10 +97,10 @@ export class TransportService {
       maxReachDateTime: { gte: now },
     };
 
-    if (dto.departureCity) where.departureCity = { contains: dto.departureCity, mode: 'insensitive' };
-    if (dto.departureCountry) where.departureCountry = { contains: dto.departureCountry, mode: 'insensitive' };
-    if (dto.destinationCity) where.destinationCity = { contains: dto.destinationCity, mode: 'insensitive' };
-    if (dto.destinationCountry) where.destinationCountry = { contains: dto.destinationCountry, mode: 'insensitive' };
+    if (dto.departureCity) where.departureCity = { contains: dto.departureCity.trim(), mode: 'insensitive' };
+    if (dto.departureCountry) where.departureCountry = { contains: dto.departureCountry.trim(), mode: 'insensitive' };
+    if (dto.destinationCity) where.destinationCity = { contains: dto.destinationCity.trim(), mode: 'insensitive' };
+    if (dto.destinationCountry) where.destinationCountry = { contains: dto.destinationCountry.trim(), mode: 'insensitive' };
     if (dto.transportType) where.transportType = dto.transportType;
     if (dto.date) {
       const d = new Date(dto.date);
@@ -92,6 +114,7 @@ export class TransportService {
       include: {
         transporter: { select: { id: true, name: true, phoneNumber: true, profileImageUrl: true, avatarUrl: true, profile: { select: { companyName: true } } } },
         vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, imageUrl: true } },
+        stops: { orderBy: { stopOrder: 'asc' } },
       },
       orderBy: { departureDateTime: 'asc' },
     });
@@ -119,11 +142,12 @@ export class TransportService {
   }
 
   async findOne(id: string) {
-    const transport = await this.prisma.transport.findUnique({
+    const transport: any = await this.prisma.transport.findUnique({
       where: { id },
       include: {
         transporter: { select: { id: true, name: true, phoneNumber: true, profileImageUrl: true, avatarUrl: true, profile: { select: { companyName: true } } } },
         vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, imageUrl: true } },
+        stops: { orderBy: { stopOrder: 'asc' } },
       },
     });
     if (!transport) throw new NotFoundException('Transport not found');
@@ -150,7 +174,7 @@ export class TransportService {
   async myRoutes(transporterId: string) {
     const transports = await this.prisma.transport.findMany({
       where: { transporterId },
-      include: { vehicle: true, _count: { select: { bookings: true } } },
+      include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } }, _count: { select: { bookings: true } } },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -182,14 +206,48 @@ export class TransportService {
       transportType = vehicle.transportType;
     }
 
+    const finalDepDate = dto.departureDateTime ? new Date(dto.departureDateTime) : new Date(transport.departureDateTime);
+    const finalMaxDate = dto.maxReachDateTime ? new Date(dto.maxReachDateTime) : new Date(transport.maxReachDateTime);
+
+    if (dto.departureDateTime && finalDepDate < new Date()) {
+      throw new BadRequestException('Departure date cannot be in the past');
+    }
+    if (dto.maxReachDateTime && finalMaxDate < new Date()) {
+      throw new BadRequestException('Max reach date cannot be in the past');
+    }
+    if (finalMaxDate <= finalDepDate) {
+      throw new BadRequestException('Max reach date must be after departure date');
+    }
+
+    const updateData: any = {
+      ...dto,
+      transportType,
+      departureDateTime: dto.departureDateTime ? new Date(dto.departureDateTime) : undefined,
+      maxReachDateTime: dto.maxReachDateTime ? new Date(dto.maxReachDateTime) : undefined,
+    };
+
+    if (dto.departureCountry) updateData.departureCountry = dto.departureCountry.trim();
+    if (dto.departureCity) updateData.departureCity = dto.departureCity.trim();
+    if (dto.departureAddress) updateData.departureAddress = dto.departureAddress.trim();
+    if (dto.destinationCountry) updateData.destinationCountry = dto.destinationCountry.trim();
+    if (dto.destinationCity) updateData.destinationCity = dto.destinationCity.trim();
+    if (dto.destinationAddress) updateData.destinationAddress = dto.destinationAddress.trim();
+
+    delete updateData.stops;
+    if (dto.stops) {
+      updateData.stops = {
+        deleteMany: {},
+        create: dto.stops.map((s, index) => ({
+          city: s.city.trim(),
+          address: s.address.trim(),
+          stopOrder: index,
+        })),
+      };
+    }
+
     return this.prisma.transport.update({
       where: { id },
-      data: {
-        ...dto,
-        transportType,
-        departureDateTime: dto.departureDateTime ? new Date(dto.departureDateTime) : undefined,
-        maxReachDateTime: dto.maxReachDateTime ? new Date(dto.maxReachDateTime) : undefined,
-      },
+      data: updateData,
     });
   }
 

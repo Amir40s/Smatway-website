@@ -10,8 +10,10 @@ import { Combobox } from "@/components/Combobox";
 type RouteForm = {
   departureCountry: string;
   departureCity: string;
+  departureAddress: string;
   destinationCountry: string;
   destinationCity: string;
+  destinationAddress: string;
   price: string;
   currency: string;
   availableSeats: string;
@@ -29,8 +31,10 @@ export default function AddRoutePage() {
   const [form, setForm] = useState<RouteForm>({
     departureCountry: "",
     departureCity: "",
+    departureAddress: "",
     destinationCountry: "",
     destinationCity: "",
+    destinationAddress: "",
     price: "",
     currency: "",
     availableSeats: "",
@@ -38,6 +42,22 @@ export default function AddRoutePage() {
     maxReachDateTime: "",
     vehicleId: "",
   });
+
+  const [stops, setStops] = useState<{ city: string; address: string }[]>([]);
+
+  function addStop() {
+    setStops([...stops, { city: "", address: "" }]);
+  }
+
+  function updateStop(index: number, key: "city" | "address", value: string) {
+    const updated = [...stops];
+    updated[index][key] = value;
+    setStops(updated);
+  }
+
+  function removeStop(index: number) {
+    setStops(stops.filter((_, idx) => idx !== index));
+  }
 
   useEffect(() => {
     (async () => {
@@ -77,18 +97,41 @@ export default function AddRoutePage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    const depDate = new Date(form.departureDateTime);
+    if (depDate < new Date()) {
+      setError("Departure date cannot be in the past");
+      setLoading(false);
+      return;
+    }
+
+    const maxDate = new Date(form.maxReachDateTime);
+    if (maxDate < new Date()) {
+      setError("Max reach date cannot be in the past");
+      setLoading(false);
+      return;
+    }
+    if (maxDate <= depDate) {
+      setError("Max reach date must be after departure date");
+      setLoading(false);
+      return;
+    }
+
     try {
       await createTransport({
         departureCountry: form.departureCountry,
         departureCity: form.departureCity,
+        departureAddress: form.departureAddress,
         destinationCountry: form.destinationCountry,
         destinationCity: form.destinationCity,
+        destinationAddress: form.destinationAddress,
         price: parseFloat(form.price),
         currency: form.currency || undefined,
         availableSeats: parseInt(form.availableSeats),
         departureDateTime: form.departureDateTime,
         maxReachDateTime: form.maxReachDateTime,
         vehicleId: form.vehicleId,
+        stops: stops.filter(s => s.city.trim() !== "" && s.address.trim() !== ""),
       });
       router.push("/dashboard/routes");
     } catch (e: any) {
@@ -144,6 +187,11 @@ export default function AddRoutePage() {
               <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Departure City</label>
               <input required type="text" placeholder="e.g. Lahore" value={form.departureCity} onChange={e => set("departureCity", e.target.value)} className={inputClass} />
             </div>
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Departure Physical Address (Loading Terminal)</label>
+              <input required type="text" placeholder="e.g. Terminal 1, Lahore Motorway Bypass" value={form.departureAddress} onChange={e => set("departureAddress", e.target.value)} className={inputClass} />
+            </div>
+
             <div>
               <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Destination Country</label>
               <input required type="text" placeholder="e.g. Pakistan" value={form.destinationCountry} onChange={e => set("destinationCountry", e.target.value)} className={inputClass} />
@@ -152,7 +200,77 @@ export default function AddRoutePage() {
               <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Destination City</label>
               <input required type="text" placeholder="e.g. Islamabad" value={form.destinationCity} onChange={e => set("destinationCity", e.target.value)} className={inputClass} />
             </div>
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Destination Physical Address (Arrival Terminal)</label>
+              <input required type="text" placeholder="e.g. Faizabad Interchange Terminal, Islamabad" value={form.destinationAddress} onChange={e => set("destinationAddress", e.target.value)} className={inputClass} />
+            </div>
           </div>
+        </div>
+
+        {/* Intermediate Stops */}
+        <div className="border-t border-slate-100 pt-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900">Intermediate Stops (Optional)</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Add intermediate towns/terminals along your route.</p>
+            </div>
+            <button
+              type="button"
+              onClick={addStop}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100/50 hover:bg-emerald-100/50 transition-all"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Add Stop
+            </button>
+          </div>
+
+          {stops.length === 0 ? (
+            <p className="text-xs text-slate-400 italic py-3 text-center bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+              No intermediate stops added yet. Click "+ Add Stop" to specify stops.
+            </p>
+          ) : (
+            <div className="space-y-3.5">
+              {stops.map((stop, index) => (
+                <div key={index} className="bg-slate-50/50 p-4 rounded-xl border border-slate-200/80 relative flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Stop #{index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeStop(index)}
+                      className="text-slate-400 hover:text-red-600 transition-colors p-1"
+                      aria-label="Remove Stop"
+                    >
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-500 mb-1 block">City</label>
+                      <input
+                        required
+                        type="text"
+                        placeholder="e.g. Faisalabad"
+                        value={stop.city}
+                        onChange={(e) => updateStop(index, "city", e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Physical Terminal Address</label>
+                      <input
+                        required
+                        type="text"
+                        placeholder="e.g. Faisalabad Motorway Toll Plaza Terminal"
+                        value={stop.address}
+                        onChange={(e) => updateStop(index, "address", e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
@@ -201,11 +319,11 @@ export default function AddRoutePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Departure Date & Time</label>
-              <input required type="datetime-local" value={form.departureDateTime} onChange={e => set("departureDateTime", e.target.value)} className={inputClass} />
+              <input required type="datetime-local" min={new Date().toISOString().slice(0, 16)} value={form.departureDateTime} onChange={e => set("departureDateTime", e.target.value)} className={inputClass} />
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Max Reach Date & Time</label>
-              <input required type="datetime-local" value={form.maxReachDateTime} onChange={e => set("maxReachDateTime", e.target.value)} className={inputClass} />
+              <input required type="datetime-local" min={form.departureDateTime || new Date().toISOString().slice(0, 16)} value={form.maxReachDateTime} onChange={e => set("maxReachDateTime", e.target.value)} className={inputClass} />
             </div>
           </div>
         </div>

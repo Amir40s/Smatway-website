@@ -15,7 +15,7 @@ import {
 } from "@/app/dashboard/_Components/Icons";
 import {
   Page, Reveal, PageHeader, EmptyState, SkeletonList, StatusPill,
-  PrimaryButton, SurfaceCard, spring,
+  PrimaryButton, SurfaceCard, spring, RouteTimeline,
 } from "@/app/dashboard/_Components/ui";
 
 const transportTypes = ["All", "CAR", "BUS", "VAN", "MINIBUS", "TRAIN"] as const;
@@ -49,10 +49,10 @@ export default function SearchRidesPage() {
     setError("");
     try {
       const data = await searchTransports({
-        departureCountry: depCountry || undefined,
-        departureCity: depCity || undefined,
-        destinationCountry: destCountry || undefined,
-        destinationCity: destCity || undefined,
+        departureCountry: depCountry?.trim() || undefined,
+        departureCity: depCity?.trim() || undefined,
+        destinationCountry: destCountry?.trim() || undefined,
+        destinationCity: destCity?.trim() || undefined,
         transportType: transportType !== "All" ? transportType : undefined,
         date: date || undefined,
       });
@@ -302,14 +302,15 @@ function TransportCard({ transport }: { transport: any }) {
                 {vehicle?.model || "—"} · {vehicle?.plateNumber || "N/A"}
               </span>
             </div>
-            <h3 className="text-[15px] font-semibold text-zinc-950 flex items-center gap-1.5 flex-wrap">
-              <span>{transport.departureCity}</span>
-              <ArrowRightIcon className="w-3.5 h-3.5 text-slate-400" />
-              <span>{transport.destinationCity}</span>
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {transport.departureCountry} → {transport.destinationCountry}
-            </p>
+            <div className="mt-3 mb-4">
+              <RouteTimeline
+                departureCity={`${transport.departureCity}, ${transport.departureCountry}`}
+                departureAddress={transport.departureAddress}
+                destinationCity={`${transport.destinationCity}, ${transport.destinationCountry}`}
+                destinationAddress={transport.destinationAddress}
+                stops={transport.stops}
+              />
+            </div>
 
             <div className="flex items-center gap-4 text-[11px] text-slate-500 mt-2.5 flex-wrap">
               <span className="inline-flex items-center gap-1">
@@ -498,14 +499,6 @@ function TransporterProfileModalInner({ loading, profile, onClose }: { loading: 
               </div>
             )}
 
-            {profile.phoneNumber && (
-              <div className="px-6 pb-6">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                  Contact
-                </p>
-                <p className="text-[14px] font-medium text-zinc-950">{profile.phoneNumber}</p>
-              </div>
-            )}
           </>
         ) : (
           <div className="p-10 text-center text-sm text-red-600">Failed to load profile</div>

@@ -209,22 +209,7 @@ export default function TransporterBookingsPage() {
         </motion.div>
       )}
 
-      {/* Chat modal */}
-      <AnimatePresence>
-        {chatBookingId && (
-          <ChatModal
-            loading={chatLoading}
-            messages={chatMessages}
-            currentUserId={currentUser?.id}
-            messageText={messageText}
-            sendingMessage={sendingMessage}
-            onChangeText={setMessageText}
-            onSend={handleSendMessage}
-            onClose={closeChat}
-            messagesEndRef={messagesEndRef}
-          />
-        )}
-      </AnimatePresence>
+
     </Page>
   );
 }
@@ -283,7 +268,7 @@ function BookingRow({
               <p className="text-[14px] font-semibold text-zinc-950 truncate">
                 {traveler?.name || "Unknown traveler"}
               </p>
-              <p className="text-[11px] text-slate-500 truncate">{traveler?.email}</p>
+
             </div>
           </div>
 
@@ -336,14 +321,7 @@ function BookingRow({
               </div>
             ) : (
               <div className="flex gap-1.5">
-                {booking.status === "CONFIRMED" && (
-                  <button
-                    onClick={onChat}
-                    className="text-[11px] font-semibold bg-zinc-950 text-white px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-all active:scale-[0.98]"
-                  >
-                    Chat
-                  </button>
-                )}
+
                 <Link
                   href={`/dashboard/bookings/${booking.id}`}
                   className="text-[11px] font-semibold border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all active:scale-[0.98]"

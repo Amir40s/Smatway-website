@@ -1,10 +1,12 @@
-import { IsNotEmpty, IsNumber, IsInt, IsOptional, IsString, Length, Min } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsInt, IsOptional, IsString, Length, Min, IsArray } from 'class-validator';
 
 export class CreateTransportDto {
   @IsString() @IsNotEmpty() departureCountry!: string;
   @IsString() @IsNotEmpty() departureCity!: string;
+  @IsString() @IsNotEmpty() departureAddress!: string;
   @IsString() @IsNotEmpty() destinationCountry!: string;
   @IsString() @IsNotEmpty() destinationCity!: string;
+  @IsString() @IsNotEmpty() destinationAddress!: string;
 
   @IsString() @IsNotEmpty() vehicleId!: string;
 
@@ -18,4 +20,8 @@ export class CreateTransportDto {
   @IsString() @IsNotEmpty() departureDateTime!: string;
 
   @IsString() @IsNotEmpty() maxReachDateTime!: string;
+
+  @IsOptional()
+  @IsArray()
+  stops?: { city: string; address: string }[];
 }

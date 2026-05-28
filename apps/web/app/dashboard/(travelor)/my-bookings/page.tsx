@@ -180,22 +180,7 @@ export default function MyBookingsPage() {
         </motion.div>
       )}
 
-      {/* Chat modal */}
-      <AnimatePresence>
-        {chatBookingId && (
-          <ChatModal
-            loading={chatLoading}
-            messages={chatMessages}
-            currentUserId={user?.id}
-            messageText={messageText}
-            sendingMessage={sendingMessage}
-            onChangeText={setMessageText}
-            onSend={handleSend}
-            onClose={closeChat}
-            messagesEndRef={messagesEndRef}
-          />
-        )}
-      </AnimatePresence>
+
     </Page>
   );
 }
@@ -251,6 +236,12 @@ function BookingCard({
               <ArrowRightIcon className="w-3.5 h-3.5 text-slate-400" />
               <span>{booking.transport.destinationCity}</span>
             </h3>
+            {booking.transport.departureAddress && booking.transport.destinationAddress && (
+              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                <span className="font-semibold text-slate-500">Pick-up:</span> {booking.transport.departureAddress} <br />
+                <span className="font-semibold text-slate-500">Drop-off:</span> {booking.transport.destinationAddress}
+              </p>
+            )}
 
             <div className="flex items-center gap-4 text-[11px] text-slate-500 mt-2 flex-wrap">
               <span className="inline-flex items-center gap-1">
@@ -269,21 +260,14 @@ function BookingCard({
               {formatPrice(booking.totalPrice, booking.transport?.currency)}
             </p>
             <div className="flex gap-1.5 flex-wrap justify-end">
-              {booking.status === "CONFIRMED" && (
-                <button
-                  onClick={onChat}
-                  className="text-[11px] font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-all active:scale-[0.98]"
-                >
-                  Chat
-                </button>
-              )}
+
               <Link
                 href={`/dashboard/traveler/booking/${booking.id}`}
                 className="text-[11px] font-semibold border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all active:scale-[0.98]"
               >
                 Details
               </Link>
-              {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
+              {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && booking.paymentStatus !== "PAID" && (
                 <button
                   onClick={onCancel}
                   disabled={cancelling}

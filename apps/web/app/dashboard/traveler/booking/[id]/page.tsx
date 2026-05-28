@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getBooking, cancelBooking, updatePaymentMethod, createReview, initChat, getChatByBooking, getMessages, sendMessage, getTransporterProfile, initializePayment, verifyPayment } from "@/lib/api";
 import { formatPrice } from "@/lib/currencies";
+import { RouteTimeline } from "@/app/dashboard/_Components/ui";
 
 const paymentMethods = [
   {
@@ -212,9 +213,15 @@ export default function BookingDetailPage() {
           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${paymentStatusColors[booking.paymentStatus]}`}>Payment: {booking.paymentStatus}</span>
         </div>
 
-        <h3 className="font-semibold text-zinc-900 mb-1">
-          {booking.transport.departureCity}, {booking.transport.departureCountry} → {booking.transport.destinationCity}, {booking.transport.destinationCountry}
-        </h3>
+        <div className="mt-3 mb-4">
+          <RouteTimeline
+            departureCity={`${booking.transport.departureCity}, ${booking.transport.departureCountry}`}
+            departureAddress={booking.transport.departureAddress}
+            destinationCity={`${booking.transport.destinationCity}, ${booking.transport.destinationCountry}`}
+            destinationAddress={booking.transport.destinationAddress}
+            stops={booking.transport.stops}
+          />
+        </div>
         <p className="text-sm text-slate-500">
           {dep.toLocaleDateString()} at {dep.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </p>
@@ -266,9 +273,6 @@ export default function BookingDetailPage() {
                 <span>{transporterProfile.vehicleCount} vehicles</span>
               )}
             </div>
-            {booking.transport.transporter?.phoneNumber && (
-              <p className="mt-1 text-[12px] font-medium text-emerald-700">{booking.transport.transporter.phoneNumber}</p>
-            )}
           </div>
           <button
             onClick={() => setShowProfile(true)}
@@ -352,12 +356,6 @@ export default function BookingDetailPage() {
                     </div>
                   </div>
                 )}
-                {booking.transport.transporter?.phoneNumber && (
-                  <div className="px-6 pb-6">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Contact</p>
-                    <p className="text-[14px] font-medium text-zinc-950">{booking.transport.transporter.phoneNumber}</p>
-                  </div>
-                )}
               </>
             ) : (
               <div className="p-10 text-center text-sm text-red-600">Failed to load profile</div>
@@ -420,7 +418,7 @@ export default function BookingDetailPage() {
       )}
 
       {/* Cancel */}
-      {!isCancelled && booking.status !== "COMPLETED" && (
+      {!isCancelled && booking.status !== "COMPLETED" && booking.paymentStatus !== "PAID" && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
           <h3 className="text-sm font-semibold text-zinc-900 mb-1">Cancel Booking</h3>
           <p className="text-xs text-slate-400 mb-3">Cancelling will release your seats back to the pool.</p>
@@ -464,66 +462,7 @@ export default function BookingDetailPage() {
         </div>
       )}
 
-      {/* Chat Section */}
-      {booking.status === "CONFIRMED" && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h3 className="text-sm font-semibold text-zinc-900 mb-1">Contact Transporter</h3>
-          <p className="text-xs text-slate-400 mb-4">Message and share contact info</p>
 
-          {!chatId ? (
-            <button
-              onClick={initializeChat}
-              className="w-full bg-zinc-900 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-zinc-800 transition-colors"
-            >
-              Start Chat
-            </button>
-          ) : (
-            <div className="space-y-3">
-              {/* Contact Info */}
-              <div className="bg-slate-50 rounded-lg p-3 mb-3">
-                <p className="text-xs text-slate-600 mb-2">Transporter Contact</p>
-                <p className="text-sm font-medium text-zinc-900">{booking.transport.transporter?.name}</p>
-                <p className="text-sm text-emerald-600 font-semibold">{booking.transport.transporter?.phoneNumber}</p>
-              </div>
-
-              {/* Messages */}
-              <div className="bg-slate-50 rounded-lg p-3 h-64 overflow-y-auto space-y-2 mb-3">
-                {messages.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-8">No messages yet</p>
-                ) : (
-                  messages.map(msg => (
-                    <div key={msg.id} className={`text-xs ${msg.senderId === booking.travelerId ? 'text-right' : ''}`}>
-                      <p className="text-slate-500 mb-0.5">{msg.sender?.name}</p>
-                      <div className={`inline-block max-w-xs px-3 py-1.5 rounded ${msg.senderId === booking.travelerId ? 'bg-zinc-900 text-white' : 'bg-white border border-slate-200'}`}>
-                        {msg.content}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Message Input */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Type message..."
-                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-zinc-900"
-                />
-                <button
-                  onClick={handleSendMessage}
-                  disabled={sendingMessage || !messageText.trim()}
-                  className="bg-zinc-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-zinc-800 disabled:opacity-50"
-                >
-                  {sendingMessage ? "..." : "Send"}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

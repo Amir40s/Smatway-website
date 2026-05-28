@@ -397,4 +397,83 @@ export function TabFilter<T extends string>({
 // Add this to your globals.css if not present:
 //   @keyframes shimmer { from { background-position: 200% 0 } to { background-position: -200% 0 } }
 
+// ─── Route Timeline Component ──────────────────────────────────────────────
+export function RouteTimeline({
+  departureCity,
+  departureAddress,
+  destinationCity,
+  destinationAddress,
+  stops = [],
+  className = "",
+}: {
+  departureCity: string;
+  departureAddress?: string;
+  destinationCity: string;
+  destinationAddress?: string;
+  stops?: { city: string; address: string }[];
+  className?: string;
+}) {
+  const allPoints = [
+    { city: departureCity, address: departureAddress, type: "start" as const },
+    ...stops.map((s, idx) => ({ city: s.city, address: s.address, type: "stop" as const, index: idx })),
+    { city: destinationCity, address: destinationAddress, type: "end" as const },
+  ];
+
+  return (
+    <div className={`relative flex flex-col gap-4 ${className}`}>
+      {allPoints.map((pt, i) => {
+        let dotClass = "bg-emerald-500 ring-emerald-100/50";
+        if (pt.type === "stop") dotClass = "bg-amber-500 ring-amber-100/50";
+        if (pt.type === "end") dotClass = "bg-rose-500 ring-rose-100/50";
+
+        const isLast = i === allPoints.length - 1;
+
+        return (
+          <div key={i} className="flex gap-3 relative">
+            {/* Connector graphics container */}
+            <div className="flex flex-col items-center flex-shrink-0 w-5">
+              {/* Dot */}
+              <div className={`relative flex h-5 w-5 items-center justify-center rounded-full bg-white ring-4 ${dotClass} shadow-sm z-10`}>
+                <div className="h-1.5 w-1.5 rounded-full bg-white" />
+              </div>
+              {/* Line down to the next dot */}
+              {!isLast && (
+                <div className="w-0.5 grow border-l-2 border-dashed border-slate-200 mt-1 mb-1 z-0 min-h-[1.5rem]" />
+              )}
+            </div>
+
+            {/* Text content */}
+            <div className="pb-1 flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-zinc-950">{pt.city}</span>
+                {pt.type === "stop" && (
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-100">
+                    Stop {pt.index !== undefined ? pt.index + 1 : ""}
+                  </span>
+                )}
+                {pt.type === "start" && (
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-100">
+                    Departure
+                  </span>
+                )}
+                {pt.type === "end" && (
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-100">
+                    Destination
+                  </span>
+                )}
+              </div>
+              {pt.address && (
+                <p className="text-[11px] text-slate-500 mt-0.5 font-medium leading-normal max-w-xl">
+                  {pt.address}
+                </p>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export { AnimatePresence };
+
