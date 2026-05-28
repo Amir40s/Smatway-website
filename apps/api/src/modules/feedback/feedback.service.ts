@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../../common/services/storage.service';
 import { MailService } from '../auth/mail/mail.service';
@@ -12,6 +12,11 @@ export class FeedbackService {
   ) {}
 
   async create(userId: string, rating: number, comment: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.accountType !== 'TRAVELER') {
+      throw new ForbiddenException('Only travelers can give feedback');
+    }
+
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       throw new BadRequestException(
         'Rating must be an integer between 1 and 5',
@@ -120,6 +125,9 @@ export class FeedbackService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.email) {
       throw new BadRequestException('User email not found');
+    }
+    if (user.accountType !== 'TRAVELER') {
+      throw new ForbiddenException('Only travelers can give feedback');
     }
     await this.mailService.sendJourneyFeedbackEmail(user.email, data);
     return { ok: true };

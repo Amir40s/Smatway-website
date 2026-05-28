@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -26,22 +26,32 @@ export class ReviewController {
   }
 
   @Get('transporter/:transporterId/reviews')
+  @UseGuards(JwtAuthGuard)
   getReviews(
+    @CurrentUser() user: User,
     @Param('transporterId') transporterId: string,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '5',
   ) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can read feedbacks');
+    }
     return this.reviewService.getTransporterReviews(transporterId, parseInt(page), parseInt(limit));
   }
 
   @Get('transporter/:transporterId/profile')
-  getFullProfile(@Param('transporterId') transporterId: string) {
-    return this.reviewService.getTransporterFullProfile(transporterId);
+  @UseGuards(JwtAuthGuard)
+  getFullProfile(@CurrentUser() user: User, @Param('transporterId') transporterId: string) {
+    return this.reviewService.getTransporterFullProfile(transporterId, user);
   }
 
   /** Public — latest platform-wide reviews for the marketing homepage Testimonials section. */
   @Get('recent')
-  getRecent(@Query('limit') limit: string = '6') {
+  @UseGuards(JwtAuthGuard)
+  getRecent(@CurrentUser() user: User, @Query('limit') limit: string = '6') {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can read feedbacks');
+    }
     return this.reviewService.getRecentPlatformReviews(parseInt(limit, 10) || 6);
   }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { FeedbackService } from './feedback.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -23,6 +23,9 @@ export class FeedbackController {
   @Get('mine')
   @UseGuards(JwtAuthGuard)
   listMine(@CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can read feedbacks');
+    }
     return this.feedbackService.listMine(user.id);
   }
 
@@ -34,7 +37,11 @@ export class FeedbackController {
 
   /** Public — site feedback for the marketing homepage Testimonials rotator. */
   @Get('recent')
-  getRecent(@Query('limit') limit: string = '6') {
+  @UseGuards(JwtAuthGuard)
+  getRecent(@CurrentUser() user: User, @Query('limit') limit: string = '6') {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can read feedbacks');
+    }
     return this.feedbackService.getRecent(parseInt(limit, 10) || 6);
   }
 

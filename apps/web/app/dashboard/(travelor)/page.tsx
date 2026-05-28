@@ -344,10 +344,6 @@ function TransportCard({ transport }: { transport: any }) {
               <span className="text-[11px] font-semibold text-zinc-950">
                 {transport.transporter?.name || "Unknown"}
               </span>
-              <span className="flex items-center gap-0.5 text-[10px] text-amber-600 font-semibold">
-                <StarIcon className="w-3 h-3 fill-current" />
-                {rating.toFixed(1)}
-              </span>
               <span className="text-[10px] text-slate-400">· {rides} rides</span>
             </button>
           </div>
@@ -471,35 +467,10 @@ function TransporterProfileModalInner({ loading, profile, onClose }: { loading: 
               </div>
             </div>
 
-            <div className="grid grid-cols-3 divide-x divide-slate-100 border-y border-slate-100">
-              <ProfileStat label="Rating" value={profile.averageRating?.toFixed(1) || "—"} accent />
+            <div className="grid grid-cols-2 divide-x divide-slate-100 border-y border-slate-100">
               <ProfileStat label="Completed" value={profile.totalCompletedRides || 0} />
               <ProfileStat label="Vehicles" value={profile.vehicleCount || 0} />
             </div>
-
-            {profile.reviews && profile.reviews.length > 0 && (
-              <div className="p-6">
-                <h3 className="text-[13px] font-semibold text-zinc-950 mb-3">Recent reviews</h3>
-                <div className="space-y-3">
-                  {profile.reviews.map((review: any) => (
-                    <div key={review.id} className="bg-slate-50 px-3.5 py-3 rounded-xl">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-[12px] font-semibold text-zinc-950">
-                          {review.traveler?.name || "Anonymous"}
-                        </p>
-                        <span className="flex items-center gap-0.5 text-[11px] text-amber-600 font-semibold">
-                          <StarIcon className="w-3 h-3 fill-current" />
-                          {review.rating}
-                        </span>
-                      </div>
-                      {review.feedback && (
-                        <p className="text-[11px] text-slate-600 line-clamp-2">{review.feedback}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
           </>
         ) : (

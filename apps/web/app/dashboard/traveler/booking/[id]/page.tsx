@@ -260,12 +260,6 @@ export default function BookingDetailPage() {
           <div className="min-w-0 flex-1">
             <p className="text-[15px] font-semibold text-zinc-950 truncate">{booking.transport.transporter?.name || "Unknown"}</p>
             <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] text-slate-500">
-              {transporterProfile?.averageRating !== undefined && (
-                <span className="inline-flex items-center gap-1 text-amber-600 font-semibold">
-                  <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-                  {Number(transporterProfile.averageRating).toFixed(1)}
-                </span>
-              )}
               {transporterProfile?.totalCompletedRides !== undefined && (
                 <span>{transporterProfile.totalCompletedRides} trips</span>
               )}
@@ -320,14 +314,7 @@ export default function BookingDetailPage() {
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 divide-x divide-slate-100 border-y border-slate-100">
-                  <div className="p-5 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <svg className="w-4 h-4 text-amber-500 fill-current" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-                      <p className="text-xl font-semibold tabular-nums text-amber-600">{transporterProfile.averageRating?.toFixed(1) || "—"}</p>
-                    </div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mt-1">Rating</p>
-                  </div>
+                <div className="grid grid-cols-2 divide-x divide-slate-100 border-y border-slate-100">
                   <div className="p-5 text-center">
                     <p className="text-xl font-semibold tabular-nums text-zinc-950">{transporterProfile.totalCompletedRides || 0}</p>
                     <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mt-1">Completed</p>
@@ -337,25 +324,6 @@ export default function BookingDetailPage() {
                     <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mt-1">Vehicles</p>
                   </div>
                 </div>
-                {transporterProfile.reviews?.length > 0 && (
-                  <div className="p-6">
-                    <h3 className="text-[13px] font-semibold text-zinc-950 mb-3">Recent reviews</h3>
-                    <div className="space-y-3">
-                      {transporterProfile.reviews.map((r: any) => (
-                        <div key={r.id} className="bg-slate-50 px-3.5 py-3 rounded-xl">
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="text-[12px] font-semibold text-zinc-950">{r.traveler?.name || "Anonymous"}</p>
-                            <span className="flex items-center gap-0.5 text-[11px] text-amber-600 font-semibold">
-                              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-                              {r.rating}
-                            </span>
-                          </div>
-                          {r.feedback && <p className="text-[11px] text-slate-600 line-clamp-2">{r.feedback}</p>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </>
             ) : (
               <div className="p-10 text-center text-sm text-red-600">Failed to load profile</div>

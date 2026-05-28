@@ -18,6 +18,12 @@ export class ReviewService {
 
     if (!booking) throw new NotFoundException('Booking not found');
     if (booking.travelerId !== travelerId) throw new ForbiddenException();
+
+    const user = await this.prisma.user.findUnique({ where: { id: travelerId } });
+    if (!user || user.accountType !== 'TRAVELER') {
+      throw new ForbiddenException('Only travelers can give feedback');
+    }
+
     if (booking.status !== BookingStatus.COMPLETED) {
       throw new BadRequestException('Booking must be completed before rating');
     }
@@ -141,7 +147,7 @@ export class ReviewService {
     return { reviews: withAvatars };
   }
 
-  async getTransporterFullProfile(transporterId: string) {
+  async getTransporterFullProfile(transporterId: string, requestingUser?: any) {
     const user = await this.prisma.user.findUnique({
       where: { id: transporterId },
       include: { profile: { select: { companyName: true } } },
@@ -150,7 +156,9 @@ export class ReviewService {
     if (!user) throw new NotFoundException('Transporter not found');
 
     const stats = await this.getTransporterStats(transporterId);
-    const { reviews } = await this.getTransporterReviews(transporterId, 1, 5);
+    const reviews = requestingUser?.role === 'ADMIN'
+      ? (await this.getTransporterReviews(transporterId, 1, 5)).reviews
+      : [];
 
     const vehicleCount = await this.prisma.vehicle.count({
       where: { transporterId, deleted: false },
