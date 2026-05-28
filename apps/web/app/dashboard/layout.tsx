@@ -32,7 +32,6 @@ const transporterNav = [
   { key: "/dashboard/routes", label: "Routes", icon: MapPinIcon },
   { key: "/dashboard/bookings", label: "Bookings", icon: BookOpenIcon },
   { key: "/dashboard/t-announcements", label: "Announcements", icon: MegaphoneIcon },
-  { key: "/dashboard/feedback", label: "Feedback", icon: StarIcon },
   { key: "/dashboard/payments", label: "Payments", icon: CreditCardIcon },
   { key: "/dashboard/profile", label: "Profile", icon: UserIcon },
   { key: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
@@ -54,7 +53,6 @@ const transporterTitles: Record<string, string> = {
   "/dashboard/routes": "Routes",
   "/dashboard/bookings": "Bookings",
   "/dashboard/t-announcements": "Announcements",
-  "/dashboard/feedback": "Feedback",
   "/dashboard/payments": "Payments",
   "/dashboard/profile": "Profile",
   "/dashboard/settings": "Settings",
@@ -74,6 +72,7 @@ const travelerOnlyPaths = new Set([
   "/dashboard/my-bookings",
   "/dashboard/announcements",
   "/dashboard/rate-journey",
+  "/dashboard/feedback",
 ]);
 
 function roleFromPath(pathname: string, fallback: "traveler" | "transporter") {

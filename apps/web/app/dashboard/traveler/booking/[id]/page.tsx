@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getBooking, cancelBooking, updatePaymentMethod, createReview, initChat, getChatByBooking, getMessages, sendMessage, getTransporterProfile, initializePayment, verifyPayment } from "@/lib/api";
 import { formatPrice } from "@/lib/currencies";
+import { countryName } from "@/lib/countries";
 import { RouteTimeline } from "@/app/dashboard/_Components/ui";
 
 const paymentMethods = [
@@ -215,9 +216,9 @@ export default function BookingDetailPage() {
 
         <div className="mt-3 mb-4">
           <RouteTimeline
-            departureCity={`${booking.transport.departureCity}, ${booking.transport.departureCountry}`}
+            departureCity={`${booking.transport.departureCity}, ${countryName(booking.transport.departureCountry)}`}
             departureAddress={booking.transport.departureAddress}
-            destinationCity={`${booking.transport.destinationCity}, ${booking.transport.destinationCountry}`}
+            destinationCity={`${booking.transport.destinationCity}, ${countryName(booking.transport.destinationCountry)}`}
             destinationAddress={booking.transport.destinationAddress}
             stops={booking.transport.stops}
           />

@@ -8,6 +8,7 @@ import { searchTransports, createBooking, getTransporterProfile } from "@/lib/ap
 import { getCurrentUser } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatPrice } from "@/lib/currencies";
+import { countryName } from "@/lib/countries";
 import {
   SearchIcon, CarIcon, MapPinIcon, CalendarIcon, ChevronDownIcon,
   UsersIcon, ArrowRightIcon, XIcon, StarIcon, SparklesIcon,
@@ -36,8 +37,9 @@ export default function SearchRidesPage() {
       try {
         const user = await getCurrentUser();
         if (user?.country) {
-          setDepCountry(user.country);
-          setDestCountry(user.country);
+          const full = countryName(user.country);
+          setDepCountry(full);
+          setDestCountry(full);
         }
         setDate(new Date().toISOString().split("T")[0]);
       } catch {}
@@ -306,9 +308,9 @@ function TransportCard({ transport }: { transport: any }) {
             </div>
             <div className="mt-3 mb-4">
               <RouteTimeline
-                departureCity={`${transport.departureCity}, ${transport.departureCountry}`}
+                departureCity={`${transport.departureCity}, ${countryName(transport.departureCountry)}`}
                 departureAddress={transport.departureAddress}
-                destinationCity={`${transport.destinationCity}, ${transport.destinationCountry}`}
+                destinationCity={`${transport.destinationCity}, ${countryName(transport.destinationCountry)}`}
                 destinationAddress={transport.destinationAddress}
                 stops={transport.stops}
               />

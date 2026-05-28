@@ -13,6 +13,7 @@ const mockPrisma = {
 };
 const mockJwt = { sign: jest.fn().mockReturnValue('signed-jwt') } as unknown as JwtService;
 const mockMail = { sendPasswordReset: jest.fn() };
+const mockStorage = { resolveImageUrl: jest.fn() };
 const mockRes = { cookie: jest.fn(), clearCookie: jest.fn() } as any;
 
 describe('AuthService', () => {
@@ -20,7 +21,7 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AuthService(mockPrisma as any, mockJwt, mockMail as any);
+    service = new AuthService(mockPrisma as any, mockJwt, mockMail as any, mockStorage as any);
   });
 
   describe('validateLocalUser', () => {
@@ -46,7 +47,7 @@ describe('AuthService', () => {
   describe('register', () => {
     it('throws ConflictException if email taken', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: '1' });
-      await expect(service.register({ email: 'a@b.com', password: 'pw' }, mockRes)).rejects.toThrow(
+      await expect(service.register({ email: 'a@b.com', password: 'pw' })).rejects.toThrow(
         ConflictException,
       );
     });
