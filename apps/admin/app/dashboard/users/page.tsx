@@ -509,6 +509,16 @@ export default function UsersPage() {
                     <p className="text-slate-400">Suspension Note</p>
                     <p className="font-semibold text-zinc-950 mt-1 line-clamp-2">{selectedUser.suspensionReason || "—"}</p>
                   </div>
+                  <div className="rounded-xl bg-slate-50 p-3 col-span-2">
+                    <p className="text-slate-400">Emergency Contact</p>
+                    {selectedUser.profile?.emergencyContactName || selectedUser.profile?.emergencyContactPhone ? (
+                      <p className="font-semibold text-zinc-950 mt-1">
+                        {selectedUser.profile.emergencyContactName || "Unnamed"} · {selectedUser.profile.emergencyContactPhone || "No Phone"}
+                      </p>
+                    ) : (
+                      <p className="font-semibold text-zinc-950 mt-1">—</p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">

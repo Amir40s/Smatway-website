@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Page, Reveal, PageHeader, PrimaryButton, spring } from "@/app/dashboard/_Components/ui";
 import { StarIcon } from "@/app/dashboard/_Components/Icons";
-import { createSiteFeedback, getMySiteFeedback, type SiteFeedbackEntry } from "@/lib/api";
+import { createSiteFeedback, getMySiteFeedback, getMyBookings, type SiteFeedbackEntry } from "@/lib/api";
 
 const RATING_LABELS: Record<number, string> = {
   1: "Frustrating",
@@ -24,6 +24,11 @@ export default function FeedbackPage() {
   const [history, setHistory] = useState<SiteFeedbackEntry[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
 
+  // Booking selector state
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [selectedBookingId, setSelectedBookingId] = useState("");
+  const [loadingBookings, setLoadingBookings] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     getMySiteFeedback()
@@ -33,10 +38,28 @@ export default function FeedbackPage() {
     return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => {
+    setLoadingBookings(true);
+    getMyBookings()
+      .then((data) => {
+        setBookings(data || []);
+        if (data && data.length > 0) {
+          const firstCompleted = data.find((b: any) => b.status === "COMPLETED") || data[0];
+          setSelectedBookingId(firstCompleted.id);
+        }
+      })
+      .catch((err) => console.error("Error loading bookings:", err))
+      .finally(() => setLoadingBookings(false));
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    if (!selectedBookingId) {
+      setError("Please select a booking reference to submit feedback for.");
+      return;
+    }
     if (rating < 1) {
       setError("Pick a star rating before submitting.");
       return;
@@ -47,15 +70,26 @@ export default function FeedbackPage() {
     }
     try {
       setSubmitting(true);
-      const created = await createSiteFeedback({ rating, comment: comment.trim() });
+      const created = await createSiteFeedback({
+        rating,
+        comment: comment.trim(),
+        bookingId: selectedBookingId,
+      });
       setHistory((prev) => [
-        { id: created.id, rating: created.rating, comment: created.comment, createdAt: created.createdAt, user: null },
+        {
+          id: created.id,
+          rating: created.rating,
+          comment: created.comment,
+          createdAt: created.createdAt,
+          bookingId: created.bookingId,
+          user: null,
+        },
         ...prev,
       ]);
       setRating(0);
       setHover(0);
       setComment("");
-      setSuccess("Thanks — your feedback is in and may appear on the homepage.");
+      setSuccess("Thanks — your feedback has been received and mapped to your booking.");
       setTimeout(() => setSuccess(null), 4000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not submit feedback.");
@@ -80,6 +114,38 @@ export default function FeedbackPage() {
           onSubmit={handleSubmit}
           className="rounded-2xl border border-slate-200/70 bg-white p-6 sm:p-8 shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
         >
+          {/* Booking selector dropdown widget */}
+          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 mb-6 space-y-2">
+            <label className="block text-[11px] font-bold text-zinc-700 uppercase tracking-wider">
+              Select Booking Reference for Feedback
+            </label>
+            {loadingBookings ? (
+              <p className="text-xs text-slate-400">Loading your recent journeys...</p>
+            ) : bookings.length === 0 ? (
+              <p className="text-xs text-slate-400">No journeys found to provide feedback on.</p>
+            ) : (
+              <div className="relative">
+                <select
+                  value={selectedBookingId}
+                  onChange={(e) => setSelectedBookingId(e.target.value)}
+                  className="w-full bg-white rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-zinc-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer appearance-none font-semibold pr-10"
+                >
+                  <option value="" disabled>-- Select a completed journey --</option>
+                  {bookings.map((b: any) => (
+                    <option key={b.id} value={b.id}>
+                      #{b.id.slice(0, 8).toUpperCase()} ({b.transport.departureCity} → {b.transport.destinationCity}) — {b.status}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Rating */}
           <div className="mb-7">
             <div className="flex items-center justify-between gap-3 mb-3">

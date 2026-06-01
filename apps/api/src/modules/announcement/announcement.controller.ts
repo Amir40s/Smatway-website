@@ -9,10 +9,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AnnouncementService } from './announcement.service';
-import { CreateAnnouncementDto } from './dto/create-announcement.dto';
+import { CreateAnnouncementDto, CreateAdminAnnouncementDto } from './dto/create-announcement.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User, AccountType } from '@prisma/client';
+import { User, AccountType, Role } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard)
 @Controller('announcements')
@@ -35,6 +35,14 @@ export class AnnouncementController {
     return this.announcementService.myAnnouncements(user.id);
   }
 
+  @Get('transporter/feed')
+  transporterFeed(@CurrentUser() user: User) {
+    if (user.accountType !== AccountType.TRANSPORTER) {
+      throw new ForbiddenException('Only transporters can view their announcements feed');
+    }
+    return this.announcementService.transporterAnnouncementsFeed();
+  }
+
   @Get('traveler')
   travelerAnnouncements(@CurrentUser() user: User) {
     if (user.accountType !== AccountType.TRAVELER) {
@@ -49,5 +57,31 @@ export class AnnouncementController {
       throw new ForbiddenException('Only transporters can delete announcements');
     }
     return this.announcementService.remove(id, user.id);
+  }
+
+  // --- ADMIN BROADCAST MANAGEMENT ENDPOINTS ---
+
+  @Post('admin')
+  createAdminAnnouncement(@CurrentUser() user: User, @Body() dto: CreateAdminAnnouncementDto) {
+    if (user.role !== Role.ADMIN) {
+      throw new ForbiddenException('Access denied. Administrators only.');
+    }
+    return this.announcementService.createAdminAnnouncement(dto);
+  }
+
+  @Get('admin')
+  getAllAnnouncementsAdmin(@CurrentUser() user: User) {
+    if (user.role !== Role.ADMIN) {
+      throw new ForbiddenException('Access denied. Administrators only.');
+    }
+    return this.announcementService.getAllAnnouncementsAdmin();
+  }
+
+  @Delete('admin/:id')
+  removeAdminAnnouncement(@Param('id') id: string, @CurrentUser() user: User) {
+    if (user.role !== Role.ADMIN) {
+      throw new ForbiddenException('Access denied. Administrators only.');
+    }
+    return this.announcementService.removeAdmin(id);
   }
 }

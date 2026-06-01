@@ -18,6 +18,7 @@ type Review = {
     name: string;
   } | null;
   booking?: {
+    id: string;
     transport?: {
       departureCity: string;
       destinationCity: string;
@@ -207,21 +208,32 @@ export default function ReviewsPage() {
       {/* Ratings stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Total Feedbacks</p>
+          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Total Journey Reviews</p>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-zinc-950">{totalFeedbacks}</span>
-            <span className="text-[10px] bg-slate-100 text-slate-600 rounded-full px-2 py-0.5 font-bold">Lifetime</span>
+            <span className="text-2xl font-bold text-zinc-950">{reviews.length}</span>
+            <span className="text-[10px] bg-slate-100 text-slate-600 rounded-full px-2 py-0.5 font-bold">Base on Bookings</span>
           </div>
         </div>
 
         <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Average Feedback Rating</p>
+          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Average Journey Rating</p>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-emerald-600">{avgRating} / 5.0</span>
+            <span className="text-2xl font-bold text-emerald-600">
+              {reviews.length > 0
+                ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length) * 10) / 10
+                : 0} / 5.0
+            </span>
             <span className="text-[10px] bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5 font-bold">Live</span>
           </div>
         </div>
- 
+
+        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Platform Feedbacks</p>
+          <div className="flex items-baseline justify-between mt-2">
+            <span className="text-2xl font-bold text-indigo-600">{totalFeedbacks}</span>
+            <span className="text-[10px] bg-indigo-50 text-indigo-700 rounded-full px-2 py-0.5 font-bold">Overall Site</span>
+          </div>
+        </div>
 
         <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Low Rating Attention</p>
@@ -232,61 +244,180 @@ export default function ReviewsPage() {
         </div>
       </div>
 
+      {/* PRIMARY SECTION: Booking-Based Passenger Journey Reviews */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-6 overflow-hidden">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-5">
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between border-b border-slate-100 pb-4 mb-5">
           <div>
-            <h3 className="text-[15px] font-bold text-zinc-950">Journey Reports & Passenger Ratings</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Real feedback submitted from the traveler dashboard and route review flows.</p>
+            <h3 className="text-[15px] font-bold text-zinc-950">Journey Reports & Passenger Ratings (Base on Bookings)</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Real journey ratings submitted by travelers for specific transporters and active bookings.</p>
           </div>
-          <span className="text-xs text-slate-400">{totalFeedbacks} items</span>
+          
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Search reviews..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-slate-50 rounded-xl border border-slate-200 px-3 py-1.5 text-xs text-zinc-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 w-full sm:w-48"
+            />
+            <select
+              value={ratingFilter}
+              onChange={(e) => setRatingFilter(e.target.value)}
+              className="bg-slate-50 rounded-xl border border-slate-200 px-3 py-1.5 text-xs text-zinc-950 focus:outline-none"
+            >
+              <option value="ALL">All Stars</option>
+              <option value="5">5 Stars</option>
+              <option value="4">4 Stars</option>
+              <option value="3">3 Stars</option>
+              <option value="2">2 Stars</option>
+              <option value="1">1 Star</option>
+            </select>
+          </div>
         </div>
 
-        {feedbackLoading ? (
-          <div className="py-12 text-center text-xs text-slate-400">Loading site feedback...</div>
-        ) : siteFeedback.length === 0 ? (
-          <div className="py-12 text-center bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-400">
-            No site feedback has been submitted yet.
+        {loading ? (
+          <div className="py-12 text-center text-xs text-slate-400">Loading traveler journey ratings...</div>
+        ) : filteredReviews.length === 0 ? (
+          <div className="py-12 text-center bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+            <svg className="w-10 h-10 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+            </svg>
+            <p className="text-sm font-semibold text-zinc-800 mb-1">No Journey Reviews Yet</p>
+            <p className="text-xs text-slate-400 max-w-xs mx-auto">
+              Journey reviews are submitted by travelers <strong>after completing a booking</strong>. They appear here once a traveler rates their transporter from their booking detail page.
+            </p>
+            <p className="text-xs text-slate-400 mt-2">
+              Looking for platform feedback? Check the{" "}
+              <a href="/dashboard/feedback" className="text-indigo-600 font-semibold hover:underline">Feedback page →</a>
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {siteFeedback.map((entry) => (
-              <div key={entry.id} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+            {filteredReviews.map((review) => (
+              <div key={review.id} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-center gap-3 min-w-0">
-                    {entry.user?.avatarUrl ? (
-                      <img src={entry.user.avatarUrl} alt={entry.user.name} className="w-10 h-10 rounded-xl object-cover ring-1 ring-slate-200" />
+                    {review.traveler?.avatarUrl ? (
+                      <img src={review.traveler.avatarUrl} alt={review.traveler.name} className="w-10 h-10 rounded-xl object-cover ring-1 ring-slate-200" />
                     ) : (
                       <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-700">
-                        {(entry.user?.name || "U").charAt(0).toUpperCase()}
+                        {(review.traveler?.name || "U").charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-zinc-950 truncate">{entry.user?.name || "Anonymous"}</p>
-                      <p className="text-[11px] text-slate-400">{entry.user?.country || "No country"} · {entry.user?.accountType || "TRAVELER"}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold text-zinc-950 truncate">{review.traveler?.name || "Anonymous"}</p>
+                        <span className="text-[10px] text-slate-400">rated</span>
+                        <p className="text-xs font-semibold text-emerald-600 truncate">{review.transporter?.name || "Transporter"}</p>
+                      </div>
+                      
+                      {review.booking?.transport && (
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Booking ID: <span className="font-mono text-[9px] font-semibold">{(review.booking.id || "").substring(0, 8).toUpperCase()}</span> · Route: {review.booking.transport.departureCity} → {review.booking.transport.destinationCity}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <StarRow rating={entry.rating} />
+                  
+                  <div className="flex items-center gap-2.5">
+                    <StarRow rating={review.rating} />
                     <span className="text-[11px] text-slate-400 tabular-nums">
-                      {new Date(entry.createdAt).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })}
+                      {new Date(review.createdAt).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })}
                     </span>
+                    <button
+                      onClick={() => handleDeleteReview(review.id)}
+                      disabled={actionLoading === review.id}
+                      className="p-1.5 border border-slate-200 rounded-lg hover:border-red-600 text-slate-400 hover:text-red-600 transition-colors shrink-0 disabled:opacity-60"
+                      title="Moderate/Delete Review"
+                    >
+                      {actionLoading === review.id ? (
+                        <ActionSpinner />
+                      ) : (
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
                 </div>
-                <p className="mt-3 text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap">{entry.comment}</p>
+                <p className="mt-3 text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap">"{review.feedback || "No feedback comment provided."}"</p>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Main Grid: Reviews List on Left, Transporter Analysis on Right */}
+      {/* SECONDARY GRID: Platform Feedback CTA & Transporter Ratings Leaderboard */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        {/* LEFT COLUMN: Reviews Listing & Moderation */}
-       
+        {/* LEFT COLUMN: Feedback page CTA */}
+        <div className="xl:col-span-2 bg-gradient-to-br from-indigo-50 to-slate-50 rounded-3xl border border-indigo-100/60 shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-6 flex flex-col justify-between gap-4">
+          <div>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-100/70 px-3 py-1 rounded-full mb-3">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+              Platform Feedback
+            </span>
+            <h3 className="text-[17px] font-bold text-zinc-950">Booking-Based Platform Feedback</h3>
+            <p className="text-sm text-slate-500 mt-2 leading-relaxed max-w-md">
+              Platform feedback is now tracked per booking, so you can see exactly which traveler gave which feedback on which journey. View the full breakdown in the dedicated Feedback module.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-center min-w-[90px]">
+                <p className="text-xs text-slate-400 font-medium">Total Entries</p>
+                <p className="text-lg font-bold text-zinc-950">{siteFeedback.length}</p>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-center min-w-[90px]">
+                <p className="text-xs text-slate-400 font-medium">Avg Rating</p>
+                <p className="text-lg font-bold text-emerald-600">{avgRating} / 5</p>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-center min-w-[90px]">
+                <p className="text-xs text-slate-400 font-medium">5-Star Rate</p>
+                <p className="text-lg font-bold text-indigo-600">{fiveStarPercent}%</p>
+              </div>
+            </div>
+          </div>
+          <a
+            href="/dashboard/feedback"
+            className="inline-flex items-center gap-2 self-start bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm"
+          >
+            View Full Feedback Report
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
 
-        {/* RIGHT COLUMN: Transporter Ratings Analysis */}
-        
+        {/* RIGHT COLUMN: Transporter Ratings Leaderboard */}
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-6 space-y-4">
+          <div>
+            <h3 className="text-[15px] font-bold text-zinc-950">Transporter Leaderboard</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Average passenger ratings and ride completion frequency.</p>
+          </div>
+
+          {transporterAnalysis.length === 0 ? (
+            <div className="py-12 text-center bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-400">
+              No rating analysis logged.
+            </div>
+          ) : (
+            <div className="space-y-3.5 max-h-[500px] overflow-y-auto pr-1">
+              {transporterAnalysis.map((t, idx) => (
+                <div key={idx} className="flex items-center justify-between gap-3 text-xs border-b border-slate-100 pb-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-zinc-950 truncate">{t.name}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{t.count} passenger reviews</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full">
+                      ★ {t.avg}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
       </div>
     </div>

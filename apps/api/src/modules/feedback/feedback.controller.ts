@@ -8,6 +8,7 @@ import { RateJourneyDto } from './dto/rate-journey.dto';
 class CreateSiteFeedbackDto {
   rating!: number;
   comment!: string;
+  bookingId?: string;
 }
 
 @Controller('feedback')
@@ -17,15 +18,12 @@ export class FeedbackController {
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@CurrentUser() user: User, @Body() dto: CreateSiteFeedbackDto) {
-    return this.feedbackService.create(user.id, dto.rating, dto.comment);
+    return this.feedbackService.create(user.id, dto.rating, dto.comment, dto.bookingId);
   }
 
   @Get('mine')
   @UseGuards(JwtAuthGuard)
   listMine(@CurrentUser() user: User) {
-    if (user.role !== 'ADMIN') {
-      throw new ForbiddenException('Only admin can read feedbacks');
-    }
     return this.feedbackService.listMine(user.id);
   }
 
@@ -35,14 +33,23 @@ export class FeedbackController {
     return this.feedbackService.rateJourney(user.id, dto);
   }
 
-  /** Public — site feedback for the marketing homepage Testimonials rotator. */
-  @Get('recent')
+   @Get('recent')
   @UseGuards(JwtAuthGuard)
   getRecent(@CurrentUser() user: User, @Query('limit') limit: string = '6') {
     if (user.role !== 'ADMIN') {
       throw new ForbiddenException('Only admin can read feedbacks');
     }
     return this.feedbackService.getRecent(parseInt(limit, 10) || 6);
+  }
+
+  /** Admin — all site feedback with booking + transport details. */
+  @Get('admin/all')
+  @UseGuards(JwtAuthGuard)
+  getAllForAdmin(@CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can access this endpoint');
+    }
+    return this.feedbackService.getAllForAdmin();
   }
 
   /** Public — aggregate site feedback stats for the homepage Feedback section. */

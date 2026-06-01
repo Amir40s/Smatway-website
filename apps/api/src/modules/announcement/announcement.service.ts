@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { CreateAnnouncementDto } from './dto/create-announcement.dto';
+import { CreateAnnouncementDto, CreateAdminAnnouncementDto } from './dto/create-announcement.dto';
 
 @Injectable()
 export class AnnouncementService {
@@ -25,6 +25,7 @@ export class AnnouncementService {
         transportId: dto.transportId || null,
         title: dto.title,
         content: dto.content,
+        targetAudience: 'TRAVELER',
       },
       include: {
         transport: true,
@@ -58,25 +59,32 @@ export class AnnouncementService {
       },
     });
 
-    if (bookings.length === 0) {
-      return [];
-    }
-
-    // 2. Extract unique transporter IDs and transport IDs
     const transporterIds = Array.from(new Set(bookings.map((b) => b.transport.transporterId)));
     const transportIds = Array.from(new Set(bookings.map((b) => b.transportId)));
 
-    // 3. Query announcements
+    // 2. Query announcements: pulls relevant admin system-wide or targeted announcements alongside regular transporter ones
     const announcements = await this.prisma.announcement.findMany({
       where: {
-        transporterId: {
-          in: transporterIds,
-        },
         OR: [
-          { transportId: null },
+          // Transporter announcements related to bookings
           {
-            transportId: {
-              in: transportIds,
+            transporterId: {
+              in: transporterIds,
+            },
+            OR: [
+              { transportId: null },
+              {
+                transportId: {
+                  in: transportIds,
+                },
+              },
+            ],
+          },
+          // Admin announcements targeted to TRAVELER or ALL
+          {
+            transporterId: null,
+            targetAudience: {
+              in: ['ALL', 'TRAVELER'],
             },
           },
         ],
@@ -102,8 +110,63 @@ export class AnnouncementService {
       transporter: ann.transporter ? {
         ...ann.transporter,
         name: ann.transporter.profile?.companyName || ann.transporter.name,
-      } : null,
+      } : {
+        name: 'SmatWay Administrator',
+      },
     }));
+  }
+
+  async transporterAnnouncementsFeed() {
+    return this.prisma.announcement.findMany({
+      where: {
+        transporterId: null,
+        targetAudience: {
+          in: ['ALL', 'TRANSPORTER'],
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async createAdminAnnouncement(dto: CreateAdminAnnouncementDto) {
+    return this.prisma.announcement.create({
+      data: {
+        title: dto.title,
+        content: dto.content,
+        targetAudience: dto.targetAudience,
+      },
+    });
+  }
+
+  async getAllAnnouncementsAdmin() {
+    return this.prisma.announcement.findMany({
+      include: {
+        transporter: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async removeAdmin(id: string) {
+    const announcement = await this.prisma.announcement.findUnique({
+      where: { id },
+    });
+    if (!announcement) {
+      throw new NotFoundException('Announcement not found');
+    }
+    return this.prisma.announcement.delete({
+      where: { id },
+    });
   }
 
   async remove(id: string, transporterId: string) {

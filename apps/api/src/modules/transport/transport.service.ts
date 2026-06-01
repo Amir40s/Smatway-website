@@ -150,8 +150,47 @@ export class TransportService {
       orderBy: { departureDateTime: 'asc' },
     });
 
+    // Chronological Stop-Order Filtering: Ensure traveler's departure precedes destination along the route.
+    const validTransports = transports.filter((transport) => {
+      const depCity = dto.departureCity ? dto.departureCity.trim().toLowerCase() : null;
+      const destCity = dto.destinationCity ? dto.destinationCity.trim().toLowerCase() : null;
+
+      let depIndex = -2;
+      let destIndex = -2;
+
+      // Resolve departure city index
+      if (!depCity) {
+        depIndex = -1;
+      } else if (transport.departureCity.toLowerCase().includes(depCity)) {
+        depIndex = -1;
+      } else {
+        const stopIdx = transport.stops.findIndex(s => s.city.toLowerCase().includes(depCity));
+        if (stopIdx !== -1) {
+          depIndex = stopIdx;
+        }
+      }
+
+      // Resolve destination city index
+      if (!destCity) {
+        destIndex = 999999;
+      } else if (transport.destinationCity.toLowerCase().includes(destCity)) {
+        destIndex = 999999;
+      } else {
+        const stopIdx = transport.stops.findIndex(s => s.city.toLowerCase().includes(destCity));
+        if (stopIdx !== -1) {
+          destIndex = stopIdx;
+        }
+      }
+
+      // Filter out if requested cities were not matched, or if departure is chronological after destination
+      if (depIndex === -2 || destIndex === -2 || depIndex >= destIndex) {
+        return false;
+      }
+      return true;
+    });
+
     return Promise.all(
-      transports.map(async (transport: any) => {
+      validTransports.map(async (transport: any) => {
         const stats = await this.getTransporterStats(transport.transporterId);
         return {
           ...transport,

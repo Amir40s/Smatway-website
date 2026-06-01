@@ -437,8 +437,8 @@ export type SiteFeedbackStats = {
   recommendRate: number | null;
 };
 
-export async function createSiteFeedback(data: { rating: number; comment: string }): Promise<{
-  id: string; rating: number; comment: string; createdAt: string;
+export async function createSiteFeedback(data: { rating: number; comment: string; bookingId?: string }): Promise<{
+  id: string; rating: number; comment: string; createdAt: string; bookingId?: string | null;
 }> {
   return apiPost('/feedback', data);
 }

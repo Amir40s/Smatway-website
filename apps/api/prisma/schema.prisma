@@ -304,6 +304,8 @@ model SiteFeedback {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  bookingId String?
+
   rating    Int      // 1..5
   comment   String
 
@@ -348,16 +350,23 @@ model Message {
   @@index([senderId])
 }
 
+enum AnnouncementAudience {
+  ALL
+  TRAVELER
+  TRANSPORTER
+}
+
 model Announcement {
-  id            String    @id @default(uuid())
-  transporterId String
-  transporter   User      @relation(fields: [transporterId], references: [id], onDelete: Cascade)
+  id            String               @id @default(uuid())
+  transporterId String?
+  transporter   User?                @relation(fields: [transporterId], references: [id], onDelete: Cascade)
   transportId   String?
-  transport     Transport? @relation(fields: [transportId], references: [id], onDelete: Cascade)
+  transport     Transport?           @relation(fields: [transportId], references: [id], onDelete: Cascade)
   title         String
   content       String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  targetAudience AnnouncementAudience @default(ALL)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 
   @@index([transporterId])
   @@index([transportId])
