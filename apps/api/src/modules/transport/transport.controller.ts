@@ -1,5 +1,5 @@
 import {
-  Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards,
+  Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, ForbiddenException,
 } from '@nestjs/common';
 import { TransportService } from './transport.service';
 import { CreateTransportDto } from './dto/create-transport.dto';
@@ -21,6 +21,15 @@ export class TransportController {
   @Get()
   search(@Query() dto: SearchTransportDto) {
     return this.transportService.search(dto);
+  }
+
+  @Get('admin/all')
+  @UseGuards(JwtAuthGuard)
+  getAllTransports(@CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can access all routes');
+    }
+    return this.transportService.getAllTransports();
   }
 
   @Get('my')

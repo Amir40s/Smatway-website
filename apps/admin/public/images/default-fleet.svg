@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="220" viewBox="0 0 320 220" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="24" y1="18" x2="292" y2="198" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#334155"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="88" y1="74" x2="232" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E2E8F0" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#F8FAFC" stop-opacity="0.06"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="220" rx="28" fill="url(#bg)"/>
+  <rect x="34" y="24" width="252" height="172" rx="24" stroke="#F8FAFC" stroke-opacity="0.1" stroke-width="2"/>
+  <path d="M74 130C74 117.85 83.85 108 96 108H224C236.15 108 246 117.85 246 130V152H74V130Z" fill="url(#glass)"/>
+  <path d="M94 118H226C230.418 118 234 121.582 234 126V152H86V126C86 121.582 89.5817 118 94 118Z" fill="#CBD5E1" fill-opacity="0.2"/>
+  <path d="M100 132H220C226.627 132 232 137.373 232 144V156H88V144C88 137.373 93.3726 132 100 132Z" fill="#94A3B8" fill-opacity="0.14"/>
+  <rect x="122" y="94" width="76" height="36" rx="12" fill="#F8FAFC" fill-opacity="0.12"/>
+  <rect x="136" y="80" width="48" height="28" rx="8" fill="#F8FAFC" fill-opacity="0.16"/>
+  <circle cx="112" cy="160" r="18" fill="#0F172A"/>
+  <circle cx="112" cy="160" r="8" fill="#F8FAFC"/>
+  <circle cx="206" cy="160" r="18" fill="#0F172A"/>
+  <circle cx="206" cy="160" r="8" fill="#F8FAFC"/>
+  <rect x="144" y="102" width="32" height="16" rx="6" fill="#F8FAFC" fill-opacity="0.18"/>
+  <path d="M132 120H188C193.523 120 198 124.477 198 130V132H122V130C122 124.477 126.477 120 132 120Z" fill="#F8FAFC" fill-opacity="0.12"/>
+  <path d="M148 160H172" stroke="#F8FAFC" stroke-opacity="0.2" stroke-width="2" stroke-linecap="round"/>
+</svg>

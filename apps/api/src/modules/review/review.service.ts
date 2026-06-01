@@ -175,4 +175,51 @@ export class ReviewService {
       reviews,
     };
   }
+
+  async getAllReviewsAdmin() {
+    const reviews = await this.prisma.review.findMany({
+      include: {
+        traveler: { select: { id: true, name: true, email: true, avatarUrl: true } },
+        transporter: { select: { id: true, name: true, profile: { select: { companyName: true } } } },
+        booking: {
+          include: {
+            transport: {
+              select: {
+                departureCity: true,
+                destinationCity: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return Promise.all(
+      reviews.map(async (r: any) => ({
+        ...r,
+        traveler: r.traveler
+          ? {
+              ...r.traveler,
+              avatarUrl: r.traveler.avatarUrl
+                ? await this.storageService.resolveImageUrl(r.traveler.avatarUrl)
+                : null,
+            }
+          : null,
+        transporter: r.transporter
+          ? {
+              ...r.transporter,
+              name: r.transporter.profile?.companyName || r.transporter.name,
+            }
+          : null,
+      })),
+    );
+  }
+
+  async deleteReviewAdmin(id: string) {
+    const review = await this.prisma.review.findUnique({ where: { id } });
+    if (!review) throw new NotFoundException('Review not found');
+
+    return this.prisma.review.delete({ where: { id } });
+  }
 }

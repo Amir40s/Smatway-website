@@ -113,4 +113,40 @@ export class VehicleService {
       imageUrl: await this.storageService.resolveImageUrl(vehicle.imageUrl),
     };
   }
+
+  async getAllVehicles() {
+    const vehicles = await this.prisma.vehicle.findMany({
+      where: { deleted: false },
+      include: {
+        transporter: {
+          select: {
+            id: true,
+            name: true,
+            profile: { select: { companyName: true } },
+          },
+        },
+        transports: {
+          select: {
+            id: true,
+            departureCity: true,
+            destinationCity: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return Promise.all(
+      vehicles.map(async (v) => {
+        let imageUrl = v.imageUrl;
+        if (imageUrl) {
+          imageUrl = await this.storageService.resolveImageUrl(imageUrl);
+        }
+        return {
+          ...v,
+          imageUrl,
+        };
+      }),
+    );
+  }
 }

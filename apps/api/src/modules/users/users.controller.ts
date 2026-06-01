@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Put,
+  Patch,
   Post,
   Delete,
   Body,
@@ -21,6 +22,7 @@ import { User } from '@prisma/client';
 import { UsersService } from './users.service';
 import { StorageService } from '../../common/services/storage.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { CreateEmergencyContactDto, UpdateEmergencyContactDto } from './dto/emergency-contact.dto';
 import { UpdateNotificationPreferencesDto } from './dto/notification-preferences.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -41,12 +43,62 @@ export class UsersController {
     return this.usersService.getAllTransporters();
   }
 
+  @Get('admin/users')
+  async getAllUsers(@CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can access users details');
+    }
+    return this.usersService.getAllUsers();
+  }
+
+  @Put('admin/users/:id')
+  async updateAdminUser(
+    @CurrentUser() user: User,
+    @Param('id') userId: string,
+    @Body() dto: AdminUpdateUserDto,
+  ) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can update users');
+    }
+    return this.usersService.updateAdminUser(userId, dto);
+  }
+
+  @Patch('admin/users/:id/suspend')
+  async toggleAdminUserSuspension(
+    @CurrentUser() user: User,
+    @Param('id') userId: string,
+  ) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can suspend users');
+    }
+    return this.usersService.toggleAdminUserSuspension(userId);
+  }
+
+  @Delete('admin/users/:id')
+  async deleteAdminUser(
+    @CurrentUser() user: User,
+    @Param('id') userId: string,
+  ) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can delete users');
+    }
+    return this.usersService.deleteAdminUser(userId);
+  }
+
   @Get('admin/stats')
   async getAdminStats(@CurrentUser() user: User) {
     if (user.role !== 'ADMIN') {
       throw new ForbiddenException('Only admin can access SmatWay dashboard stats');
     }
     return this.usersService.getAdminStats();
+  }
+
+  @Get('admin/activity-logs')
+  async getActivityLogs(@CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can access activity logs');
+    }
+    return this.usersService.getActivityLogs();
   }
 
   @Get('profile')

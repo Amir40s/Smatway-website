@@ -1,6 +1,6 @@
 import {
   Body, Controller, Delete, FileTypeValidator, Get, MaxFileSizeValidator, Param,
-  ParseFilePipe, Patch, Post, UploadedFile, UseGuards, UseInterceptors,
+  ParseFilePipe, Patch, Post, UploadedFile, UseGuards, UseInterceptors, ForbiddenException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { VehicleService } from './vehicle.service';
@@ -36,6 +36,14 @@ export class VehicleController {
   @Get('my')
   myVehicles(@CurrentUser() user: User) {
     return this.vehicleService.myVehicles(user.id);
+  }
+
+  @Get('admin/all')
+  getAllVehicles(@CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can access all vehicles');
+    }
+    return this.vehicleService.getAllVehicles();
   }
 
   @Get(':id')

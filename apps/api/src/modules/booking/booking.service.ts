@@ -349,4 +349,58 @@ export class BookingService {
       data: { paymentMethod },
     });
   }
+
+  async getAllBookings() {
+    const bookings = await this.prisma.booking.findMany({
+      include: {
+        traveler: { select: { id: true, name: true, email: true, phoneNumber: true, avatarUrl: true } },
+        transport: {
+          include: {
+            vehicle: { select: { name: true, plateNumber: true } },
+            transporter: { select: { id: true, name: true, profile: { select: { companyName: true } } } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return Promise.all(
+      bookings.map(async (booking: any) => ({
+        ...booking,
+        traveler: booking.traveler
+          ? {
+              ...booking.traveler,
+              avatarUrl: booking.traveler.avatarUrl
+                ? await this.storageService.resolveImageUrl(booking.traveler.avatarUrl)
+                : null,
+            }
+          : null,
+      })),
+    );
+  }
+
+  async updateBookingAdmin(id: string, dto: { status?: BookingStatus; paymentStatus?: PaymentStatus }) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id },
+      include: { transport: true },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    if (dto.status === BookingStatus.CANCELLED && booking.status !== BookingStatus.CANCELLED) {
+      await this.prisma.transport.update({
+        where: { id: booking.transportId },
+        data: { availableSeats: { increment: booking.seatsBooked } },
+      });
+    } else if (dto.status && dto.status !== BookingStatus.CANCELLED && booking.status === BookingStatus.CANCELLED) {
+      await this.prisma.transport.update({
+        where: { id: booking.transportId },
+        data: { availableSeats: { decrement: booking.seatsBooked } },
+      });
+    }
+
+    return this.prisma.booking.update({
+      where: { id },
+      data: dto,
+    });
+  }
 }

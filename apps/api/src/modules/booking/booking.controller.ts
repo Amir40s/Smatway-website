@@ -1,8 +1,9 @@
 import {
-  Body, Controller, Get, Param, Patch, Post, UseGuards,
+  Body, Controller, Get, Param, Patch, Post, UseGuards, ForbiddenException,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { UpdateBookingAdminDto } from './dto/update-booking-admin.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PaymentMethod, User } from '@prisma/client';
@@ -25,6 +26,26 @@ export class BookingController {
   @Get('my')
   myBookings(@CurrentUser() user: User) {
     return this.bookingService.myBookings(user.id);
+  }
+
+  @Get('admin/all')
+  getAllBookings(@CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can access all bookings');
+    }
+    return this.bookingService.getAllBookings();
+  }
+
+  @Patch('admin/:id')
+  updateBookingAdmin(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @Body() dto: UpdateBookingAdminDto,
+  ) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can update bookings');
+    }
+    return this.bookingService.updateBookingAdmin(id, dto);
   }
 
   @Get('transporter/all')

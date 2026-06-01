@@ -20,13 +20,22 @@ const prisma = new PrismaClient({ adapter });
 async function run() {
   try {
     const hash = await bcrypt.hash('admin123', 10);
-    await prisma.user.create({
-      data: {
+    await prisma.user.upsert({
+      where: { email: 'admin@smatway.com' },
+      update: {
+        name: 'Super Admin',
+        passwordHash: hash,
+        role: 'ADMIN',
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+      },
+      create: {
         email: 'admin@smatway.com',
         name: 'Super Admin',
         passwordHash: hash,
         role: 'ADMIN',
         emailVerified: true,
+        emailVerifiedAt: new Date(),
       },
     });
     console.log('✅ Admin user added successfully!');

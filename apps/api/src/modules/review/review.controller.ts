@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Param, Post, Query, UseGuards, Delete } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -53,5 +53,23 @@ export class ReviewController {
       throw new ForbiddenException('Only admin can read feedbacks');
     }
     return this.reviewService.getRecentPlatformReviews(parseInt(limit, 10) || 6);
+  }
+
+  @Get('admin/all')
+  @UseGuards(JwtAuthGuard)
+  getAllReviewsAdmin(@CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can read feedbacks');
+    }
+    return this.reviewService.getAllReviewsAdmin();
+  }
+
+  @Delete('admin/:id')
+  @UseGuards(JwtAuthGuard)
+  deleteReviewAdmin(@CurrentUser() user: User, @Param('id') id: string) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can moderate reviews');
+    }
+    return this.reviewService.deleteReviewAdmin(id);
   }
 }

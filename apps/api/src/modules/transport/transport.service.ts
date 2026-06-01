@@ -201,6 +201,28 @@ export class TransportService {
     };
   }
 
+  async getAllTransports() {
+    const transports = await this.prisma.transport.findMany({
+      include: {
+        transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } },
+        vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true } },
+        stops: { orderBy: { stopOrder: 'asc' } },
+        _count: { select: { bookings: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return Promise.all(
+      transports.map(async (transport: any) => ({
+        ...transport,
+        transporter: {
+          ...transport.transporter,
+          name: transport.transporter?.profile?.companyName || transport.transporter?.name || '',
+        },
+      })),
+    );
+  }
+
   async myRoutes(transporterId: string) {
     const transports = await this.prisma.transport.findMany({
       where: { transporterId },

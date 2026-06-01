@@ -1,16 +1,20 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { config as loadEnv } from 'dotenv';
+
+// 1. Initialize environment variables before importing AppModule
+const appEnvPath = resolve(__dirname, '..', '.env');
+if (existsSync(appEnvPath)) {
+  loadEnv({ path: appEnvPath });
+}
+
+// 2. Statically import modules
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { json, urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
-
-const appEnvPath = resolve(__dirname, '..', '.env');
-if (existsSync(appEnvPath)) {
-  loadEnv({ path: appEnvPath });
-}
+import { AppModule } from './app.module';
 
 const logger = new Logger('Bootstrap');
 const maxPortAttempts = 20;
@@ -25,9 +29,6 @@ function resolveStartPort(defaultPort: number): number {
 }
 
 async function bootstrap() {
-  // Lazy-load AppModule after dotenv has been applied.
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { AppModule } = require('./app.module') as typeof import('./app.module');
   const app = await NestFactory.create(AppModule);
 
   app.useWebSocketAdapter(new IoAdapter(app));
@@ -39,6 +40,7 @@ async function bootstrap() {
     'https://admin.smatway.com',
     'http://localhost:3000',
     'http://localhost:3001',
+    'http://localhost:3002',
     'http://localhost:3009',
   ];
 
@@ -65,7 +67,6 @@ async function bootstrap() {
 
   for (let attempt = 0; attempt < maxPortAttempts; attempt += 1) {
     // Try binding directly; this avoids race conditions between probe and listen.
-    // eslint-disable-next-line no-await-in-loop
     try {
       await app.listen(selectedPort, '0.0.0.0');
 
