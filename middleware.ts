@@ -1,13 +1,24 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = ['/signin', '/signup', '/verify-email', '/forgot-password', '/reset-password', '/api', '/_next', '/favicon.ico'];
+const PUBLIC_PATHS = [
+    '/',
+    '/how-it-works',
+    '/signin',
+    '/signup',
+    '/verify-email',
+    '/forgot-password',
+    '/reset-password',
+    '/api',
+    '/_next',
+    '/favicon.ico',
+];
 
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    // 1. Allow public paths and the landing page
-    if (pathname === '/' || PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+    // 1. Allow public paths, including the marketing pages and landing page.
+    if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
         return NextResponse.next();
     }
 

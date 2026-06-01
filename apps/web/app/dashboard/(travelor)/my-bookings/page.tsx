@@ -8,6 +8,7 @@ import io from "socket.io-client";
 import { getMyBookings, cancelBooking, initChat, getMessages } from "@/lib/api";
 import { formatPrice } from "@/lib/currencies";
 import { getCurrentUser } from "@/lib/auth";
+import { countryCodeFromName } from "@/lib/countries";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   BookOpenIcon, CarIcon, CalendarIcon, UsersIcon,
@@ -227,7 +228,7 @@ function BookingCard({
                 {booking.paymentStatus === "PAID" ? "Paid" : booking.paymentStatus === "FAILED" ? "Payment failed" : "Unpaid"}
               </StatusPill>
               <span className="text-[10px] text-slate-400 font-mono">
-                #{booking.id.slice(0, 6).toUpperCase()}
+                #{countryCodeFromName(booking.transport.departureCountry) || "XX"}-{booking.id.slice(0, 6).toUpperCase()}
               </span>
             </div>
 
@@ -267,6 +268,14 @@ function BookingCard({
               >
                 Details
               </Link>
+              {booking.status === "COMPLETED" && (
+                <Link
+                  href={`/dashboard/rate-journey?bookingId=${booking.id}`}
+                  className="text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-all active:scale-[0.98]"
+                >
+                  Rate Journey
+                </Link>
+              )}
               {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && booking.paymentStatus !== "PAID" && (
                 <button
                   onClick={onCancel}

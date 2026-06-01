@@ -35,4 +35,9 @@ export class AdminUpdateUserDto {
 
   @IsOptional()
   suspended?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  suspensionReason?: string;
 }

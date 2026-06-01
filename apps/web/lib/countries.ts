@@ -211,8 +211,18 @@ const rest: Country[] = [
 export const countries: Country[] = [...africa, ...rest];
 
 export const countryMap = new Map(countries.map(c => [c.code, c]));
+const countryNameToCode = new Map(countries.map((c) => [c.name.toLowerCase(), c.code]));
 
 export function countryName(code?: string | null): string {
   if (!code) return "";
   return countryMap.get(code)?.name ?? code;
+}
+
+export function countryCodeFromName(country?: string | null): string {
+  if (!country) return "";
+  const trimmed = country.trim();
+  if (/^[A-Za-z]{2}$/.test(trimmed)) {
+    return trimmed.toUpperCase();
+  }
+  return countryNameToCode.get(trimmed.toLowerCase()) ?? trimmed.slice(0, 2).toUpperCase();
 }

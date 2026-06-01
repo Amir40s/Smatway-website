@@ -58,7 +58,7 @@ export class VehicleService {
     return vehicle;
   }
 
-  async remove(id: string, transporterId: string) {
+  async remove(id: string, transporterId: string, reason?: string) {
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id },
     });
@@ -74,7 +74,29 @@ export class VehicleService {
 
     return this.prisma.vehicle.update({
       where: { id },
-      data: { deleted: true },
+      data: { deleteRequested: true, deleteReason: reason },
+    });
+  }
+
+  async approveDelete(id: string) {
+    const vehicle = await this.prisma.vehicle.findUnique({
+      where: { id },
+    });
+    if (!vehicle) throw new NotFoundException('Vehicle not found');
+    return this.prisma.vehicle.update({
+      where: { id },
+      data: { deleted: true, deleteRequested: false },
+    });
+  }
+
+  async rejectDelete(id: string) {
+    const vehicle = await this.prisma.vehicle.findUnique({
+      where: { id },
+    });
+    if (!vehicle) throw new NotFoundException('Vehicle not found');
+    return this.prisma.vehicle.update({
+      where: { id },
+      data: { deleteRequested: false },
     });
   }
 

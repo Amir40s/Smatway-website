@@ -95,6 +95,7 @@ export class TransportService {
     const where: any = {
       status: TransportStatus.ACTIVE,
       maxReachDateTime: { gte: now },
+      deleteRequested: false,
     };
 
     if (dto.transportType) where.transportType = dto.transportType;
@@ -303,11 +304,29 @@ export class TransportService {
     });
   }
 
-  async remove(id: string, transporterId: string) {
+  async remove(id: string, transporterId: string, reason?: string) {
     const transport = await this.prisma.transport.findUnique({ where: { id } });
     if (!transport) throw new NotFoundException('Transport not found');
     if (transport.transporterId !== transporterId) throw new ForbiddenException();
+    return this.prisma.transport.update({
+      where: { id },
+      data: { deleteRequested: true, deleteReason: reason },
+    });
+  }
+
+  async approveDelete(id: string) {
+    const transport = await this.prisma.transport.findUnique({ where: { id } });
+    if (!transport) throw new NotFoundException('Transport not found');
     return this.prisma.transport.delete({ where: { id } });
+  }
+
+  async rejectDelete(id: string) {
+    const transport = await this.prisma.transport.findUnique({ where: { id } });
+    if (!transport) throw new NotFoundException('Transport not found');
+    return this.prisma.transport.update({
+      where: { id },
+      data: { deleteRequested: false },
+    });
   }
 
   async deleteByVehicle(vehicleId: string, transporterId: string) {

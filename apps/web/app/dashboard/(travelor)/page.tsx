@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatPrice } from "@/lib/currencies";
 import { countryName } from "@/lib/countries";
+import { formatTransportType } from "@/lib/utils";
 import {
   SearchIcon, CarIcon, MapPinIcon, CalendarIcon, ChevronDownIcon,
   UsersIcon, ArrowRightIcon, XIcon, StarIcon, SparklesIcon,
@@ -19,18 +20,31 @@ import {
   PrimaryButton, SurfaceCard, spring, RouteTimeline,
 } from "@/app/dashboard/_Components/ui";
 
-const transportTypes = ["All", "CAR", "BUS", "VAN", "MINIBUS", "TRAIN"] as const;
+const transportTypes = [
+  { label: "All types", value: "All" },
+  { label: "Car", value: "CAR" },
+  { label: "Van", value: "VAN" },
+  { label: "Minibus", value: "MINIBUS" },
+  { label: "Bus", value: "BUS" },
+  { label: "Ferry", value: "FERRY" },
+  { label: "Train", value: "TRAIN" },
+] as const;
 
 export default function SearchRidesPage() {
   const [depCountry, setDepCountry] = useState("");
   const [depCity, setDepCity] = useState("");
   const [destCountry, setDestCountry] = useState("");
   const [destCity, setDestCity] = useState("");
-  const [transportType, setTransportType] = useState<(typeof transportTypes)[number]>("All");
+  const [transportType, setTransportType] = useState<(typeof transportTypes)[number]["value"]>("All");
   const [date, setDate] = useState("");
   const [results, setResults] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const selectedDate = date ? new Date(`${date}T00:00:00`) : null;
+  const isPastDate = !!selectedDate && selectedDate < today;
 
   useEffect(() => {
     (async () => {
@@ -47,6 +61,11 @@ export default function SearchRidesPage() {
   }, []);
 
   async function handleSearch() {
+    if (isPastDate) {
+      setError("Past dates are unavailable. Pick today or a future date.");
+      setResults(null);
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -129,13 +148,13 @@ export default function SearchRidesPage() {
                   />
                 </Field>
 
-                <Field label="Departure" icon={<CalendarIcon className="w-4 h-4" />}>
+                <Field label="Departure" icon={<CalendarIcon className="w-4 h-4" />} error={isPastDate}>
                   <input
                     type="date"
                     value={date}
                     min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-transparent text-sm text-zinc-900 focus:outline-none font-medium mt-1"
+                    className={`w-full bg-transparent text-sm focus:outline-none font-medium mt-1 ${isPastDate ? "text-rose-600" : "text-zinc-900"}`}
                   />
                 </Field>
 
@@ -147,8 +166,8 @@ export default function SearchRidesPage() {
                       className="w-full bg-transparent text-sm text-zinc-900 focus:outline-none font-medium appearance-none cursor-pointer pr-6"
                     >
                       {transportTypes.map((t) => (
-                        <option key={t} value={t}>
-                          {t === "All" ? "All types" : t.charAt(0) + t.slice(1).toLowerCase()}
+                        <option key={t.value} value={t.value}>
+                          {t.label}
                         </option>
                       ))}
                     </select>
@@ -231,9 +250,9 @@ export default function SearchRidesPage() {
 }
 
 // ─── Field ────────────────────────────────────────────────────────────────────
-function Field({ label, icon, children }: { label: string; icon?: React.ReactNode; children: React.ReactNode }) {
+function Field({ label, icon, children, error = false }: { label: string; icon?: React.ReactNode; children: React.ReactNode; error?: boolean }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 hover:border-slate-300 transition-colors">
+    <div className={`rounded-xl border bg-white px-3 py-2.5 transition-colors hover:border-slate-300 ${error ? "border-rose-300 bg-rose-50/40" : "border-slate-200"}`}>
       <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">
         {icon}
         {label}
@@ -301,7 +320,7 @@ function TransportCard({ transport }: { transport: any }) {
           {/* Route & transporter */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <StatusPill tone="emerald">{vehicle?.transportType || "ROUTE"}</StatusPill>
+              <StatusPill tone="emerald">{formatTransportType(vehicle?.transportType || "ROUTE")}</StatusPill>
               <span className="text-[11px] text-slate-400">
                 {vehicle?.model || "—"} · {vehicle?.plateNumber || "N/A"}
               </span>

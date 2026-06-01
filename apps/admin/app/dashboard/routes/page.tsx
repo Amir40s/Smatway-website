@@ -30,6 +30,8 @@ type Route = {
   fleetImageUrl: string | null;
   stops: { city: string; address: string }[];
   status: "ACTIVE" | "FULL" | "INACTIVE";
+  deleteRequested?: boolean;
+  deleteReason?: string | null;
 };
 
 function getInitials(label: string) {
@@ -143,6 +145,8 @@ export default function RoutesPage() {
               ? t.stops.map((stop: { city: string; address: string }) => ({ city: stop.city, address: stop.address }))
               : [],
             status: t.status as Route["status"],
+            deleteRequested: t.deleteRequested || false,
+            deleteReason: t.deleteReason || null,
           };
         });
         setRoutesList(parsed);
@@ -307,6 +311,36 @@ export default function RoutesPage() {
     if (!window.confirm("Are you sure you want to permanently delete this travel route? This action is irreversible.")) return;
     setRoutesList((curr) => curr.filter((r) => r.id !== id));
     setSelectedId(null);
+  };
+
+  const handleApproveDeleteRoute = async (id: string) => {
+    if (!window.confirm("Are you sure you want to approve this route deletion?")) return;
+    try {
+      const res = await fetch(`${apiBase}/transport/admin/${id}/approve-delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to approve deletion");
+      setRefreshIndex((p) => p + 1);
+    } catch (e: any) {
+      alert(e.message || "Failed to approve deletion");
+    }
+  };
+
+  const handleRejectDeleteRoute = async (id: string) => {
+    if (!window.confirm("Are you sure you want to reject this route deletion?")) return;
+    try {
+      const res = await fetch(`${apiBase}/transport/admin/${id}/reject-delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to reject deletion");
+      setRefreshIndex((p) => p + 1);
+    } catch (e: any) {
+      alert(e.message || "Failed to reject deletion");
+    }
   };
 
   const resetForm = () => {
@@ -489,18 +523,24 @@ export default function RoutesPage() {
                         {r.bookingCount} Reserved
                       </td>
                       <td className="py-4 px-4">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-boldcase tracking-[0.14em] ${
-                          r.status === "ACTIVE"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : r.status === "FULL"
-                            ? "bg-amber-50 text-amber-700"
-                            : "bg-rose-50 text-rose-700"
-                        }`}>
-                          {r.status}
-                        </span>
+                        {r.deleteRequested ? (
+                          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-bold tracking-[0.14em] bg-red-50 text-red-700 ring-1 ring-red-200 animate-pulse">
+                            DELETE PENDING
+                          </span>
+                        ) : (
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-bold tracking-[0.14em] ${
+                            r.status === "ACTIVE"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : r.status === "FULL"
+                              ? "bg-amber-50 text-amber-700"
+                              : "bg-rose-50 text-rose-700"
+                          }`}>
+                            {r.status}
+                          </span>
+                        )}
                       </td>
                       <td className="py-4 px-4 text-right">
-                        <div className="inline-flex items-center gap-1.5">
+                        <div className="inline-flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setSelectedId(r.id)}
                             className="p-1.5 border border-slate-200 rounded-lg hover:border-zinc-950 text-slate-500 hover:text-zinc-900 transition-all"
@@ -511,7 +551,24 @@ export default function RoutesPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                           </button>
-                        
+                          {r.deleteRequested && (
+                            <>
+                              <button
+                                onClick={() => handleApproveDeleteRoute(r.id)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-2.5 py-1 text-[9px] font-bold shadow-sm transition-all"
+                                title="Approve route deletion"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleRejectDeleteRoute(r.id)}
+                                className="border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg px-2.5 py-1 text-[9px] font-bold shadow-sm transition-all"
+                                title="Reject route deletion"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -542,6 +599,13 @@ export default function RoutesPage() {
                 Close View
               </button>
             </div>
+
+            {selected.deleteRequested && (
+              <div className="bg-rose-50 border border-rose-100 text-rose-700 text-xs p-4 rounded-2xl">
+                <p className="font-bold uppercase tracking-wider text-[10px] mb-1">Pending Deletion Request</p>
+                <p className="font-medium">Reason: {selected.deleteReason || "No reason provided."}</p>
+              </div>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2 text-xs">
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3">

@@ -286,8 +286,11 @@ export async function getMyRoutes(): Promise<any[]> {
   return apiGet<any[]>('/transport/my');
 }
 
-export async function deleteTransport(id: string): Promise<any> {
-  return apiDelete<any>(`/transport/${id}`);
+export async function deleteTransport(id: string, reason?: string): Promise<any> {
+  return apiRequest<any>(`/transport/${id}`, {
+    method: 'DELETE',
+    body: reason ? JSON.stringify({ reason }) : undefined,
+  });
 }
 
 // Booking
@@ -519,8 +522,11 @@ export async function updateVehicle(id: string, data: FormData): Promise<any> {
   return resData;
 }
 
-export async function deleteVehicle(id: string): Promise<any> {
-  return apiDelete<any>(`/vehicle/${id}`);
+export async function deleteVehicle(id: string, reason?: string): Promise<any> {
+  return apiRequest<any>(`/vehicle/${id}`, {
+    method: 'DELETE',
+    body: reason ? JSON.stringify({ reason }) : undefined,
+  });
 }
 
 // Password

@@ -139,6 +139,11 @@ export default function SignUpPage() {
     phoneNumber: "",
     country: "",
     preferredCurrency: "",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
+    bankName: "",
+    bankAccountNumber: "",
+    bankAccountHolderName: "",
     agreedToTerms: false,
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -194,6 +199,12 @@ export default function SignUpPage() {
       phoneNumber: formData.phoneNumber,
       country: formData.country,
       preferredCurrency: formData.preferredCurrency || undefined,
+      emergencyContactName: formData.emergencyContactName || undefined,
+      emergencyContactPhone: formData.emergencyContactPhone || undefined,
+      bankName: accountType === "transporter" ? formData.bankName || undefined : undefined,
+      bankAccountNumber: accountType === "transporter" ? formData.bankAccountNumber || undefined : undefined,
+      bankAccountHolderName: accountType === "transporter" ? formData.bankAccountHolderName || undefined : undefined,
+      agreedToTerms: formData.agreedToTerms,
       accountType,
     };
     console.log("%cRegistration Payload data:", "color: #0ea5e9;", payload);
@@ -210,6 +221,10 @@ export default function SignUpPage() {
         console.warn("%c[Validation Fail] Password & confirmation mismatch.", "color: #ef4444; font-weight: bold;");
         throw new Error("Passwords do not match");
       }
+      if (!formData.agreedToTerms) {
+        console.warn("%c[Validation Fail] Terms not accepted.", "color: #ef4444; font-weight: bold;");
+        throw new Error("You must accept the Terms of Use & Conditions to continue");
+      }
 
       console.log("%c📡 Sending registration payload to POST /auth/register...", "color: #10b981; font-weight: bold;");
       const startTime = Date.now();
@@ -221,6 +236,12 @@ export default function SignUpPage() {
         phoneNumber: formData.phoneNumber,
         country: formData.country,
         preferredCurrency: formData.preferredCurrency || undefined,
+        emergencyContactName: formData.emergencyContactName || undefined,
+        emergencyContactPhone: formData.emergencyContactPhone || undefined,
+        bankName: accountType === "transporter" ? formData.bankName || undefined : undefined,
+        bankAccountNumber: accountType === "transporter" ? formData.bankAccountNumber || undefined : undefined,
+        bankAccountHolderName: accountType === "transporter" ? formData.bankAccountHolderName || undefined : undefined,
+        agreedToTerms: formData.agreedToTerms,
         accountType,
       });
       const duration = Date.now() - startTime;
@@ -342,11 +363,13 @@ export default function SignUpPage() {
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="name" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Full name</label>
+            <label htmlFor="name" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">
+              {accountType === "transporter" ? "Owner / CEO full name" : "Full name"}
+            </label>
             <div className="relative flex items-center">
               <span className="absolute left-3.5 pointer-events-none"><UserIcon /></span>
               <input
-                id="name" type="text" placeholder="Your full name" required
+                id="name" type="text" placeholder={accountType === "transporter" ? "Owner / CEO full name" : "Your full name"} required
                 value={formData.name} onChange={handleInputChange}
                 className={inputBase}
               />
@@ -411,6 +434,37 @@ export default function SignUpPage() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="emergencyContactName" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Emergency contact name</label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 pointer-events-none"><UserIcon /></span>
+                <input
+                  id="emergencyContactName"
+                  type="text"
+                  placeholder="Relative or next of kin"
+                  value={formData.emergencyContactName}
+                  onChange={handleInputChange}
+                  className={inputBase}
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="emergencyContactPhone" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Emergency contact phone</label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 pointer-events-none"><PhoneIcon /></span>
+                <input
+                  id="emergencyContactPhone"
+                  type="text"
+                  placeholder="Emergency contact phone"
+                  value={formData.emergencyContactPhone}
+                  onChange={handleInputChange}
+                  className={inputBase}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Preferred currency — defaults based on country selection, user can override */}
           <div>
             <label htmlFor="preferredCurrency" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Preferred currency</label>
@@ -426,6 +480,50 @@ export default function SignUpPage() {
             />
             <p className="mt-1 text-[11px] text-zinc-500">Used for route prices. You can change this later in your profile.</p>
           </div>
+
+          {accountType === "transporter" && (
+            <div className="space-y-4 rounded-2xl border border-zinc-200 bg-zinc-50/60 p-4">
+              <div>
+                <h3 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Transporter payout details</h3>
+                <p className="mt-1 text-[11px] text-zinc-500">These details help us verify who receives settlement payments.</p>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <label htmlFor="bankName" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Bank name</label>
+                  <input
+                    id="bankName"
+                    type="text"
+                    placeholder="e.g. Access Bank"
+                    value={formData.bankName}
+                    onChange={handleInputChange}
+                    className={inputBase}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="bankAccountNumber" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Account number</label>
+                  <input
+                    id="bankAccountNumber"
+                    type="text"
+                    placeholder="Bank account number"
+                    value={formData.bankAccountNumber}
+                    onChange={handleInputChange}
+                    className={inputBase}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="bankAccountHolderName" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Account holder</label>
+                  <input
+                    id="bankAccountHolderName"
+                    type="text"
+                    placeholder="Account holder name"
+                    value={formData.bankAccountHolderName}
+                    onChange={handleInputChange}
+                    className={inputBase}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <label htmlFor="password" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Password</label>
@@ -477,6 +575,7 @@ export default function SignUpPage() {
               id="agreedToTerms"
               checked={formData.agreedToTerms}
               onChange={handleInputChange}
+              required
               className="mt-0.5 cursor-pointer accent-emerald-600 w-4 h-4"
             />
             <span className="text-[12.5px] leading-snug text-zinc-600">
@@ -495,7 +594,7 @@ export default function SignUpPage() {
           <div className="pt-2">
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !formData.agreedToTerms}
               className="group relative w-full overflow-hidden rounded-xl bg-zinc-950 px-5 py-3.5 text-[14px] font-semibold text-white shadow-[0_10px_24px_-8px_rgba(15,23,42,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] transition-all duration-300 hover:shadow-[0_14px_36px_-10px_rgba(16,185,129,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/20 to-emerald-500/0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />

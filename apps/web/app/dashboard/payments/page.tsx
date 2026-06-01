@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getTransportBookings } from "@/lib/api";
 import { formatPrice } from "@/lib/currencies";
+import { countryCodeFromName } from "@/lib/countries";
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -69,7 +70,7 @@ export default function PaymentsPage() {
               <tbody className="divide-y divide-slate-100">
                 {payments.map((booking) => (
                   <tr key={booking.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-5 py-4 text-zinc-900 font-mono text-xs">{booking.id.slice(0, 8).toUpperCase()}</td>
+                    <td className="px-5 py-4 text-zinc-900 font-mono text-xs">{`${countryCodeFromName(booking.transport?.departureCountry) || "XX"}-${booking.id.slice(0, 4).toUpperCase()}`}</td>
                     <td className="px-5 py-4 text-zinc-900">{booking.traveler?.name || "Unknown"}</td>
                     <td className="px-5 py-4 text-slate-500">
                       {booking.transport?.departureCity} → {booking.transport?.destinationCity}

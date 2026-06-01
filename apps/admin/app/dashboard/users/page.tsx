@@ -14,6 +14,14 @@ function formatCurrency(amount: number, currency = "USD") {
   }
 }
 
+function formatCountryCode(country?: string | null) {
+  return country?.trim().slice(0, 2).toUpperCase() || "XX";
+}
+
+function formatCountryAwareId(country: string | null | undefined, id: string) {
+  return `${formatCountryCode(country)}-${id.substring(0, 8).toUpperCase()}`;
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -135,11 +143,25 @@ export default function UsersPage() {
     const action = user.isSuspended ? "reactivate" : "suspend";
     if (!window.confirm(`Are you sure you want to ${action} this user?`)) return;
 
+    let suspensionReason: string | undefined;
+    if (!user.isSuspended) {
+      suspensionReason = window.prompt("Enter a suspension reason or comment before continuing:")?.trim() || undefined;
+      if (!suspensionReason) {
+        alert("A suspension reason is required.");
+        return;
+      }
+
+      if (!window.confirm(`Suspend ${user.name || user.email} with this reason?\n\n${suspensionReason}`)) return;
+    }
+
     try {
       setActionLoading({ userId: user.id, action: "suspend" });
       await adminRequest(`/users/admin/users/${user.id}`, {
         method: "PUT",
-        body: JSON.stringify({ suspended: !user.isSuspended }),
+        body: JSON.stringify({
+          suspended: !user.isSuspended,
+          suspensionReason,
+        }),
       });
       setRefreshIndex((value) => value + 1);
       setSelectedUserId(user.id);
@@ -177,7 +199,7 @@ export default function UsersPage() {
       user.role?.toLowerCase().includes(q) ||
       user.accountType?.toLowerCase().includes(q)
     );
-  });
+  }).sort((a, b) => (a.name || a.email || "").localeCompare(b.name || b.email || ""));
 
   const selectedUser = users.find((user) => user.id === selectedUserId) ?? null;
 
@@ -240,6 +262,7 @@ export default function UsersPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-[11px]">
                   {filteredUsers.map((user) => {
+                    const isTransporter = user.accountType === "TRANSPORTER";
                     return (
                       <tr key={user.id} className="transition-colors hover:bg-slate-50/50">
                         <td className="py-3.5 px-4">
@@ -274,7 +297,9 @@ export default function UsersPage() {
                         </td>
                         <td className="py-3.5 px-4 font-semibold text-zinc-700">{user.role}</td>
                         <td className="py-3.5 px-4 font-semibold text-zinc-700">
-                          {user.accountType === "TRANSPORTER" ? "Transporter" : "Traveler"}
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-boldcase tracking-[0.14em] ${isTransporter ? "bg-sky-50 text-sky-700" : "bg-emerald-50 text-emerald-700"}`}>
+                            {isTransporter ? "Transporter" : "Traveler"}
+                          </span>
                         </td>
                         <td className="py-3.5 px-4 text-zinc-600">{new Date(user.createdAt).toLocaleDateString()}</td>
                         <td className="py-3.5 px-4 font-semibold text-zinc-800">{user.totalBookings ?? 0}</td>
@@ -373,6 +398,14 @@ export default function UsersPage() {
                     <p className="text-slate-400">Registered</p>
                     <p className="font-semibold text-zinc-950 mt-1">{new Date(selectedUser.createdAt).toLocaleDateString()}</p>
                   </div>
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <p className="text-slate-400">Country</p>
+                    <p className="font-semibold text-zinc-950 mt-1">{selectedUser.country || "—"}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <p className="text-slate-400">Suspension Note</p>
+                    <p className="font-semibold text-zinc-950 mt-1 line-clamp-2">{selectedUser.suspensionReason || "—"}</p>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
@@ -414,7 +447,7 @@ export default function UsersPage() {
                             <p className="font-semibold text-zinc-950">{booking.route}</p>
                             <span className="text-[10px] text-slate-400">{booking.status}</span>
                           </div>
-                          <p className="mt-1 text-slate-400">{formatCurrency(booking.amount, booking.currency)} · {booking.paymentStatus}</p>
+                          <p className="mt-1 text-slate-400">{formatCurrency(booking.amount, booking.currency)} · {booking.paymentStatus} · ID: {formatCountryAwareId(selectedUser.country, booking.id)}</p>
                         </div>
                       ))
                     ) : (

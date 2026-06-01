@@ -33,20 +33,29 @@ type BookingRelation = {
   };
 };
 
+type TravelerProfile = {
+  emergencyContactName: string | null;
+  emergencyContactPhone: string | null;
+  travelerBio: string | null;
+};
+
 type User = {
   id: string;
   email: string;
   name: string | null;
   phoneNumber: string | null;
+  country: string | null;
   role: string;
   accountType: string;
   isSuspended: boolean;
+  suspensionReason?: string | null;
   createdAt: string;
   avatarUrl: string | null;
   bookings: BookingRelation[];
   totalBookings: number;
   bookingHistory: BookingItem[];
   paymentHistory: PaymentItem[];
+  profile?: TravelerProfile | null;
 };
 
 function formatCurrency(amount: number, currency = "USD") {
@@ -86,7 +95,9 @@ export default function TravelersPage() {
       })
       .then((data: User[]) => {
         // Filter for TRAVELER type users
-        const travelers = data.filter((u) => u.accountType === "TRAVELER");
+        const travelers = data
+          .filter((u) => u.accountType === "TRAVELER")
+          .sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
         setUsers(travelers);
       })
       .catch((e) => console.error("Error fetching travelers:", e))
@@ -94,13 +105,33 @@ export default function TravelersPage() {
   }, [apiBase, refreshIndex]);
 
   const handleToggleSuspension = async (userId: string) => {
+    const target = users.find((entry) => entry.id === userId);
+    if (!target) return;
+
+    if (!window.confirm(`Are you sure you want to ${target.isSuspended ? "reactivate" : "suspend"} this traveler?`)) return;
+
+    let suspensionReason: string | undefined;
+    if (!target.isSuspended) {
+      suspensionReason = window.prompt("Enter a suspension reason or comment before continuing:")?.trim() || undefined;
+      if (!suspensionReason) {
+        alert("A suspension reason is required.");
+        return;
+      }
+
+      if (!window.confirm(`Suspend ${target.name || target.email} with this reason?\n\n${suspensionReason}`)) return;
+    }
+
     setActionLoading(userId);
     try {
-      const res = await fetch(`${apiBase}/users/admin/users/${userId}/suspend`, {
-        method: "PATCH",
+      const res = await fetch(`${apiBase}/users/admin/users/${userId}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          suspended: !target.isSuspended,
+          suspensionReason,
+        }),
         credentials: "include",
       });
 
@@ -137,7 +168,7 @@ export default function TravelersPage() {
     if (statusFilter === "ACTIVE") return matchesSearch && !u.isSuspended;
     if (statusFilter === "SUSPENDED") return matchesSearch && u.isSuspended;
     return matchesSearch;
-  });
+  }).sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
 
   const selectedUser = users.find((u) => u.id === selectedUserId) || null;
 
@@ -285,6 +316,7 @@ export default function TravelersPage() {
                         <td className="py-4 px-4 font-medium text-zinc-700">
                           <p className="truncate max-w-[180px]">{u.email}</p>
                           <p className="text-[9px] text-slate-400 mt-0.5">{u.phoneNumber || "—"}</p>
+                          <p className="text-[9px] text-slate-400 mt-0.5">Country: {u.country || "—"}</p>
                         </td>
                         <td className="py-4 px-4 text-slate-500 font-medium">
                           {new Date(u.createdAt).toLocaleDateString("en-US", {
@@ -393,10 +425,23 @@ export default function TravelersPage() {
                       <p className="font-semibold text-zinc-800">{selectedUser.phoneNumber || "—"}</p>
                     </div>
                     <div>
+                      <p className="text-slate-400">Country of Registration</p>
+                      <p className="font-semibold text-zinc-800">{selectedUser.country || "—"}</p>
+                    </div>
+                    <div>
                       <p className="text-slate-400">Registration Timestamp</p>
                       <p className="font-semibold text-zinc-800">
                         {new Date(selectedUser.createdAt).toLocaleString()}
                       </p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Emergency Contact</p>
+                      <p className="font-semibold text-zinc-800">{selectedUser.profile?.emergencyContactName || "—"}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">{selectedUser.profile?.emergencyContactPhone || ""}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-slate-400">Suspension Note</p>
+                      <p className="font-semibold text-zinc-800">{selectedUser.suspensionReason || "—"}</p>
                     </div>
                   </div>
                 </div>
@@ -450,7 +495,7 @@ export default function TravelersPage() {
                             <div className="min-w-0">
                               <p className="font-semibold text-zinc-800 truncate">{route}</p>
                               <p className="text-[10px] text-slate-400 mt-0.5">
-                                Reserved: {new Date(booking.createdAt).toLocaleDateString()} · ID: #{booking.id.substring(0, 8).toUpperCase()}
+                                Reserved: {new Date(booking.createdAt).toLocaleDateString()} · ID: {selectedUser.country?.slice(0, 2).toUpperCase() || "XX"}-{booking.id.substring(0, 8).toUpperCase()}
                               </p>
                             </div>
                             <div className="text-right shrink-0">

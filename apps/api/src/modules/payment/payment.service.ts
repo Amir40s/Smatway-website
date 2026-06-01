@@ -5,6 +5,38 @@ import { firstValueFrom } from 'rxjs';
 import * as crypto from 'crypto';
 import { BookingStatus, PaymentStatus } from '@prisma/client';
 
+function normalizeCountryCode(country?: string | null): string {
+  if (!country) return 'XX';
+
+  const trimmed = country.trim();
+  if (/^[A-Za-z]{2}$/.test(trimmed)) {
+    return trimmed.toUpperCase();
+  }
+
+  const normalized = trimmed.toLowerCase();
+  const map: Record<string, string> = {
+    nigeria: 'NG',
+    ghana: 'GH',
+    kenya: 'KE',
+    uganda: 'UG',
+    tanzania: 'TZ',
+    rwanda: 'RW',
+    ethiopia: 'ET',
+    'south africa': 'ZA',
+    egypt: 'EG',
+    morocco: 'MA',
+    algeria: 'DZ',
+    tunisia: 'TN',
+    pakistan: 'PK',
+    india: 'IN',
+    'united arab emirates': 'AE',
+    'united kingdom': 'GB',
+    'united states': 'US',
+  };
+
+  return map[normalized] || trimmed.slice(0, 2).toUpperCase();
+}
+
 @Injectable()
 export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
@@ -58,7 +90,7 @@ export class PaymentService {
         paymentCurrency = 'USD';
       }
 
-      const txRef = `flw_${booking.id}_${Date.now()}`;
+      const txRef = `flw_${normalizeCountryCode(booking.transport.departureCountry)}_${booking.id}_${Date.now()}`;
       const fallbackCallbackUrl = `${process.env.WEB_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/traveler/booking/${booking.id}`;
       const finalCallbackUrl = callbackUrl || fallbackCallbackUrl;
       const redirectUrl = finalCallbackUrl.includes('?') 
@@ -147,7 +179,7 @@ export class PaymentService {
     const payload = {
       amount: amountInMinorUnits,
       email: booking.traveler.email,
-      reference: `${booking.id}_${Date.now()}`, // Using unique reference to avoid duplicate transaction errors
+      reference: `${normalizeCountryCode(booking.transport.departureCountry)}_${booking.id}_${Date.now()}`, // Country-aware and unique per booking
       currency: paymentCurrency,
       callback_url: callbackUrl || fallbackCallbackUrl,
       metadata: {
@@ -200,7 +232,7 @@ export class PaymentService {
         const data = response.data.data;
 
         if (response.data.status === 'success' && data.status === 'successful') {
-          const bookingId = data.tx_ref.split('_')[1];
+          const bookingId = data.tx_ref.split('_')[2];
 
           const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
           if (!booking) {
@@ -248,7 +280,7 @@ export class PaymentService {
       const data = response.data.data;
 
       if (data.status === 'success') {
-        const bookingId = data.reference.split('_')[0];
+        const bookingId = data.reference.split('_')[1];
 
         const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
         if (!booking) {
@@ -297,7 +329,7 @@ export class PaymentService {
     const data = payload.data;
 
     if (event === 'charge.success') {
-      const bookingId = data.reference.split('_')[0];
+      const bookingId = data.reference.split('_')[1];
       
       const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
       if (booking && booking.paymentStatus !== PaymentStatus.PAID) {
@@ -325,7 +357,7 @@ export class PaymentService {
     if (event === 'charge.completed' && data.status === 'successful') {
       const txRef = data.tx_ref;
       if (txRef && txRef.startsWith('flw_')) {
-        const bookingId = txRef.split('_')[1];
+        const bookingId = txRef.split('_')[2];
 
         const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
         if (booking && booking.paymentStatus !== PaymentStatus.PAID) {

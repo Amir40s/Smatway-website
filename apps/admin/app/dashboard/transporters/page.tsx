@@ -7,9 +7,44 @@ type TransporterProfile = {
   licenseNumber: string | null;
   licenseExpiry: string | null;
   vehicleType: string | null;
+  emergencyContactName: string | null;
+  emergencyContactPhone: string | null;
   bankName: string | null;
   bankAccountNumber: string | null;
   bankAccountHolderName: string | null;
+};
+
+type AdminVehicle = {
+  id: string;
+  name: string;
+  model: string;
+  plateNumber: string;
+  transportType: string;
+  imageUrl: string | null;
+  deleteRequested: boolean;
+};
+
+type AdminTransport = {
+  id: string;
+  departureCountry: string;
+  departureCity: string;
+  departureAddress: string;
+  destinationCountry: string;
+  destinationCity: string;
+  destinationAddress: string;
+  transportType: string;
+  price: string;
+  currency: string;
+  availableSeats: number;
+  departureDateTime: string;
+  status: string;
+  deleteRequested: boolean;
+  vehicle: {
+    id: string;
+    name: string;
+    model: string;
+    plateNumber: string;
+  } | null;
 };
 
 type Transporter = {
@@ -26,6 +61,8 @@ type Transporter = {
   fleetCount?: number;
   routeCount?: number;
   totalEarnings?: number;
+  vehicles?: AdminVehicle[];
+  transports?: AdminTransport[];
 };
 
 type WithdrawalRequest = {
@@ -38,6 +75,14 @@ type WithdrawalRequest = {
   requestedAt: string;
   status: "PENDING" | "PAID" | "REJECTED";
 };
+
+function formatCountryCode(country?: string | null) {
+  return country?.trim().slice(0, 2).toUpperCase() || "XX";
+}
+
+function formatCountryAwareId(country: string | null | undefined, id: string) {
+  return `${formatCountryCode(country)}-${id.substring(0, 8).toUpperCase()}`;
+}
 
 function formatCurrency(amount: number, currency = "USD") {
   try {
@@ -69,6 +114,8 @@ export default function TransportersPage() {
     email: "",
     phoneNumber: "",
     country: "",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
     companyName: "",
     licenseNumber: "",
     licenseExpiry: "",
@@ -125,7 +172,7 @@ export default function TransportersPage() {
         return res.json();
       })
       .then((data: Transporter[]) => {
-        setTransporters(data);
+        setTransporters(data.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email)));
       })
       .catch((e) => console.error("Error loading transporters:", e))
       .finally(() => setLoading(false));
@@ -162,6 +209,8 @@ export default function TransportersPage() {
           email: form.email,
           phoneNumber: form.phoneNumber,
           country: form.country,
+          emergencyContactName: form.emergencyContactName,
+          emergencyContactPhone: form.emergencyContactPhone,
           accountType: "TRANSPORTER",
         }),
       }).catch(async () => {
@@ -172,6 +221,8 @@ export default function TransportersPage() {
           email: form.email,
           phoneNumber: form.phoneNumber,
           country: form.country,
+          emergencyContactName: form.emergencyContactName,
+          emergencyContactPhone: form.emergencyContactPhone,
           createdAt: new Date().toISOString(),
         };
       });
@@ -184,6 +235,8 @@ export default function TransportersPage() {
           email: form.email,
           phoneNumber: form.phoneNumber,
           country: form.country,
+          emergencyContactName: form.emergencyContactName,
+          emergencyContactPhone: form.emergencyContactPhone,
           accountType: "TRANSPORTER",
         }),
       });
@@ -213,6 +266,8 @@ export default function TransportersPage() {
           licenseNumber: form.licenseNumber,
           licenseExpiry: form.licenseExpiry,
           vehicleType: form.vehicleType,
+          emergencyContactName: form.emergencyContactName,
+          emergencyContactPhone: form.emergencyContactPhone,
           bankName: form.bankName,
           bankAccountNumber: form.bankAccountNumber,
           bankAccountHolderName: form.bankAccountHolderName,
@@ -238,6 +293,8 @@ export default function TransportersPage() {
           email: form.email,
           phoneNumber: form.phoneNumber,
           country: form.country,
+          emergencyContactName: form.emergencyContactName,
+          emergencyContactPhone: form.emergencyContactPhone,
         }),
       });
       
@@ -256,6 +313,8 @@ export default function TransportersPage() {
                   licenseNumber: form.licenseNumber,
                   licenseExpiry: form.licenseExpiry,
                   vehicleType: form.vehicleType,
+                  emergencyContactName: form.emergencyContactName,
+                  emergencyContactPhone: form.emergencyContactPhone,
                   bankName: form.bankName,
                   bankAccountNumber: form.bankAccountNumber,
                   bankAccountHolderName: form.bankAccountHolderName,
@@ -283,6 +342,8 @@ export default function TransportersPage() {
                   licenseNumber: form.licenseNumber,
                   licenseExpiry: form.licenseExpiry,
                   vehicleType: form.vehicleType,
+                  emergencyContactName: form.emergencyContactName,
+                  emergencyContactPhone: form.emergencyContactPhone,
                   bankName: form.bankName,
                   bankAccountNumber: form.bankAccountNumber,
                   bankAccountHolderName: form.bankAccountHolderName,
@@ -316,6 +377,8 @@ export default function TransportersPage() {
       email: "",
       phoneNumber: "",
       country: "",
+      emergencyContactName: "",
+      emergencyContactPhone: "",
       companyName: "",
       licenseNumber: "",
       licenseExpiry: "",
@@ -333,6 +396,8 @@ export default function TransportersPage() {
       email: t.email || "",
       phoneNumber: t.phoneNumber || "",
       country: t.country || "",
+      emergencyContactName: t.profile?.emergencyContactName || "",
+      emergencyContactPhone: t.profile?.emergencyContactPhone || "",
       companyName: t.profile?.companyName || "",
       licenseNumber: t.profile?.licenseNumber || "",
       licenseExpiry: t.profile?.licenseExpiry?.split("T")[0] || "",
@@ -351,7 +416,7 @@ export default function TransportersPage() {
       t.profile?.companyName?.toLowerCase().includes(q) ||
       t.phoneNumber?.toLowerCase().includes(q)
     );
-  });
+  }).sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
 
   const selected = transporters.find((t) => t.id === selectedId) || null;
 
@@ -492,12 +557,16 @@ export default function TransportersPage() {
                             <p className="text-[9px] text-slate-400 mt-0.5 truncate max-w-[150px]">
                               Owner: {t.name || "Unnamed"}
                             </p>
+                            <p className="text-[9px] text-slate-400 mt-0.5 truncate max-w-[150px]">
+                              ID: {formatCountryAwareId(t.country, t.id)}
+                            </p>
                           </div>
                         </div>
                       </td>
                       <td className="py-4 px-4 font-medium text-zinc-700">
                         <p className="truncate max-w-[180px]">{t.email}</p>
                         <p className="text-[9px] text-slate-400 mt-0.5">{t.phoneNumber || "—"}</p>
+                        <p className="text-[9px] text-slate-400 mt-0.5">Emergency: {t.profile?.emergencyContactName || "—"}</p>
                       </td>
                       <td className="py-4 px-4 text-center font-semibold text-zinc-800">
                         {t.fleetCount} Vehicles
@@ -651,6 +720,7 @@ export default function TransportersPage() {
                     <div>
                       <h4 className="text-sm font-bold text-zinc-950">{selected.profile?.companyName || "No Company Specified"}</h4>
                       <p className="text-xs text-slate-400">{selected.email}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Transporter ID: {formatCountryAwareId(selected.country, selected.id)}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
@@ -661,29 +731,6 @@ export default function TransportersPage() {
                     <div className="bg-white border border-slate-100 rounded-xl p-2.5">
                       <p className="text-slate-400 text-[10px]">Routes</p>
                       <p className="font-semibold text-zinc-800 mt-0.5">{selected.routeCount} Active</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* License credentials check */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-                  <h4 className="text-xs font-semibold text-zinc-950 uppercase tracking-wide">License Document Check</h4>
-                  <div className="text-xs space-y-2.5">
-                    <div>
-                      <p className="text-slate-400">License Number</p>
-                      <p className="font-semibold text-zinc-800">{selected.profile?.licenseNumber || "LN-83901-202"}</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-400">License Expiry Date</p>
-                      <p className="font-semibold text-zinc-800">
-                        {selected.profile?.licenseExpiry 
-                          ? new Date(selected.profile.licenseExpiry).toLocaleDateString()
-                          : "12/10/2028"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-slate-400">Preferred Fleet Type</p>
-                      <p className="font-semibold text-zinc-800">{selected.profile?.vehicleType || "VIP Sprinters / Vans"}</p>
                     </div>
                   </div>
                 </div>
@@ -734,15 +781,15 @@ export default function TransportersPage() {
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div>
                       <p className="text-slate-400">Bank Name</p>
-                      <p className="font-semibold text-zinc-800">{selected.profile?.bankName || "Chase Bank"}</p>
+                      <p className="font-semibold text-zinc-800">{selected.profile?.bankName || "Not Provided"}</p>
                     </div>
                     <div>
                       <p className="text-slate-400">Account Number</p>
-                      <p className="font-semibold text-zinc-800">{selected.profile?.bankAccountNumber || "•••• 4892"}</p>
+                      <p className="font-semibold text-zinc-800">{selected.profile?.bankAccountNumber || "Not Provided"}</p>
                     </div>
                     <div className="col-span-2">
                       <p className="text-slate-400">Account Holder Name</p>
-                      <p className="font-semibold text-zinc-800">{selected.profile?.bankAccountHolderName || selected.name || "Owner Agent"}</p>
+                      <p className="font-semibold text-zinc-800">{selected.profile?.bankAccountHolderName || selected.name || "Not Provided"}</p>
                     </div>
                   </div>
                 </div>
@@ -751,27 +798,23 @@ export default function TransportersPage() {
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
                   <h4 className="text-xs font-bold text-zinc-950 uppercase tracking-wide">Fleet Assignment View</h4>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 text-xs border border-slate-100">
-                      <div>
-                        <p className="font-semibold text-zinc-800">Toyota HiAce Sprinter</p>
-                        <p className="text-[10px] text-slate-400">Plate: TX-839-A</p>
-                      </div>
-                      <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[9px] font-bold rounded-md">ACTIVE</span>
-                    </div>
-                    <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 text-xs border border-slate-100">
-                      <div>
-                        <p className="font-semibold text-zinc-800">Ford Transit 12-Seater</p>
-                        <p className="text-[10px] text-slate-400">Plate: UT-482-B</p>
-                      </div>
-                      <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[9px] font-bold rounded-md">ACTIVE</span>
-                    </div>
-                    <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 text-xs border border-slate-100">
-                      <div>
-                        <p className="font-semibold text-zinc-800">Mercedes Sprinter VIP</p>
-                        <p className="text-[10px] text-slate-400">Plate: NY-103-W</p>
-                      </div>
-                      <span className="bg-slate-100 text-slate-500 px-2 py-0.5 text-[9px] font-bold rounded-md">IN MAINTENANCE</span>
-                    </div>
+                    {!selected.vehicles || selected.vehicles.length === 0 ? (
+                      <p className="text-xs text-slate-400 py-2">No vehicles registered yet.</p>
+                    ) : (
+                      selected.vehicles.map((v) => (
+                        <div key={v.id} className="flex items-center justify-between bg-slate-50 rounded-xl p-3 text-xs border border-slate-100">
+                          <div>
+                            <p className="font-semibold text-zinc-800">{v.name} {v.model}</p>
+                            <p className="text-[10px] text-slate-400">Plate: {v.plateNumber} · Type: {v.transportType}</p>
+                          </div>
+                          <span className={`px-2 py-0.5 text-[9px] font-bold rounded-md ${
+                            v.deleteRequested ? "bg-rose-50 text-rose-700 animate-pulse" : "bg-emerald-50 text-emerald-700"
+                          }`}>
+                            {v.deleteRequested ? "DELETE PENDING" : "ACTIVE"}
+                          </span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -779,20 +822,30 @@ export default function TransportersPage() {
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
                   <h4 className="text-xs font-bold text-zinc-950 uppercase tracking-wide">Active Scheduled Routes</h4>
                   <div className="space-y-2">
-                    <div className="bg-slate-50 rounded-xl p-3 text-xs border border-slate-100 flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-zinc-800">Houston, TX → Austin, TX</p>
-                        <p className="text-[10px] text-slate-400">Departure: 09:30 AM · Sprinter</p>
-                      </div>
-                      <p className="font-bold text-zinc-950">$45.00</p>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl p-3 text-xs border border-slate-100 flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-zinc-800">Dallas, TX → Houston, TX</p>
-                        <p className="text-[10px] text-slate-400">Departure: 01:15 PM · Ford Transit</p>
-                      </div>
-                      <p className="font-bold text-zinc-950">$55.00</p>
-                    </div>
+                    {!selected.transports || selected.transports.length === 0 ? (
+                      <p className="text-xs text-slate-400 py-2">No routes registered yet.</p>
+                    ) : (
+                      selected.transports.map((r) => (
+                        <div key={r.id} className="bg-slate-50 rounded-xl p-3 text-xs border border-slate-100 flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-zinc-800">
+                              {r.departureCity}, {formatCountryCode(r.departureCountry)} → {r.destinationCity}, {formatCountryCode(r.destinationCountry)}
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              Departure: {new Date(r.departureDateTime).toLocaleString()} · {r.vehicle?.name || "No Vehicle"}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-zinc-950">{formatCurrency(Number(r.price), r.currency)}</p>
+                            {r.deleteRequested && (
+                              <span className="inline-block mt-1 bg-rose-50 text-rose-700 px-2 py-0.5 text-[9px] font-bold rounded-md animate-pulse">
+                                DELETE PENDING
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -830,7 +883,7 @@ export default function TransportersPage() {
                 <h4 className="col-span-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Account Credentials</h4>
                 
                 <label className="grid gap-2 text-xs font-medium text-slate-500">
-                  Full Name / Contact Person
+                  Owner / CEO Full Name
                   <input
                     required
                     value={form.name}
@@ -869,6 +922,26 @@ export default function TransportersPage() {
                     onChange={(e) => setForm((c) => ({ ...c, country: e.target.value }))}
                     className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-zinc-950 outline-none focus:border-zinc-950 focus:bg-white transition-all"
                     placeholder="E.g. USA"
+                  />
+                </label>
+
+                <label className="grid gap-2 text-xs font-medium text-slate-500">
+                  Emergency Contact Name
+                  <input
+                    value={form.emergencyContactName}
+                    onChange={(e) => setForm((c) => ({ ...c, emergencyContactName: e.target.value }))}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-zinc-950 outline-none focus:border-zinc-950 focus:bg-white transition-all"
+                    placeholder="E.g. Jane Doe"
+                  />
+                </label>
+
+                <label className="grid gap-2 text-xs font-medium text-slate-500">
+                  Emergency Contact Phone
+                  <input
+                    value={form.emergencyContactPhone}
+                    onChange={(e) => setForm((c) => ({ ...c, emergencyContactPhone: e.target.value }))}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-zinc-950 outline-none focus:border-zinc-950 focus:bg-white transition-all"
+                    placeholder="E.g. +1 555 123 4567"
                   />
                 </label>
 
@@ -915,6 +988,7 @@ export default function TransportersPage() {
                     <option value="VAN">Vans / MiniBus</option>
                     <option value="CAR">Standard Sedan</option>
                     <option value="BUS">Coach Buses</option>
+                    <option value="FERRY">Ferry</option>
                     <option value="TRAIN">Express Rail</option>
                   </select>
                 </label>

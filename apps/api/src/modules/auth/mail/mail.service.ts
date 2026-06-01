@@ -15,7 +15,7 @@ export class MailService {
 
     this.smtpConfigured = smtpUser.length > 0 && smtpPass.length > 0;
     this.sendingEnabled = /^(true|1)$/i.test(process.env.OTP_SEND_EMAIL ?? '');
-    this.from = process.env.MAIL_FROM ?? smtpUser;
+    this.from = process.env.MAIL_FROM?.trim() || 'SmatWay <noreply@smatway.com>';
 
     if (!this.sendingEnabled) {
       this.logger.warn(

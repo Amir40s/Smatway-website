@@ -34,7 +34,8 @@ export class AuthService {
   ) { }
 
   async validateLocalUser(email: string, password: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const normalized = email?.trim().toLowerCase();
+    const user = await this.prisma.user.findUnique({ where: { email: normalized } });
     if (!user?.passwordHash) return null;
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) return null;
@@ -45,7 +46,13 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto): Promise<{ email: string; pendingVerification: true }> {
-    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (dto.agreedToTerms !== true) {
+      throw new BadRequestException('You must accept the terms and conditions');
+    }
+
+    const normalizedEmail = dto.email?.trim().toLowerCase();
+
+    const existing = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       // Allow re-registering an unverified account (overwrite profile data, resend OTP)
       if (!existing.emailVerified) {
@@ -53,6 +60,7 @@ export class AuthService {
         const updated = await this.prisma.user.update({
           where: { id: existing.id },
           data: {
+            email: normalizedEmail ?? existing.email,
             name: dto.name ?? existing.name,
             phoneNumber: dto.phoneNumber ?? existing.phoneNumber,
             country: dto.country ?? existing.country,
@@ -64,8 +72,23 @@ export class AuthService {
         // Ensure the UserProfile row exists — older accounts may not have one.
         await this.prisma.userProfile.upsert({
           where: { userId: existing.id },
-          update: { companyName: dto.businessName ?? undefined },
-          create: { userId: existing.id, companyName: dto.businessName ?? undefined },
+          update: {
+            companyName: dto.businessName ?? undefined,
+            emergencyContactName: dto.emergencyContactName ?? undefined,
+            emergencyContactPhone: dto.emergencyContactPhone ?? undefined,
+            bankName: dto.bankName ?? undefined,
+            bankAccountNumber: dto.bankAccountNumber ?? undefined,
+            bankAccountHolderName: dto.bankAccountHolderName ?? undefined,
+          },
+          create: {
+            userId: existing.id,
+            companyName: dto.businessName ?? undefined,
+            emergencyContactName: dto.emergencyContactName ?? undefined,
+            emergencyContactPhone: dto.emergencyContactPhone ?? undefined,
+            bankName: dto.bankName ?? undefined,
+            bankAccountNumber: dto.bankAccountNumber ?? undefined,
+            bankAccountHolderName: dto.bankAccountHolderName ?? undefined,
+          },
         });
         await this.issueVerificationOtp(updated);
         return { email: updated.email, pendingVerification: true };
@@ -76,7 +99,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
     const user = await this.prisma.user.create({
       data: {
-        email: dto.email,
+        email: normalizedEmail,
         name: dto.name,
         phoneNumber: dto.phoneNumber,
         country: dto.country,
@@ -84,7 +107,16 @@ export class AuthService {
         passwordHash,
         accountType: this.normalizeAccountType(dto.accountType),
         // Auto-create an empty profile so Settings pages work immediately after signup.
-        profile: { create: { companyName: dto.businessName ?? undefined } },
+        profile: {
+          create: {
+            companyName: dto.businessName ?? undefined,
+            emergencyContactName: dto.emergencyContactName ?? undefined,
+            emergencyContactPhone: dto.emergencyContactPhone ?? undefined,
+            bankName: dto.bankName ?? undefined,
+            bankAccountNumber: dto.bankAccountNumber ?? undefined,
+            bankAccountHolderName: dto.bankAccountHolderName ?? undefined,
+          },
+        },
       },
     });
 

@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getBooking, cancelBooking, updatePaymentMethod, createReview, initChat, getChatByBooking, getMessages, sendMessage, getTransporterProfile, initializePayment, verifyPayment } from "@/lib/api";
 import { formatPrice } from "@/lib/currencies";
-import { countryName } from "@/lib/countries";
+import { countryName, countryCodeFromName } from "@/lib/countries";
 import { RouteTimeline } from "@/app/dashboard/_Components/ui";
 
 const paymentMethods = [
@@ -199,12 +199,13 @@ export default function BookingDetailPage() {
 
   const dep = new Date(booking.transport.departureDateTime);
   const isCancelled = booking.status === "CANCELLED";
+  const bookingCode = `${countryCodeFromName(booking.transport.departureCountry) || "XX"}-${id.slice(0, 4).toUpperCase()}`;
 
   return (
     <div className="max-w-2xl space-y-5">
       <div className="mb-2">
         <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Booking Details</h1>
-        <p className="text-sm text-slate-400 mt-0.5">Booking #{id.slice(0, 8).toUpperCase()}</p>
+        <p className="text-sm text-slate-400 mt-0.5">Booking {bookingCode}</p>
       </div>
 
       {/* Booking Summary */}

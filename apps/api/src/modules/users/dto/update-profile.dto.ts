@@ -48,6 +48,16 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   @MaxLength(100)
+  emergencyContactName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  emergencyContactPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
   companyName?: string;
 
   @IsOptional()

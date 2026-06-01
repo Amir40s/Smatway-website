@@ -235,8 +235,8 @@ export default function ReviewsPage() {
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-6 overflow-hidden">
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-5">
           <div>
-            <h3 className="text-[15px] font-bold text-zinc-950">Site Feedback Inbox</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Real feedback submitted from the traveler dashboard.</p>
+            <h3 className="text-[15px] font-bold text-zinc-950">Journey Reports & Passenger Ratings</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Real feedback submitted from the traveler dashboard and route review flows.</p>
           </div>
           <span className="text-xs text-slate-400">{totalFeedbacks} items</span>
         </div>

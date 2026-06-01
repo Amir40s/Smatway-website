@@ -108,6 +108,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       active: pathname === "/dashboard/reviews",
     },
     {
+      label: "Announcements",
+      href: "/dashboard/settings#announcements",
+      icon: (
+        <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5l-7 4v6l7 4V5zm0 0l7 4v6l-7 4V5zm7 4l3 2-3 2" />
+        </svg>
+      ),
+      active: pathname === "/dashboard/settings",
+    },
+    {
       label: "Activity Logs",
       href: "/dashboard/activities",
       icon: (
@@ -205,7 +215,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               : pathname === "/dashboard/reviews"
               ? "Feedback & Reviews"
               : pathname === "/dashboard/settings"
-              ? "System Settings"
+                ? "System Settings & Announcements"
               : "Routes Management"}
           </h2>
 

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { Menu as MenuIcon, X as CloseIcon } from "lucide-react";
-import { RequireLoggedOut } from "@/app/_components/RequireLoggedOut";
 import { useLocale, useT } from "@/lib/i18n/LocaleProvider";
 import { locales as supportedLocales } from "@/lib/i18n/locales";
 
@@ -356,12 +355,10 @@ function Footer() {
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <RequireLoggedOut>
-      <div className="min-h-[100dvh] bg-gray-50" style={{ scrollBehavior: "smooth" }}>
-        <Navbar />
-        {children}
-        <Footer />
-      </div>
-    </RequireLoggedOut>
+    <div className="min-h-[100dvh] bg-gray-50" style={{ scrollBehavior: "smooth" }}>
+      <Navbar />
+      {children}
+      <Footer />
+    </div>
   );
 }

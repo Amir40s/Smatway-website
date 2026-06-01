@@ -22,6 +22,7 @@ enum TransportType {
   VAN
   MINIBUS
   TRAIN
+  FERRY
 }
 
 enum TransportStatus {
@@ -64,6 +65,7 @@ model User {
   emailVerifiedAt   DateTime?
   preferredCurrency String?   // ISO 4217 code (e.g. "NGN", "GHS", "USD")
   isSuspended    Boolean      @default(false)
+  suspensionReason String?
   deletedAt      DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -181,6 +183,8 @@ model Vehicle {
   transportType TransportType
   imageUrl      String?
   deleted       Boolean  @default(false)
+  deleteRequested Boolean @default(false)
+  deleteReason    String?
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -210,6 +214,8 @@ model Transport {
   maxReachDateTime   DateTime
 
   status             TransportStatus @default(ACTIVE)
+  deleteRequested    Boolean         @default(false)
+  deleteReason       String?
 
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt

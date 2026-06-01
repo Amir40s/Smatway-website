@@ -11,6 +11,7 @@ import {
 } from "@/lib/api";
 import { formatPrice } from "@/lib/currencies";
 import { getCurrentUser } from "@/lib/auth";
+import { countryCodeFromName } from "@/lib/countries";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   BookOpenIcon, ClockIcon, CheckCircleIcon, MailIcon,
@@ -262,7 +263,7 @@ function BookingRow({
                   {booking.status}
                 </StatusPill>
                 <span className="text-[10px] text-slate-400 font-mono">
-                  #{booking.id.slice(0, 6).toUpperCase()}
+                  #{countryCodeFromName(booking.transport.departureCountry) || "XX"}-{booking.id.slice(0, 6).toUpperCase()}
                 </span>
               </div>
               <p className="text-[14px] font-semibold text-zinc-950 truncate">

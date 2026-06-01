@@ -85,6 +85,8 @@ export class UsersService {
             licenseNumber: true,
             licenseExpiry: true,
             vehicleType: true,
+            emergencyContactName: true,
+            emergencyContactPhone: true,
             bankName: true,
             bankAccountNumber: true,
             bankAccountHolderName: true,
@@ -92,12 +94,40 @@ export class UsersService {
         },
         vehicles: {
           where: { deleted: false },
-          select: { id: true },
+          select: {
+            id: true,
+            name: true,
+            model: true,
+            plateNumber: true,
+            transportType: true,
+            imageUrl: true,
+            deleteRequested: true,
+          },
         },
         transports: {
           select: {
             id: true,
+            departureCountry: true,
+            departureCity: true,
+            departureAddress: true,
+            destinationCountry: true,
+            destinationCity: true,
+            destinationAddress: true,
+            transportType: true,
+            price: true,
             currency: true,
+            availableSeats: true,
+            departureDateTime: true,
+            status: true,
+            deleteRequested: true,
+            vehicle: {
+              select: {
+                id: true,
+                name: true,
+                model: true,
+                plateNumber: true,
+              },
+            },
             bookings: {
               where: { paymentStatus: 'PAID' },
               select: { totalPrice: true },
@@ -131,6 +161,8 @@ export class UsersService {
           routeCount,
           totalEarnings,
           status,
+          vehicles: t.vehicles,
+          transports: t.transports,
         };
       }),
     );
@@ -145,12 +177,28 @@ export class UsersService {
         email: true,
         name: true,
         phoneNumber: true,
+        country: true,
         role: true,
         accountType: true,
         isSuspended: true,
         createdAt: true,
         profileImageUrl: true,
         avatarUrl: true,
+        suspensionReason: true,
+        profile: {
+          select: {
+            travelerBio: true,
+            emergencyContactName: true,
+            emergencyContactPhone: true,
+            companyName: true,
+            licenseNumber: true,
+            licenseExpiry: true,
+            vehicleType: true,
+            bankName: true,
+            bankAccountNumber: true,
+            bankAccountHolderName: true,
+          },
+        },
         bookings: {
           orderBy: { createdAt: 'desc' },
           select: {
@@ -195,6 +243,7 @@ export class UsersService {
 
         return {
           ...user,
+          profile: user.profile ?? null,
           avatarUrl,
           totalBookings: user.bookings.length,
           bookings: convertedBookings,
@@ -239,6 +288,8 @@ export class UsersService {
         bio: dto.bio,
         dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
         travelerBio: dto.travelerBio,
+        emergencyContactName: dto.emergencyContactName,
+        emergencyContactPhone: dto.emergencyContactPhone,
         companyName: dto.companyName,
         licenseNumber: dto.licenseNumber,
         licenseExpiry: dto.licenseExpiry ? new Date(dto.licenseExpiry) : undefined,
@@ -252,6 +303,8 @@ export class UsersService {
         bio: dto.bio,
         dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
         travelerBio: dto.travelerBio,
+        emergencyContactName: dto.emergencyContactName,
+        emergencyContactPhone: dto.emergencyContactPhone,
         companyName: dto.companyName,
         licenseNumber: dto.licenseNumber,
         licenseExpiry: dto.licenseExpiry ? new Date(dto.licenseExpiry) : undefined,
@@ -281,7 +334,12 @@ export class UsersService {
         ...(dto.country !== undefined ? { country: dto.country } : {}),
         ...(dto.role !== undefined ? { role: dto.role } : {}),
         ...(dto.accountType !== undefined ? { accountType: dto.accountType } : {}),
-        ...(dto.suspended !== undefined ? { isSuspended: dto.suspended } : {}),
+        ...(dto.suspended !== undefined
+          ? {
+              isSuspended: dto.suspended,
+              suspensionReason: dto.suspended ? (dto.suspensionReason?.trim() || null) : null,
+            }
+          : {}),
         ...(dto.deletedAt !== undefined ? { deletedAt: dto.deletedAt ? new Date(dto.deletedAt) : null, isSuspended: true } : {}),
       },
       select: {
@@ -293,6 +351,7 @@ export class UsersService {
         role: true,
         accountType: true,
         isSuspended: true,
+        suspensionReason: true,
         deletedAt: true,
       },
     });

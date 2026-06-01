@@ -1,13 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, CarFront } from "lucide-react";
 import { motion } from "motion/react";
+import { useSearchParams } from "next/navigation";
 
 export default function RateJourneyPage() {
+  return (
+    <Suspense fallback={<div className="py-20 text-center text-sm text-slate-400">Loading rating form...</div>}>
+      <RateJourneyForm />
+    </Suspense>
+  );
+}
+
+function RateJourneyForm() {
+  const searchParams = useSearchParams();
+  const bookingId = searchParams.get("bookingId") || "";
+
   const [formData, setFormData] = useState({
     punctuality: "",
     cleanliness: "",
@@ -34,7 +46,7 @@ export default function RateJourneyPage() {
     setLoading(true);
     setError(null);
     try {
-      await api.post("/feedback/journey", formData);
+      await api.post("/feedback/journey", { ...formData, bookingId });
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || "Failed to submit feedback. Please try again.");
@@ -65,6 +77,11 @@ export default function RateJourneyPage() {
           <CarFront className="w-8 h-8" />
         </div>
         <h1 className="text-3xl font-bold text-slate-900">Rate the Journey</h1>
+        {bookingId && (
+          <p className="text-xs font-semibold text-emerald-600 bg-emerald-50 inline-block px-3 py-1 rounded-full mt-2">
+            Rating for Booking Ref: #{bookingId.slice(0, 8).toUpperCase()}
+          </p>
+        )}
         <p className="text-slate-500 mt-2">Help us maintain the highest standards by sharing your experience.</p>
       </div>
 

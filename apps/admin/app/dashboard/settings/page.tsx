@@ -160,7 +160,7 @@ export default function SettingsPage() {
           {/* Tab 1: Notifications */}
           {activeTab === "notifications" && (
             <form onSubmit={handleSaveNotifs} className="space-y-6">
-              <div>
+              <div id="announcements">
                 <h4 className="text-sm font-bold text-zinc-950">System Notifications Dispatch</h4>
                 <p className="text-[11px] text-slate-400 mt-0.5">Toggle alert preferences for traveler tickets and vehicle assignments.</p>
               </div>
@@ -245,6 +245,9 @@ export default function SettingsPage() {
                       onChange={(e) => setNotifs({ ...notifs, systemAnnouncements: e.target.checked })}
                       className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                     />
+                  </div>
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 p-4 text-xs text-slate-500">
+                    This is the admin entry point for platform announcements. The current workflow tracks announcement visibility through notification preferences.
                   </div>
                 </div>
               )}

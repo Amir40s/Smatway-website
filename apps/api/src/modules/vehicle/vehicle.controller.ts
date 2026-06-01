@@ -72,7 +72,23 @@ export class VehicleController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.vehicleService.remove(id, user.id);
+  remove(@Param('id') id: string, @CurrentUser() user: User, @Body() body?: { reason?: string }) {
+    return this.vehicleService.remove(id, user.id, body?.reason);
+  }
+
+  @Post('admin/:id/approve-delete')
+  approveDelete(@Param('id') id: string, @CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can approve deletion requests');
+    }
+    return this.vehicleService.approveDelete(id);
+  }
+
+  @Post('admin/:id/reject-delete')
+  rejectDelete(@Param('id') id: string, @CurrentUser() user: User) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admin can reject deletion requests');
+    }
+    return this.vehicleService.rejectDelete(id);
   }
 }

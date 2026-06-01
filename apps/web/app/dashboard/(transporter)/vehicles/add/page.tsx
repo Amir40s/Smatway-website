@@ -4,7 +4,14 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createVehicle } from "@/lib/api";
 
-const transportTypes = ["CAR", "BUS", "VAN", "MINIBUS", "TRAIN"];
+const transportTypes = [
+  { label: "Car", value: "CAR" },
+  { label: "Bus", value: "BUS" },
+  { label: "Van", value: "VAN" },
+  { label: "Minibus", value: "MINIBUS" },
+  { label: "Ferry", value: "FERRY" },
+  { label: "Train", value: "TRAIN" },
+];
 
 export default function AddVehiclePage() {
   const router = useRouter();
@@ -138,7 +145,7 @@ export default function AddVehiclePage() {
               <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Transport Type</label>
               <div className="relative">
                 <select required value={form.transportType} onChange={e => set("transportType", e.target.value)} className={`${inputClass} appearance-none pr-9 cursor-pointer`}>
-                  {transportTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                  {transportTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>

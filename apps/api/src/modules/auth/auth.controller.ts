@@ -82,7 +82,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async me(@CurrentUser() user: User) {
-    return this.authService.safeUserWithPresignedUrl(user);
+    try {
+      return await this.authService.safeUserWithPresignedUrl(user);
+    } catch (e) {
+      // If presigned URL generation or storage lookup fails, return the safe user without avatar URL
+      return this.authService.safeUser(user);
+    }
   }
 
   @Throttle({ default: { limit: 3, ttl: 60000 * 15 } })
