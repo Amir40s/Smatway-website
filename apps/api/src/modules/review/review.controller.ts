@@ -45,13 +45,9 @@ export class ReviewController {
     return this.reviewService.getTransporterFullProfile(transporterId, user);
   }
 
-  /** Public — latest platform-wide reviews for the marketing homepage Testimonials section. */
+  /** Public — latest platform-wide reviews for the marketing homepage Testimonials section. No auth required. */
   @Get('recent')
-  @UseGuards(JwtAuthGuard)
-  getRecent(@CurrentUser() user: User, @Query('limit') limit: string = '6') {
-    if (user.role !== 'ADMIN') {
-      throw new ForbiddenException('Only admin can read feedbacks');
-    }
+  getRecent(@Query('limit') limit: string = '6') {
     return this.reviewService.getRecentPlatformReviews(parseInt(limit, 10) || 6);
   }
 

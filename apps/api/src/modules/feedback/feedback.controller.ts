@@ -33,12 +33,9 @@ export class FeedbackController {
     return this.feedbackService.rateJourney(user.id, dto);
   }
 
-   @Get('recent')
-  @UseGuards(JwtAuthGuard)
-  getRecent(@CurrentUser() user: User, @Query('limit') limit: string = '6') {
-    if (user.role !== 'ADMIN') {
-      throw new ForbiddenException('Only admin can read feedbacks');
-    }
+  /** Public — recent site feedback for the marketing homepage. No auth required. */
+  @Get('recent')
+  getRecent(@Query('limit') limit: string = '6') {
     return this.feedbackService.getRecent(parseInt(limit, 10) || 6);
   }
 

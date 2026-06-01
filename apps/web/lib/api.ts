@@ -71,9 +71,16 @@ export async function apiRequest<T = unknown>(
         endpoint.startsWith('/auth/forgot-password') ||
         endpoint.startsWith('/auth/reset-password');
 
-      // Token expired or invalid — wipe local auth and send to sign-in so the
-      // user sees a clean login screen instead of a crash or broken page.
-      if (response.status === 401 && !isAuthAttempt && typeof window !== 'undefined') {
+      // Token expired or invalid — wipe local auth and send to sign-in, but
+      // ONLY if we are currently on a protected route (i.e. /dashboard or similar).
+      // Public marketing pages also call APIs that return 401 when the visitor is
+      // not logged in — we must NOT redirect those visitors to /signin.
+      const isProtectedRoute =
+        typeof window !== 'undefined' &&
+        (window.location.pathname.startsWith('/dashboard') ||
+          window.location.pathname.startsWith('/admin'));
+
+      if (response.status === 401 && !isAuthAttempt && isProtectedRoute) {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_token_expires_at');
         localStorage.removeItem('auth_user');

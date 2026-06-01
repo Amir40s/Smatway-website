@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Paths that are always accessible — no auth token required.
-// These are EXACT matches — do NOT use startsWith('/') or every URL matches.
+// Pages that never require authentication.
 const PUBLIC_EXACT: Set<string> = new Set([
     '/',
     '/how-it-works',
@@ -13,58 +12,48 @@ const PUBLIC_EXACT: Set<string> = new Set([
     '/reset-password',
 ]);
 
-// Prefix-based public paths (e.g. /api covers /api/foo, /favicon covers /favicon.ico)
-const PUBLIC_PREFIXES = [
-    '/api',
-    '/_next',
-    '/favicon',
-];
+const PUBLIC_PREFIXES = ['/api', '/_next', '/favicon'];
 
 function isPublicPath(pathname: string): boolean {
     if (PUBLIC_EXACT.has(pathname)) return true;
-    return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+    return PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    // 1. Always allow public/marketing/auth pages — no token needed.
+    // Always let marketing + auth pages through — no token required.
     if (isPublicPath(pathname)) {
         return NextResponse.next();
     }
 
-    // 2. Protected route — check for access token cookie.
+    // Protected route: require a valid access_token cookie.
     const accessToken = req.cookies.get('access_token')?.value;
-
     if (!accessToken) {
         const url = new URL('/signin', req.url);
         url.searchParams.set('from', pathname);
         return NextResponse.redirect(url);
     }
 
-    // 3. Verify the token with the API.
+    // Verify the token against the API.
     try {
         const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3002';
         const res = await fetch(`${apiBase}/auth/me`, {
             headers: { Cookie: `access_token=${accessToken}` },
         });
-
         if (!res.ok) {
             const url = new URL('/signin', req.url);
             url.searchParams.set('from', pathname);
             return NextResponse.redirect(url);
         }
-
         return NextResponse.next();
     } catch {
-        // API unreachable — let the request through and let the client-side
-        // auth check handle it. Do NOT redirect to /signin here because a
-        // temporary network blip would lock every user out of protected pages.
+        // If the API is temporarily unreachable, let the request through —
+        // the client-side DashboardLayout will handle re-auth gracefully.
         return NextResponse.next();
     }
 }
 
 export const config = {
-    // Match all request paths except Next.js static files
     matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
