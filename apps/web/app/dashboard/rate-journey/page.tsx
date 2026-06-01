@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
-import { api } from "@/lib/api";
+import React, { useState, Suspense, useEffect } from "react";
+import { api, getMyBookings } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, CarFront } from "lucide-react";
@@ -20,6 +20,10 @@ function RateJourneyForm() {
   const searchParams = useSearchParams();
   const bookingId = searchParams.get("bookingId") || "";
 
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [selectedBookingId, setSelectedBookingId] = useState(bookingId);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+
   const [formData, setFormData] = useState({
     punctuality: "",
     cleanliness: "",
@@ -37,16 +41,34 @@ function RateJourneyForm() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    setLoadingBookings(true);
+    getMyBookings()
+      .then((data) => {
+        setBookings(data || []);
+        if (!bookingId && data && data.length > 0) {
+          const firstCompleted = data.find((b: any) => b.status === "COMPLETED") || data[0];
+          setSelectedBookingId(firstCompleted.id);
+        }
+      })
+      .catch((err) => console.error("Error loading bookings:", err))
+      .finally(() => setLoadingBookings(false));
+  }, [bookingId]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedBookingId) {
+      setError("Please select a booking reference to rate.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      await api.post("/feedback/journey", { ...formData, bookingId });
+      await api.post("/feedback/journey", { ...formData, bookingId: selectedBookingId });
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || "Failed to submit feedback. Please try again.");
@@ -77,12 +99,44 @@ function RateJourneyForm() {
           <CarFront className="w-8 h-8" />
         </div>
         <h1 className="text-3xl font-bold text-slate-900">Rate the Journey</h1>
-        {bookingId && (
-          <p className="text-xs font-semibold text-emerald-600 bg-emerald-50 inline-block px-3 py-1 rounded-full mt-2">
-            Rating for Booking Ref: #{bookingId.slice(0, 8).toUpperCase()}
+        {selectedBookingId && (
+          <p className="text-xs font-semibold text-emerald-600 bg-emerald-50 inline-block px-3 py-1 rounded-full mt-2 animate-pulse">
+            Rating for Booking Ref: #{selectedBookingId.slice(0, 8).toUpperCase()}
           </p>
         )}
         <p className="text-slate-500 mt-2">Help us maintain the highest standards by sharing your experience.</p>
+      </div>
+
+      {/* Booking selector dropdown widget */}
+      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 mb-6 space-y-3">
+        <label className="block text-xs font-bold text-zinc-700 uppercase tracking-wider">
+          Select Booking Reference to Rate
+        </label>
+        {loadingBookings ? (
+          <p className="text-xs text-slate-400">Loading your recent bookings...</p>
+        ) : bookings.length === 0 ? (
+          <p className="text-xs text-slate-400">No bookings found to rate.</p>
+        ) : (
+          <div className="relative">
+            <select
+              value={selectedBookingId}
+              onChange={(e) => setSelectedBookingId(e.target.value)}
+              className="w-full bg-white rounded-xl border border-slate-200 px-4 py-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer appearance-none font-medium pr-10"
+            >
+              <option value="" disabled>-- Select a completed journey --</option>
+              {bookings.map((b: any) => (
+                <option key={b.id} value={b.id}>
+                  #{b.id.slice(0, 8).toUpperCase()} ({b.transport.departureCity} → {b.transport.destinationCity}) — {b.status}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </div>
+          </div>
+        )}
       </div>
 
       {error && (

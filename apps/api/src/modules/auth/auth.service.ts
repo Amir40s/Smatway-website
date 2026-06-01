@@ -39,6 +39,9 @@ export class AuthService {
     if (!user?.passwordHash) return null;
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) return null;
+    if (user.isSuspended) {
+      throw new UnauthorizedException(user.suspensionReason || 'This account has been suspended by the administrator.');
+    }
     if (!user.emailVerified) {
       throw new UnauthorizedException('EMAIL_NOT_VERIFIED');
     }
@@ -54,8 +57,7 @@ export class AuthService {
 
     const existing = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
-      // Allow re-registering an unverified account (overwrite profile data, resend OTP)
-      if (!existing.emailVerified) {
+       if (!existing.emailVerified) {
         const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
         const updated = await this.prisma.user.update({
           where: { id: existing.id },
@@ -69,8 +71,7 @@ export class AuthService {
             accountType: this.normalizeAccountType(dto.accountType) ?? existing.accountType,
           },
         });
-        // Ensure the UserProfile row exists — older accounts may not have one.
-        await this.prisma.userProfile.upsert({
+         await this.prisma.userProfile.upsert({
           where: { userId: existing.id },
           update: {
             companyName: dto.businessName ?? undefined,
@@ -106,8 +107,7 @@ export class AuthService {
         preferredCurrency: dto.preferredCurrency,
         passwordHash,
         accountType: this.normalizeAccountType(dto.accountType),
-        // Auto-create an empty profile so Settings pages work immediately after signup.
-        profile: {
+         profile: {
           create: {
             companyName: dto.businessName ?? undefined,
             emergencyContactName: dto.emergencyContactName ?? undefined,
@@ -134,10 +134,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new BadRequestException('Invalid verification code');
     if (user.emailVerified) throw new BadRequestException('Email already verified');
-
-    // Dev-only bypass: when OTP_SEND_EMAIL is off, accept "123456" so UI
-    // testing doesn't require reading the console on every signup.
-    const sendingEnabled = /^(true|1)$/i.test(process.env.OTP_SEND_EMAIL ?? '');
+      const sendingEnabled = /^(true|1)$/i.test(process.env.OTP_SEND_EMAIL ?? '');
     const isDevBypass = !sendingEnabled && otp === '123456';
 
     if (!isDevBypass) {
@@ -170,16 +167,14 @@ export class AuthService {
         where: { id: user.id },
         data: { emailVerified: true, emailVerifiedAt: new Date() },
       }),
-      // Invalidate any outstanding codes for this user
-      this.prisma.emailVerificationOtp.updateMany({
+       this.prisma.emailVerificationOtp.updateMany({
         where: { userId: user.id, used: false },
         data: { used: true },
       }),
     ]);
 
     if (isDevBypass) {
-      // eslint-disable-next-line no-console
-      console.log(`[OTP] dev-bypass used for ${email} (OTP_SEND_EMAIL=false)`);
+        console.log(`[OTP] dev-bypass used for ${email} (OTP_SEND_EMAIL=false)`);
     }
 
     const accessToken = await this.issueTokens(verifiedUser, res);
@@ -191,11 +186,9 @@ export class AuthService {
     if (!normalized) throw new BadRequestException('Email is required');
 
     const user = await this.prisma.user.findUnique({ where: { email: normalized } });
-    // Don't leak whether the account exists
-    if (!user || user.emailVerified) return { ok: true };
+     if (!user || user.emailVerified) return { ok: true };
 
-    // Cooldown — latest outstanding OTP must be older than OTP_RESEND_COOLDOWN_SECONDS
-    const latest = await this.prisma.emailVerificationOtp.findFirst({
+     const latest = await this.prisma.emailVerificationOtp.findFirst({
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
     });
@@ -270,6 +263,10 @@ export class AuthService {
         await this.prisma.refreshToken.deleteMany({ where: { userId: stored.userId } });
       }
       throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    if (stored.user.isSuspended) {
+      throw new UnauthorizedException(stored.user.suspensionReason || 'This account has been suspended.');
     }
 
     await this.prisma.refreshToken.delete({ where: { tokenHash } });

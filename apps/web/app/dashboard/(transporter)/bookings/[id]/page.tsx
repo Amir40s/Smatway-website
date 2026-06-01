@@ -246,14 +246,9 @@ export default function BookingDetailPage() {
               </div>
             </div>
           )}
-
-
-
-
+ 
         </Reveal>
-
-        {/* Sidebar */}
-        <Reveal className="space-y-5">
+         <Reveal className="space-y-5">
           <div className="rounded-2xl bg-white border border-slate-200/80 overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100">
               <h3 className="text-[13px] font-semibold text-zinc-950">Traveler</h3>

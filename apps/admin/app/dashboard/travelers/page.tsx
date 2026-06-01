@@ -2,6 +2,76 @@
 
 import { useEffect, useState } from "react";
 
+const countriesList = [
+  { code: "NG", name: "Nigeria" },
+  { code: "GH", name: "Ghana" },
+  { code: "KE", name: "Kenya" },
+  { code: "UG", name: "Uganda" },
+  { code: "TZ", name: "Tanzania" },
+  { code: "RW", name: "Rwanda" },
+  { code: "ET", name: "Ethiopia" },
+  { code: "ZA", name: "South Africa" },
+  { code: "EG", name: "Egypt" },
+  { code: "MA", name: "Morocco" },
+  { code: "DZ", name: "Algeria" },
+  { code: "TN", name: "Tunisia" },
+  { code: "LY", name: "Libya" },
+  { code: "SN", name: "Senegal" },
+  { code: "CI", name: "Côte d'Ivoire" },
+  { code: "CM", name: "Cameroon" },
+  { code: "SL", name: "Sierra Leone" },
+  { code: "ZM", name: "Zambia" },
+  { code: "ZW", name: "Zimbabwe" },
+  { code: "MW", name: "Malawi" },
+  { code: "MZ", name: "Mozambique" },
+  { code: "AO", name: "Angola" },
+  { code: "NA", name: "Namibia" },
+  { code: "BW", name: "Botswana" },
+  { code: "LS", name: "Lesotho" },
+  { code: "SZ", name: "Eswatini" },
+  { code: "MG", name: "Madagascar" },
+  { code: "MU", name: "Mauritius" },
+  { code: "SC", name: "Seychelles" },
+  { code: "DJ", name: "Djibouti" },
+  { code: "ER", name: "Eritrea" },
+  { code: "SO", name: "Somalia" },
+  { code: "SS", name: "South Sudan" },
+  { code: "SD", name: "Sudan" },
+  { code: "BJ", name: "Benin" },
+  { code: "BF", name: "Burkina Faso" },
+  { code: "BI", name: "Burundi" },
+  { code: "CV", name: "Cabo Verde" },
+  { code: "CF", name: "Central African Republic" },
+  { code: "TD", name: "Chad" },
+  { code: "KM", name: "Comoros" },
+  { code: "CG", name: "Congo" },
+  { code: "CD", name: "Congo (DRC)" },
+  { code: "GQ", name: "Equatorial Guinea" },
+  { code: "GA", name: "Gabon" },
+  { code: "GM", name: "Gambia" },
+  { code: "GN", name: "Guinea" },
+  { code: "GW", name: "Guinea-Bissau" },
+  { code: "LR", name: "Liberia" },
+  { code: "ML", name: "Mali" },
+  { code: "MR", name: "Mauritania" },
+  { code: "NE", name: "Niger" },
+  { code: "ST", name: "São Tomé and Príncipe" },
+  { code: "TG", name: "Togo" },
+  { code: "PK", name: "Pakistan" },
+  { code: "IN", name: "India" },
+  { code: "US", name: "United States" },
+  { code: "AT", name: "Austria" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "AE", name: "United Arab Emirates" }
+];
+const countryMap = new Map(countriesList.map(c => [c.code, c.name]));
+
+export function getCountryName(code?: string | null): string {
+  if (!code) return "—";
+  const trimmed = code.trim().toUpperCase();
+  return countryMap.get(trimmed) || trimmed;
+}
+
 type BookingItem = {
   id: string;
   route: string;
@@ -272,18 +342,20 @@ export default function TravelersPage() {
             <div className="inline-block min-w-full align-middle px-6">
               <table className="w-full min-w-[900px] table-fixed text-left border-collapse">
                 <colgroup>
-                  <col className="w-[220px]" />
                   <col className="w-[200px]" />
-                  <col className="w-[140px]" />
-                  <col className="w-[120px]" />
-                  <col className="w-[120px]" />
-                  <col className="w-[100px]" />
+                  <col className="w-[180px]" />
+                  <col className="w-[130px]" />
+                  <col className="w-[130px]" />
+                  <col className="w-[110px]" />
+                  <col className="w-[110px]" />
+                  <col className="w-[90px]" />
                   <col className="w-[80px]" />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                     <th className="py-3 px-4">Traveler Name</th>
                     <th className="py-3 px-4">Contact Info</th>
+                    <th className="py-3 px-4">Country</th>
                     <th className="py-3 px-4">Registered Date</th>
                     <th className="py-3 px-4 text-center">Total Bookings</th>
                     <th className="py-3 px-4">Spent Capital</th>
@@ -316,7 +388,9 @@ export default function TravelersPage() {
                         <td className="py-4 px-4 font-medium text-zinc-700">
                           <p className="truncate max-w-[180px]">{u.email}</p>
                           <p className="text-[9px] text-slate-400 mt-0.5">{u.phoneNumber || "—"}</p>
-                          <p className="text-[9px] text-slate-400 mt-0.5">Country: {u.country || "—"}</p>
+                        </td>
+                        <td className="py-4 px-4 text-zinc-600 font-semibold truncate">
+                          {getCountryName(u.country)}
                         </td>
                         <td className="py-4 px-4 text-slate-500 font-medium">
                           {new Date(u.createdAt).toLocaleDateString("en-US", {
@@ -426,7 +500,7 @@ export default function TravelersPage() {
                     </div>
                     <div>
                       <p className="text-slate-400">Country of Registration</p>
-                      <p className="font-semibold text-zinc-800">{selectedUser.country || "—"}</p>
+                      <p className="font-semibold text-zinc-800">{getCountryName(selectedUser.country)}</p>
                     </div>
                     <div>
                       <p className="text-slate-400">Registration Timestamp</p>

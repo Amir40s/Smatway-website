@@ -482,47 +482,69 @@ export default function SignUpPage() {
           </div>
 
           {accountType === "transporter" && (
-            <div className="space-y-4 rounded-2xl border border-zinc-200 bg-zinc-50/60 p-4">
-              <div>
-                <h3 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Transporter payout details</h3>
-                <p className="mt-1 text-[11px] text-zinc-500">These details help us verify who receives settlement payments.</p>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div>
-                  <label htmlFor="bankName" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Bank name</label>
-                  <input
-                    id="bankName"
-                    type="text"
-                    placeholder="e.g. Access Bank"
-                    value={formData.bankName}
-                    onChange={handleInputChange}
-                    className={inputBase}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="bankAccountNumber" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Account number</label>
-                  <input
-                    id="bankAccountNumber"
-                    type="text"
-                    placeholder="Bank account number"
-                    value={formData.bankAccountNumber}
-                    onChange={handleInputChange}
-                    className={inputBase}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="bankAccountHolderName" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Account holder</label>
-                  <input
-                    id="bankAccountHolderName"
-                    type="text"
-                    placeholder="Account holder name"
-                    value={formData.bankAccountHolderName}
-                    onChange={handleInputChange}
-                    className={inputBase}
-                  />
-                </div>
-              </div>
-            </div>
+           <div className="space-y-4 rounded-2xl border border-zinc-200 bg-zinc-50/60 p-4">
+  <div>
+    <h3 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">
+      Transporter payout details
+    </h3>
+    <p className="mt-1 text-[11px] text-zinc-500">
+      These details help us verify who receives settlement payments.
+    </p>
+  </div>
+
+  <div className="grid grid-cols-1 gap-4">
+    <div>
+      <label
+        htmlFor="bankName"
+        className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700"
+      >
+        Bank name
+      </label>
+      <input
+        id="bankName"
+        type="text"
+        placeholder="e.g. Access Bank"
+        value={formData.bankName}
+        onChange={handleInputChange}
+        className={inputBase}
+      />
+    </div>
+
+    <div>
+      <label
+        htmlFor="bankAccountNumber"
+        className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700"
+      >
+        Account number
+      </label>
+      <input
+        id="bankAccountNumber"
+        type="text"
+        placeholder="Bank account number"
+        value={formData.bankAccountNumber}
+        onChange={handleInputChange}
+        className={inputBase}
+      />
+    </div>
+
+    <div>
+      <label
+        htmlFor="bankAccountHolderName"
+        className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700"
+      >
+        Account holder
+      </label>
+      <input
+        id="bankAccountHolderName"
+        type="text"
+        placeholder="Account holder name"
+        value={formData.bankAccountHolderName}
+        onChange={handleInputChange}
+        className={inputBase}
+      />
+    </div>
+  </div>
+</div>
           )}
 
           <div>

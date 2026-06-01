@@ -18,6 +18,76 @@ function formatCountryCode(country?: string | null) {
   return country?.trim().slice(0, 2).toUpperCase() || "XX";
 }
 
+const countriesList = [
+  { code: "NG", name: "Nigeria" },
+  { code: "GH", name: "Ghana" },
+  { code: "KE", name: "Kenya" },
+  { code: "UG", name: "Uganda" },
+  { code: "TZ", name: "Tanzania" },
+  { code: "RW", name: "Rwanda" },
+  { code: "ET", name: "Ethiopia" },
+  { code: "ZA", name: "South Africa" },
+  { code: "EG", name: "Egypt" },
+  { code: "MA", name: "Morocco" },
+  { code: "DZ", name: "Algeria" },
+  { code: "TN", name: "Tunisia" },
+  { code: "LY", name: "Libya" },
+  { code: "SN", name: "Senegal" },
+  { code: "CI", name: "Côte d'Ivoire" },
+  { code: "CM", name: "Cameroon" },
+  { code: "SL", name: "Sierra Leone" },
+  { code: "ZM", name: "Zambia" },
+  { code: "ZW", name: "Zimbabwe" },
+  { code: "MW", name: "Malawi" },
+  { code: "MZ", name: "Mozambique" },
+  { code: "AO", name: "Angola" },
+  { code: "NA", name: "Namibia" },
+  { code: "BW", name: "Botswana" },
+  { code: "LS", name: "Lesotho" },
+  { code: "SZ", name: "Eswatini" },
+  { code: "MG", name: "Madagascar" },
+  { code: "MU", name: "Mauritius" },
+  { code: "SC", name: "Seychelles" },
+  { code: "DJ", name: "Djibouti" },
+  { code: "ER", name: "Eritrea" },
+  { code: "SO", name: "Somalia" },
+  { code: "SS", name: "South Sudan" },
+  { code: "SD", name: "Sudan" },
+  { code: "BJ", name: "Benin" },
+  { code: "BF", name: "Burkina Faso" },
+  { code: "BI", name: "Burundi" },
+  { code: "CV", name: "Cabo Verde" },
+  { code: "CF", name: "Central African Republic" },
+  { code: "TD", name: "Chad" },
+  { code: "KM", name: "Comoros" },
+  { code: "CG", name: "Congo" },
+  { code: "CD", name: "Congo (DRC)" },
+  { code: "GQ", name: "Equatorial Guinea" },
+  { code: "GA", name: "Gabon" },
+  { code: "GM", name: "Gambia" },
+  { code: "GN", name: "Guinea" },
+  { code: "GW", name: "Guinea-Bissau" },
+  { code: "LR", name: "Liberia" },
+  { code: "ML", name: "Mali" },
+  { code: "MR", name: "Mauritania" },
+  { code: "NE", name: "Niger" },
+  { code: "ST", name: "São Tomé and Príncipe" },
+  { code: "TG", name: "Togo" },
+  { code: "PK", name: "Pakistan" },
+  { code: "IN", name: "India" },
+  { code: "US", name: "United States" },
+  { code: "AT", name: "Austria" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "AE", name: "United Arab Emirates" }
+];
+const countryMap = new Map(countriesList.map(c => [c.code, c.name]));
+
+export function getCountryName(code?: string | null): string {
+  if (!code) return "—";
+  const trimmed = code.trim().toUpperCase();
+  return countryMap.get(trimmed) || trimmed;
+}
+
 function formatCountryAwareId(country: string | null | undefined, id: string) {
   return `${formatCountryCode(country)}-${id.substring(0, 8).toUpperCase()}`;
 }
@@ -41,6 +111,8 @@ export default function UsersPage() {
     role: "USER" as "USER" | "ADMIN",
     accountType: "TRAVELER" as "TRAVELER" | "TRANSPORTER",
   });
+
+  const [sortBy, setSortBy] = useState("name-asc");
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3002";
 
@@ -199,29 +271,55 @@ export default function UsersPage() {
       user.role?.toLowerCase().includes(q) ||
       user.accountType?.toLowerCase().includes(q)
     );
-  }).sort((a, b) => (a.name || a.email || "").localeCompare(b.name || b.email || ""));
+  }).sort((a, b) => {
+    if (sortBy === "name-asc") {
+      return (a.name || a.email || "").localeCompare(b.name || b.email || "");
+    }
+    if (sortBy === "name-desc") {
+      return (b.name || b.email || "").localeCompare(a.name || a.email || "");
+    }
+    if (sortBy === "date-desc") {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    if (sortBy === "date-asc") {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    }
+    return 0;
+  });
 
   const selectedUser = users.find((user) => user.id === selectedUserId) ?? null;
 
   return (
     <div className="w-full space-y-6">
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-6 overflow-hidden w-full">
-        <div className="mb-6 flex flex-col sm:flex-row gap-3 items-center justify-between border-b border-slate-100 pb-5">
+        <div className="mb-6 flex flex-col lg:flex-row gap-3 items-center justify-between border-b border-slate-100 pb-5">
           <div>
             <h2 className="text-lg font-semibold text-zinc-950">Users Management</h2>
             <p className="text-xs text-slate-400 mt-0.5">Search users, review bookings, and inspect payment history.</p>
           </div>
-          <div className="w-full sm:w-80 relative flex items-center">
-            <input
-              type="text"
-              placeholder="Search name, email, phone, or role..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 rounded-xl border border-slate-200 px-4 py-2.5 pl-10 text-xs text-zinc-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-            />
-            <svg className="w-4 h-4 stroke-slate-400 absolute left-3 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+            <div className="w-full sm:w-72 relative flex items-center">
+              <input
+                type="text"
+                placeholder="Search name, email, phone, or role..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-50 rounded-xl border border-slate-200 px-4 py-2.5 pl-10 text-xs text-zinc-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+              />
+              <svg className="w-4 h-4 stroke-slate-400 absolute left-3 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-slate-50 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all w-full sm:w-auto"
+            >
+              <option value="name-asc">Alphabetical (A-Z)</option>
+              <option value="name-desc">Alphabetical (Z-A)</option>
+              <option value="date-desc">Newest Registered</option>
+              <option value="date-asc">Oldest Registered</option>
+            </select>
           </div>
         </div>
 
@@ -235,16 +333,17 @@ export default function UsersPage() {
         ) : (
           <div className="overflow-x-auto -mx-6 w-full max-w-full">
             <div className="inline-block min-w-full align-middle px-6 w-full max-w-full">
-              <table className="w-full min-w-[1180px] table-fixed text-left border-collapse">
+              <table className="w-full min-w-[1280px] table-fixed text-left border-collapse">
                 <colgroup>
-                  <col className="w-[220px]" />
-                  <col className="w-[260px]" />
-                  <col className="w-[180px]" />
+                  <col className="w-[200px]" />
+                  <col className="w-[230px]" />
+                  <col className="w-[160px]" />
+                  <col className="w-[140px]" />
+                  <col className="w-[110px]" />
+                  <col className="w-[110px]" />
                   <col className="w-[130px]" />
-                  <col className="w-[120px]" />
-                  <col className="w-[150px]" />
-                  <col className="w-[150px]" />
-                  <col className="w-[130px]" />
+                  <col className="w-[140px]" />
+                  <col className="w-[110px]" />
                   <col className="w-[100px]" />
                 </colgroup>
                 <thead>
@@ -252,6 +351,7 @@ export default function UsersPage() {
                     <th className="py-3 px-4">Name</th>
                     <th className="py-3 px-4">Email</th>
                     <th className="py-3 px-4">Phone Number</th>
+                    <th className="py-3 px-4">Country</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4">Role</th>
                     <th className="py-3 px-4">Account Type</th>
@@ -275,7 +375,7 @@ export default function UsersPage() {
                               </div>
                             )}
                             <div>
-                              <p className="font-semibold text-zinc-950">{user.name || "Unnamed User"}</p>
+                              <p className="font-semibold text-zinc-950 truncate max-w-[120px]">{user.name || "Unnamed User"}</p>
                               <p className="text-[9px] text-slate-400 leading-none mt-0.5">{user.accountType || "—"}</p>
                             </div>
                           </div>
@@ -289,6 +389,9 @@ export default function UsersPage() {
                           <div className="truncate max-w-full" title={user.phoneNumber || "—"}>
                             {user.phoneNumber || "—"}
                           </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-zinc-600 align-top font-semibold truncate">
+                          {getCountryName(user.country)}
                         </td>
                         <td className="py-3.5 px-4">
                           <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-boldcase tracking-[0.14em] ${user.isSuspended ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>
@@ -400,7 +503,7 @@ export default function UsersPage() {
                   </div>
                   <div className="rounded-xl bg-slate-50 p-3">
                     <p className="text-slate-400">Country</p>
-                    <p className="font-semibold text-zinc-950 mt-1">{selectedUser.country || "—"}</p>
+                    <p className="font-semibold text-zinc-950 mt-1">{getCountryName(selectedUser.country)}</p>
                   </div>
                   <div className="rounded-xl bg-slate-50 p-3">
                     <p className="text-slate-400">Suspension Note</p>

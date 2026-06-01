@@ -177,12 +177,20 @@ export default function SearchRidesPage() {
               </div>
 
               <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100">
-                {error && <p className="text-[12px] text-red-600 flex-1">{error}</p>}
+                {error ? (
+                  <p className="text-[12px] text-red-600 flex-1">{error}</p>
+                ) : isPastDate ? (
+                  <p className="text-[12px] text-red-600 flex-1">Past dates are unavailable. Pick a future date.</p>
+                ) : null}
                 <button
                   type="button"
                   onClick={handleSearch}
-                  disabled={loading}
-                  className="ml-auto inline-flex items-center gap-2 bg-zinc-950 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-zinc-800 disabled:opacity-60 transition-all active:scale-[0.98]"
+                  disabled={loading || isPastDate}
+                  className={`ml-auto inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] ${
+                    isPastDate
+                      ? "bg-rose-600 hover:bg-rose-700 text-white cursor-not-allowed opacity-90 shadow-[0_4px_12px_rgba(225,29,72,0.3)] animate-pulse"
+                      : "bg-zinc-950 text-white hover:bg-zinc-800 disabled:opacity-60"
+                  }`}
                 >
                   {loading ? (
                     <>
