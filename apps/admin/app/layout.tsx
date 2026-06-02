@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { LanguageSwitcher, LocaleProvider, RuntimeLocalizer } from "@smatway/i18n";
 import "./globals.css";
 
 const jakartaSans = Plus_Jakarta_Sans({
@@ -24,10 +25,17 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="ar"
+      dir="rtl"
       className={`${jakartaSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <LocaleProvider storageKey="smatway:locale">
+          <RuntimeLocalizer />
+          {children}
+          <LanguageSwitcher floating />
+        </LocaleProvider>
+      </body>
     </html>
   );
 }

@@ -24,36 +24,6 @@ function useReducedFx() {
   return reduced;
 }
 
-// ─── useHomepageStats — single shared fetch of /platform/overview ───────────
-// Multiple sections (Stats, SafetyBanner, Feedback) need the same numbers.
-// We dedupe across all of them with a module-scope promise so the page makes
-// exactly one network call regardless of how many sections mount.
-import type { PlatformOverview } from "@/lib/api";
-
-let _overviewCache: Promise<PlatformOverview> | null = null;
-function fetchOverviewOnce(): Promise<PlatformOverview> {
-  if (!_overviewCache) {
-    _overviewCache = import("@/lib/api").then(({ getPlatformOverview }) =>
-      getPlatformOverview(0),
-    );
-    // If the fetch fails, clear the cache so the next mount can retry.
-    _overviewCache.catch(() => { _overviewCache = null; });
-  }
-  return _overviewCache;
-}
-
-function useHomepageStats(): PlatformOverview["stats"] | null {
-  const [stats, setStats] = useState<PlatformOverview["stats"] | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    fetchOverviewOnce()
-      .then((d) => { if (!cancelled) setStats(d.stats); })
-      .catch(() => { /* leave null → fall back to seeds */ });
-    return () => { cancelled = true; };
-  }, []);
-  return stats;
-}
-
 // ─── Reusable scroll-reveal wrapper ──────────────────────────────────────────
 
 function Reveal({
@@ -138,50 +108,6 @@ function MagneticLink({ href, className, children, strength = 0.18 }: {
     <motion.a ref={ref} href={href} onMouseMove={onMove} onMouseLeave={onLeave} style={{ x: sx, y: sy }} className={className}>
       {children}
     </motion.a>
-  );
-}
-
-// ─── LiveTicker — kinetic horizontal strip showing real-time platform activity
-
-// Seed data — used until the public activity endpoint returns real entries.
-// Mix of Nigerian + Ghanaian intercity routes so the strip reads as live
-// pan-West-African activity rather than a single-country app.
-const liveTickerSeed = [
-  { city: "Lagos → Abuja", note: "departing in 8 min" },
-  { city: "Accra → Kumasi", note: "3 seats left" },
-  { city: "Ibadan → Lagos", note: "12 booked today" },
-  { city: "Port Harcourt → Lagos", note: "departing in 22 min" },
-  { city: "Cape Coast → Accra", note: "5 seats left" },
-  { city: "Abuja → Kano", note: "departing in 47 min" },
-  { city: "Tamale → Kumasi", note: "9 booked today" },
-  { city: "Takoradi → Accra", note: "2 seats left" },
-];
-
-function LiveTicker() {
-  const items = liveTickerSeed;
-  const doubled = [...items, ...items];
-
-  return (
-    <section className="relative overflow-hidden border-y border-zinc-200/70 bg-white py-5">
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-32 bg-gradient-to-r from-white to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-32 bg-gradient-to-l from-white to-transparent" />
-      <div className="absolute left-4 top-1/2 z-20 hidden -translate-y-1/2 items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 sm:inline-flex">
-        <span className="relative flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        </span>
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">Live</span>
-      </div>
-      <div className="flex w-max animate-marquee items-center gap-10 whitespace-nowrap pl-32">
-        {doubled.map((d, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <span className="text-[14px] font-semibold tracking-tight text-zinc-900">{d.city}</span>
-            <span className="font-mono text-[12px] text-zinc-500">· {d.note}</span>
-            <span className="h-1 w-1 rounded-full bg-zinc-300" />
-          </div>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -606,16 +532,6 @@ function TicketIcon({ className = "w-6 h-6" }: { className?: string }) {
 
 // ─── Data (ALL IMAGE URLs VERIFIED & WORKING) ────────────────────────────────
 
-// Seed stats — only used when /platform/overview hasn't loaded yet. Tuned to
-// believable early-stage numbers so the homepage never advertises a scale we
-// don't have. Real values from the API replace these the moment they arrive.
-const stats: Array<{ to: number; decimals?: number; suffix: string; tail?: string; label: string; icon: React.ReactNode }> = [
-  { to: 320, suffix: "", label: "Active travelers", icon: <UsersIcon className="w-6 h-6" /> },
-  { to: 48, suffix: "", label: "Verified transporters", icon: <RouteIcon className="w-6 h-6" /> },
-  { to: 4.7, decimals: 1, suffix: "", tail: "/5", label: "Average rating", icon: <StarIcon className="w-6 h-6" /> },
-  { to: 95, suffix: "%", label: "On-time arrivals", icon: <ClockIcon className="w-6 h-6" /> },
-];
-
 const features = [
   {
     icon: <ShieldIcon className="w-7 h-7" />,
@@ -633,10 +549,10 @@ const features = [
   },
   {
     icon: <ClockIcon className="w-7 h-7" />,
-    title: "Real-Time Tracking",
-    description: "Monitor your journey live. Share your trip link with family so they always know where you are.",
+    title: "Confidential Journeys",
+    description: "Trip details stay private inside your account, with booking updates shown only where they belong.",
     image: "/images/home/vehicle-3.jpg",
-    imageAlt: "Real-time GPS tracking dashboard",
+    imageAlt: "Private booking dashboard",
   },
   {
     icon: <UsersIcon className="w-7 h-7" />,
@@ -658,14 +574,14 @@ const steps = [
   {
     num: "02",
     title: "Find or post routes",
-    description: "Search available routes by city and date. Transporters post schedules and set fares.",
+    description: "Search available routes by city and date. Transporters post schedules and manage bookings.",
     image: "/images/home/story-2.jpg",
     imageAlt: "Map showing travel routes between cities",
   },
   {
     num: "03",
     title: "Travel with confidence",
-    description: "Book, pay securely, track in real time. Rate your experience when you arrive.",
+    description: "Book, pay securely, keep your trip details private, and rate your experience when you arrive.",
     image: "/images/home/story-3.jpg",
     imageAlt: "Happy travelers on an open road trip",
   },
@@ -675,7 +591,7 @@ const testimonials = [
   {
     name: "Sarah K.",
     role: "Frequent Traveler",
-    text: "SmatWay changed intercity travel for me — verified drivers, real-time tracking, and I always know exactly what I'm paying.",
+    text: "SmatWay changed intercity travel for me — verified drivers, protected booking, and trip details that stay private.",
     rating: 5,
     avatar: "/images/home/avatar-1.jpg",
   },
@@ -689,20 +605,10 @@ const testimonials = [
   {
     name: "Maria L.",
     role: "Daily Commuter",
-    text: "The real-time tracking gives my family peace of mind. I share my trip link every morning. That's priceless.",
+    text: "The private booking flow gives me peace of mind. My trip details stay in my account.",
     rating: 5,
     avatar: "/images/home/avatar-3.jpg",
   },
-];
-
-// Legacy `routes` (no longer rendered — superseded by routesBento). Kept here
-// only to avoid dead-import errors in older builds; feel free to delete once
-// nothing references it.
-const routes = [
-  { from: "Lagos", to: "Abuja", price: "₦18,000", time: "8h 30m", image: "/images/home/route-lahore-islamabad.jpg" },
-  { from: "Accra", to: "Kumasi", price: "₵120", time: "4h 15m", image: "/images/home/route-karachi-hyderabad.jpg" },
-  { from: "Port Harcourt", to: "Lagos", price: "₦15,000", time: "7h 45m", image: "/images/home/route-islamabad-peshawar.jpg" },
-  { from: "Kumasi", to: "Tamale", price: "₵100", time: "6h 00m", image: "/images/home/route-multan-lahore.jpg" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -851,24 +757,23 @@ function Hero() {
                       <div className="flex items-center justify-between mb-1.5 sm:mb-2.5">
                         <div className="flex items-center gap-1.5 sm:gap-2">
                           <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">Live Trip</span>
+                          <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">{t("hero.overlay.protectedTrip")}</span>
                         </div>
-                        <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">ETA 2h 15m</span>
+                        <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">{t("hero.overlay.statusActive")}</span>
                       </div>
 
-                      {/* Compact horizontal route — Lagos [bar] Abuja on one row, with 62% at end */}
+                      {/* Compact horizontal route status */}
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] sm:text-xs font-bold text-zinc-900 shrink-0">Lagos</span>
+                        <span className="text-[11px] sm:text-xs font-bold text-zinc-900 shrink-0">{t("hero.overlay.pickup")}</span>
                         <div className="relative h-1 sm:h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden">
                           <motion.div
                             className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
                             initial={{ width: "0%" }}
-                            animate={{ width: "62%" }}
+                            animate={{ width: "58%" }}
                             transition={{ duration: 2, delay: 1.2, ease: "easeOut" }}
                           />
                         </div>
-                        <span className="text-[11px] sm:text-xs font-bold text-zinc-900 shrink-0">Abuja</span>
-                        <span className="text-[11px] sm:text-sm font-bold text-zinc-900 tabular-nums shrink-0 ml-1">62%</span>
+                        <span className="text-[11px] sm:text-xs font-bold text-zinc-900 shrink-0">{t("hero.overlay.arrival")}</span>
                       </div>
                     </div>
                   </div>
@@ -882,389 +787,13 @@ function Hero() {
                   <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div>
-                  <div className="text-xs sm:text-sm font-bold text-zinc-900 leading-tight">Verified</div>
-                  <div className="text-[10px] sm:text-xs text-slate-400 font-medium leading-tight">Licensed &amp; Inspected</div>
+                  <div className="text-xs sm:text-sm font-bold text-zinc-900 leading-tight">{t("hero.badge.verified")}</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400 font-medium leading-tight">{t("hero.badge.licensed")}</div>
                 </div>
               </motion.div>
 
-              {/* 4.9/5 badge — hidden on mobile, it overlapped the compact Live Trip card at the bottom */}
-              <motion.div className="hidden sm:flex absolute sm:-bottom-5 sm:left-6 bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] border border-slate-100 px-5 py-3.5 items-center gap-3 z-20"
-                animate={{ y: [0, -6, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}>
-                <div className="flex -space-x-1 sm:-space-x-1.5">
-                  {[1, 2, 3, 4, 5].map((i) => <StarIcon key={i} className="w-3 h-3 sm:w-4 sm:h-4 text-amber-400" />)}
-                </div>
-                <div>
-                  <div className="text-xs sm:text-sm font-bold text-zinc-900 leading-tight">4.9/5</div>
-                  <div className="text-[10px] sm:text-xs text-slate-400 font-medium leading-tight">12K+ reviews</div>
-                </div>
-              </motion.div>
-
-              {/* Active-travelers card — hidden on mobile since -left-4 overflows the narrow media box and looks cramped next to the other badges */}
-              <div className="absolute top-1/2 -translate-y-1/2 -left-4 z-20 hidden sm:block">
-                <motion.div
-                  className="bg-white rounded-xl shadow-lg border border-slate-100 px-4 py-2.5 flex items-center gap-2 will-change-transform"
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-                >
-                  <div className="flex -space-x-2">
-                    {["/images/home/avatar-1.jpg",
-                      "/images/home/avatar-2.jpg",
-                      "/images/home/avatar-3.jpg"
-                    ].map((src, i) => (
-                      <SmartImage key={i} src={src} fallbackSrc="/images/home/avatar-1.jpg" alt="Active traveler" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
-                    ))}
-                  </div>
-                  <div className="text-xs">
-                    <div className="font-bold text-zinc-900">+2.4K</div>
-                    <div className="text-slate-400">this week</div>
-                  </div>
-                </motion.div>
-              </div>
             </div>
           </motion.div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Stats ────────────────────────────────────────────────────────────────────
-
-function Stats() {
-  const reduced = useReducedFx();
-  const live = useHomepageStats();
-
-  // Real values when /platform/overview has loaded; otherwise use the seed
-  // marketing numbers so the section never renders a flash of zeros.
-  // For rating/on-time we keep the seed when the API returns null (i.e. no
-  // reviews / no completed trips yet) — showing "0.0/5" reads as broken.
-  const realStats: typeof stats = live
-    ? [
-        { to: live.travelers, suffix: "", tail: live.travelers >= 1000 ? "+" : undefined, label: "Active travelers", icon: <UsersIcon className="w-6 h-6" /> },
-        { to: live.transporters, suffix: "", tail: live.transporters >= 100 ? "+" : undefined, label: "Verified transporters", icon: <RouteIcon className="w-6 h-6" /> },
-        { to: live.avgRating ?? 4.7, decimals: 1, suffix: "", tail: "/5", label: "Average Transporter rating", icon: <StarIcon className="w-6 h-6" /> },
-        { to: Math.round(live.onTimeRate ?? 95), suffix: "%", label: "On-time arrivals", icon: <ClockIcon className="w-6 h-6" /> },
-      ]
-    : stats;
-
-  return (
-    <section className="relative bg-zinc-950 border-y border-white/[0.06] overflow-hidden">
-      <div className="absolute inset-0 grain" />
-      {!reduced && (
-        <>
-          <motion.div className="absolute -top-20 left-[10%] w-[350px] h-[350px] rounded-full pointer-events-none opacity-40 blur-[100px]"
-            style={{ background: "radial-gradient(circle, rgba(16,185,129,0.5) 0%, transparent 70%)" }}
-            animate={{ x: [0, 40, 0], scale: [1, 1.2, 1] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} />
-          <motion.div className="absolute -bottom-16 right-[15%] w-[300px] h-[300px] rounded-full pointer-events-none opacity-30 blur-[90px]"
-            style={{ background: "radial-gradient(circle, rgba(20,184,166,0.5) 0%, transparent 70%)" }}
-            animate={{ x: [0, -30, 0], scale: [1.1, 0.9, 1.1] }} transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }} />
-        </>
-      )}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/[0.06]">
-          {realStats.map((stat, i) => (
-            <Reveal key={stat.label} delay={i * 0.08} className="group cursor-pointer py-10 md:py-14 px-6 md:px-8 text-center rounded-2xl transition-all duration-300 hover:bg-white/[0.03] hover:-translate-y-1">
-              <div className="mb-2 inline-flex items-center justify-center text-emerald-400">{stat.icon}</div>
-              <div className="font-[var(--font-display)] text-3xl md:text-4xl text-white tracking-tight mb-1.5 group-hover:text-emerald-400 transition-colors duration-300">
-                <CountUp to={stat.to} decimals={stat.decimals} suffix={stat.suffix} duration={1800} />
-                {stat.tail && <span className="text-xl text-zinc-500">{stat.tail}</span>}
-              </div>
-              <div className="text-sm text-zinc-400 font-medium">{stat.label}</div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Popular Routes — bento grid (1 big + 3 small) ──────────────────────────
-
-// Seed routes — mix of Nigerian and Ghanaian corridors with native currencies.
-// Real `routes` from /platform/popular-routes (when wired) override this.
-const routesBento = [
-  {
-    from: "Lagos", to: "Abuja", price: "₦18,000", time: "8h 30m", seats: 7,
-    hue: "from-emerald-500/80 via-emerald-700/60 to-teal-900/90",
-    image: "/images/home/route-lahore-islamabad.jpg",
-    vehicle: "Coach + Sedan", next: "8 min", featured: true,
-  },
-  {
-    from: "Accra", to: "Kumasi", price: "₵120", time: "4h 15m", seats: 14,
-    hue: "from-amber-500/70 via-orange-700/60 to-rose-900/90",
-    image: "/images/home/route-karachi-hyderabad.jpg",
-    vehicle: "Coach", next: "22 min",
-  },
-  {
-    from: "Port Harcourt", to: "Lagos", price: "₦15,000", time: "7h 45m", seats: 24,
-    hue: "from-sky-500/70 via-indigo-700/60 to-violet-900/90",
-    image: "/images/home/route-islamabad-peshawar.jpg",
-    vehicle: "Van", next: "47 min",
-  },
-  {
-    from: "Kumasi", to: "Tamale", price: "₵100", time: "6h 00m", seats: 4,
-    hue: "from-rose-500/70 via-fuchsia-700/60 to-purple-900/90",
-    image: "/images/home/route-multan-lahore.jpg",
-    vehicle: "Coach", next: "1h 12m",
-  },
-];
-
-function VehicleIcon({ kind, className = "h-3.5 w-3.5" }: { kind: string; className?: string }) {
-  // Generic transport icon — small steering wheel / vehicle silhouette
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M5 17h14M5 17l1.5-5h11L19 17M5 17v2a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-2M16 17v2a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-2" />
-      <circle cx="8" cy="14.5" r="0.5" fill="currentColor" />
-      <circle cx="16" cy="14.5" r="0.5" fill="currentColor" />
-    </svg>
-  );
-}
-
-function RouteArc({ large = false, index = 0 }: { large?: boolean; index?: number }) {
-  const pathId = `route-arc-${index}-${large ? "lg" : "sm"}`;
-  const d = large
-    ? "M30,60 C150,10 320,110 470,40"
-    : "M14,32 C70,4 150,60 200,28";
-  const w = large ? 500 : 215;
-  const h = large ? 90 : 50;
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="block w-full" aria-hidden>
-      <defs>
-        <path id={pathId} d={d} />
-      </defs>
-      {/* Static dashed track */}
-      <path d={d} stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" fill="none" strokeDasharray="3 6" strokeLinecap="round" />
-      {/* Flowing dashes */}
-      <motion.path
-        d={d} stroke="rgba(255,255,255,0.95)" strokeWidth="2" fill="none" strokeDasharray="10 28" strokeLinecap="round"
-        animate={{ strokeDashoffset: [0, -38] }}
-        transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
-      />
-      {/* Endpoints */}
-      <circle cx={large ? 30 : 14} cy={large ? 60 : 32} r={large ? 5 : 3.5} fill="white" />
-      <circle cx={large ? 30 : 14} cy={large ? 60 : 32} r={large ? 9 : 6} fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1" />
-      <circle cx={large ? 470 : 200} cy={large ? 40 : 28} r={large ? 5 : 3.5} fill="rgb(110,231,183)" />
-      <circle cx={large ? 470 : 200} cy={large ? 40 : 28} r={large ? 9 : 6} fill="none" stroke="rgba(110,231,183,0.6)" strokeWidth="1" />
-      {/* Moving vehicle dot */}
-      <motion.g
-        animate={{ offsetDistance: ["8%", "92%", "8%"] }}
-        transition={{ duration: 5 + index, repeat: Infinity, ease: "easeInOut" }}
-        style={{ offsetPath: `path("${d}")`, offsetRotate: "auto" }}
-      >
-        <circle r={large ? 4 : 3} fill="white" />
-        <circle r={large ? 8 : 6} fill="white" opacity="0.25" />
-      </motion.g>
-    </svg>
-  );
-}
-
-function RouteTile({ r, large = false, index = 0 }: { r: typeof routesBento[number]; large?: boolean; index?: number }) {
-  return (
-    <motion.a
-      href="/signup"
-      whileHover={{ y: -6 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className={`group relative block h-full overflow-hidden rounded-3xl bg-zinc-950 text-white shadow-[0_30px_70px_-25px_rgba(16,185,129,0.25),0_18px_40px_-20px_rgba(0,0,0,0.4)] ring-1 ring-white/10 ${large ? "p-5 sm:p-7 md:p-8" : "p-4 sm:p-5 md:p-6"}`}
-    >
-      {/* Background image */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={r.image}
-        alt={`${r.from} to ${r.to}`}
-        className="absolute inset-0 h-full w-full object-cover scale-105 transition-transform duration-700 group-hover:scale-110"
-      />
-      {/* Hue color overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${r.hue} mix-blend-multiply`} />
-      {/* Vignette */}
-      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/85 via-zinc-950/15 to-zinc-950/40" />
-      {/* Top-left highlight */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(255,255,255,0.2),transparent_55%)]" />
-      {/* Animated halo */}
-      <motion.div
-        className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/15 blur-2xl"
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.55, 0.3] }}
-        transition={{ duration: 5 + index, repeat: Infinity, ease: "easeInOut" }}
-      />
-      {/* Inner ring */}
-      <div className="absolute inset-0 ring-1 ring-inset ring-white/15" />
-      {/* Subtle dot grid */}
-      <div
-        className="absolute inset-0 opacity-25"
-        style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.5) 0.5px, transparent 0.5px)", backgroundSize: "20px 20px" }}
-      />
-
-      <div className="relative flex h-full min-w-0 flex-col">
-        {/* Top: live chip + arrow */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-black/35 px-2.5 py-1 backdrop-blur">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-80" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-300" />
-            </span>
-            <span className="font-mono text-[10px] font-semibold tabular-nums tracking-wider">
-              <CountUp to={r.seats} duration={1300} /> seats left
-            </span>
-          </div>
-          <ArrowRightIcon className="h-4 w-4 text-white/80 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
-        </div>
-
-        {/* Middle: route arc (only on featured large tile) */}
-        {large && (
-          <div className="my-6">
-            <RouteArc large index={index} />
-          </div>
-        )}
-
-        {/* Bottom area */}
-        <div className={`mt-auto ${large ? "" : ""}`}>
-          {/* Cities */}
-          {large ? (
-            <div className="flex items-end justify-between gap-3 sm:gap-6">
-              <div className="min-w-0">
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/70">From</div>
-                <div className="mt-0.5 truncate font-semibold tracking-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">{r.from}</div>
-              </div>
-              <div className="min-w-0 text-right">
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/70">To</div>
-                <div className="mt-0.5 truncate font-semibold tracking-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">{r.to}</div>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-baseline justify-between gap-2">
-                <div className="min-w-0 truncate font-semibold tracking-tight text-lg sm:text-xl leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">{r.from}</div>
-                <div className="min-w-0 truncate text-right font-semibold tracking-tight text-lg sm:text-xl leading-none text-white/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">{r.to}</div>
-              </div>
-              <div className="-my-1">
-                <RouteArc index={index} />
-              </div>
-            </div>
-          )}
-
-          {/* Footer row: vehicle, departure, fare, time */}
-          <div className={`${large ? "mt-6" : "mt-4"} flex flex-wrap items-end justify-between gap-x-3 gap-y-2 border-t border-white/15 pt-4`}>
-            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 sm:gap-3">
-              <div className="inline-flex items-center gap-1.5 text-[11px] text-white/85">
-                <VehicleIcon kind={r.vehicle} />
-                <span className="font-medium">{r.vehicle}</span>
-              </div>
-              <span className="hidden text-white/30 sm:inline">·</span>
-              <div className="inline-flex items-center gap-1.5 text-[11px] text-emerald-200">
-                <span className="relative flex h-1 w-1">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-80" />
-                  <span className="relative inline-flex h-1 w-1 rounded-full bg-emerald-300" />
-                </span>
-                <span className="font-mono">Next {r.next}</span>
-              </div>
-            </div>
-            <div className="ml-auto text-right">
-              <div className="font-mono text-sm sm:text-base font-semibold tabular-nums leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">{r.price}</div>
-              <div className="mt-1 font-mono text-[10px] tabular-nums text-white/60">{r.time}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.a>
-  );
-}
-
-// Currency code → display symbol. Falls back to the code itself.
-function currencySymbol(code: string): string {
-  switch ((code || "").toUpperCase()) {
-    case "NGN": return "₦";
-    case "GHS": return "₵";
-    case "USD": return "$";
-    case "EUR": return "€";
-    case "GBP": return "£";
-    case "KES": return "KSh ";
-    case "ZAR": return "R";
-    default: return `${code} `;
-  }
-}
-
-function formatNextDeparture(minutes: number | null): string {
-  if (minutes === null) return "Schedule TBD";
-  if (minutes < 60) return `${minutes} min`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
-}
-
-function PopularRoutes() {
-  const [routes, setRoutes] = useState<typeof routesBento>(routesBento);
-
-  // Fetch real top-4 routes by booking count. The seed defines the visual
-  // grid (hue / image / featured slot); we map real route data into those
-  // slots so the bento layout stays stable. Falls back to the Nigerian/
-  // Ghanaian seed if the API returns fewer than 2 routes.
-  useEffect(() => {
-    let cancelled = false;
-    import("@/lib/api").then(({ getPopularRoutes }) =>
-      getPopularRoutes(4)
-        .then((res) => {
-          if (cancelled) return;
-          const live = res?.routes ?? [];
-          if (live.length < 2) return;
-          const merged = routesBento.map((seed, idx) => {
-            const real = live[idx];
-            if (!real) return seed;
-            const sym = currencySymbol(real.currency);
-            const priceNum = Math.round(real.minPrice).toLocaleString();
-            return {
-              ...seed,
-              from: real.from,
-              to: real.to,
-              price: `${sym}${priceNum}`,
-              time: seed.time, // we don't have a duration on the model
-              seats: real.availableSeats,
-              vehicle: real.vehicle || seed.vehicle,
-              next: formatNextDeparture(real.nextDepartureMinutes),
-            };
-          });
-          setRoutes(merged);
-        })
-        .catch(() => { /* keep seed */ }),
-    );
-    return () => { cancelled = true; };
-  }, []);
-
-  return (
-    <section className="relative bg-zinc-950 py-24 lg:py-32 overflow-hidden text-white">
-      {/* Live backgrounds — turned UP for the dark canvas */}
-      <LiveAurora tones={["emerald", "cool", "violet"]} intensity={0.7} dark />
-      <LiveGrid dark intensity={0.9} />
-      <LiveDots count={36} color="emerald" dark />
-      <LiveRibbon dark />
-      <div className="absolute inset-0 grain opacity-50" />
-      {/* Bottom fade so it blends into next section */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-zinc-950" />
-
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Reveal className="mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 backdrop-blur">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-80" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              </span>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">Most-booked · live this week</span>
-            </div>
-            <h2 className="mt-4 font-[var(--font-display)] text-4xl md:text-5xl lg:text-6xl tracking-tight leading-[1.02] text-white">
-              Where will you <span className="italic text-emerald-300">go next?</span>
-            </h2>
-          </div>
-          <Link href="/signup" className="group inline-flex items-center gap-1.5 self-start rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition-colors hover:border-emerald-400/40 hover:bg-white/10 sm:self-end">
-            Browse all routes
-            <ArrowRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-          </Link>
-        </Reveal>
-
-        <div className="grid gap-4 md:grid-cols-4 md:auto-rows-[230px]">
-          {routes.map((r, i) => (
-            <Reveal key={`${r.from}-${r.to}`} delay={i * 0.08} className={`min-w-0 ${r.featured ? "md:col-span-2 md:row-span-2" : ""}`}>
-              <RouteTile r={r} large={r.featured} index={i} />
-            </Reveal>
-          ))}
         </div>
       </div>
     </section>
@@ -1275,33 +804,43 @@ function PopularRoutes() {
 
 const featurePillars = [
   {
-    eyebrow: "01 · Trust",
-    title: "Drivers we'd trust with our family.",
-    body: "Every transporter clears identity, license, and vehicle inspection. Anyone showing red flags loses access — automatically and permanently.",
+    n: "01",
+    eyebrowKey: "features.trust.eyebrow",
+    titleKey: "features.trust.title",
+    bodyKey: "features.trust.body",
     visual: "shield" as const,
   },
   {
-    eyebrow: "02 · Money",
-    title: "The price you see is the price you pay.",
-    body: "No surge, no hidden fees, no curb-side bargaining. Your fare sits in escrow until you arrive. Refunds happen the same day.",
+    n: "02",
+    eyebrowKey: "features.protection.eyebrow",
+    titleKey: "features.protection.title",
+    bodyKey: "features.protection.body",
     visual: "wallet" as const,
   },
   {
-    eyebrow: "03 · Visibility",
-    title: "Live tracking — for you and the people who care.",
-    body: "Watch your trip update to the meter. Generate a one-tap share link and your family follows along until you arrive safely.",
+    n: "03",
+    eyebrowKey: "features.privacy.eyebrow",
+    titleKey: "features.privacy.title",
+    bodyKey: "features.privacy.body",
     visual: "radar" as const,
   },
   {
-    eyebrow: "04 · Voice",
-    title: "Reviews that actually mean something.",
-    body: "Only verified passengers can leave reviews. Drivers below 4.5 get coached. Below 4.0 get suspended. The standard stays high.",
+    n: "04",
+    eyebrowKey: "features.voice.eyebrow",
+    titleKey: "features.voice.title",
+    bodyKey: "features.voice.body",
     visual: "voices" as const,
   },
 ];
 
 function ShieldVisual() {
-  const checks = ["License", "ID match", "Insurance", "Vehicle audit"];
+  const t = useT();
+  const checks = [
+    t("visual.license"),
+    t("visual.idMatch"),
+    t("visual.insurance"),
+    t("visual.vehicleAudit"),
+  ];
   return (
     <div className="relative aspect-square w-full max-w-[440px]">
       <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-emerald-50 via-white to-emerald-100/40" />
@@ -1347,6 +886,7 @@ function ShieldVisual() {
 }
 
 function WalletVisual() {
+  const t = useT();
   return (
     <div className="relative aspect-square w-full max-w-[440px]">
       <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-amber-50 via-white to-orange-100/40" />
@@ -1360,16 +900,16 @@ function WalletVisual() {
         >
           <div className="aspect-[1.6/1] w-full rounded-2xl bg-zinc-950 p-5 text-white shadow-[0_30px_60px_-20px_rgba(0,0,0,0.4)] ring-1 ring-white/10">
             <div className="flex items-start justify-between">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">SmatWay · Escrow</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">{t("visual.escrow")}</div>
               <MapPinIcon className="h-4 w-4 text-emerald-400" />
             </div>
             <div className="mt-12 font-mono text-[15px] tracking-[0.2em] text-zinc-200">4729 · 8810 · ····</div>
             <div className="mt-3 flex items-end justify-between">
               <div>
-                <div className="text-[9px] uppercase tracking-wider text-zinc-500">Trip hold</div>
-                <div className="font-mono text-base font-semibold tabular-nums">₦18,000.00</div>
+                <div className="text-[9px] uppercase tracking-wider text-zinc-500">{t("visual.tripHold")}</div>
+                <div className="font-mono text-base font-semibold uppercase tracking-wider">{t("visual.protected")}</div>
               </div>
-              <div className="rounded-full bg-emerald-500/15 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Held</div>
+              <div className="rounded-full bg-emerald-500/15 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">{t("visual.held")}</div>
             </div>
           </div>
         </motion.div>
@@ -1379,21 +919,22 @@ function WalletVisual() {
         animate={{ y: [0, -5, 0] }}
         transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
       >
-        <div className="font-mono text-zinc-950">+ 0 fees</div>
-        <div className="text-[10px] text-zinc-500">No surge</div>
+        <div className="font-mono text-zinc-950">{t("visual.noFees")}</div>
+        <div className="text-[10px] text-zinc-500">{t("visual.noSurge")}</div>
       </motion.div>
       <motion.div
         className="absolute bottom-8 left-6 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-800 shadow-sm"
         animate={{ y: [0, -4, 0] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
       >
-        Released to driver in 2h
+        {t("visual.releaseOnArrival")}
       </motion.div>
     </div>
   );
 }
 
 function RadarVisual() {
+  const t = useT();
   return (
     <div className="relative aspect-square w-full max-w-[440px]">
       <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-sky-50 via-white to-emerald-50/40" />
@@ -1415,7 +956,7 @@ function RadarVisual() {
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       >
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        Lagos → Abuja
+        {t("visual.routeProtected")}
       </motion.div>
       <motion.div
         className="absolute left-[16%] top-[64%] flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] font-medium text-zinc-700 shadow-[0_6px_18px_rgba(0,0,0,0.06)]"
@@ -1423,7 +964,7 @@ function RadarVisual() {
         transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
       >
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        ETA 2h 15m
+        {t("visual.locationHidden")}
       </motion.div>
       <motion.div
         className="absolute right-6 bottom-6 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-800"
@@ -1434,17 +975,18 @@ function RadarVisual() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
         </span>
-        Sharing live
+        {t("visual.privateTrip")}
       </motion.div>
     </div>
   );
 }
 
 function VoicesVisual() {
+  const t = useT();
   const reviews = [
-    { name: "Amna F.", note: "Driver was 5 min early. Smooth ride.", stars: 5, x: "5%", y: "10%" },
-    { name: "Bilal Q.", note: "Cleanest van I've taken. AC perfect.", stars: 5, x: "55%", y: "32%" },
-    { name: "Sara M.", note: "Tracking link kept my mum at ease.", stars: 5, x: "12%", y: "58%" },
+    { name: t("visual.review.one.name"), note: t("visual.review.one.note"), stars: 5, x: "5%", y: "10%" },
+    { name: t("visual.review.two.name"), note: t("visual.review.two.note"), stars: 5, x: "55%", y: "32%" },
+    { name: t("visual.review.three.name"), note: t("visual.review.three.note"), stars: 5, x: "12%", y: "58%" },
   ];
   return (
     <div className="relative aspect-square w-full max-w-[440px]">
@@ -1478,8 +1020,8 @@ function VoicesVisual() {
         animate={{ y: [0, -4, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       >
-        <div className="font-mono text-2xl font-semibold tabular-nums">4.9</div>
-        <div className="text-[10px] uppercase tracking-wider text-zinc-400">avg rating</div>
+        <div className="font-mono text-sm font-semibold uppercase tracking-wider">{t("visual.verified")}</div>
+        <div className="text-[10px] uppercase tracking-wider text-zinc-400">{t("visual.riderFeedback")}</div>
       </motion.div>
     </div>
   );
@@ -1493,6 +1035,7 @@ function PillarVisual({ kind }: { kind: typeof featurePillars[number]["visual"] 
 }
 
 function Features() {
+  const t = useT();
   const reducedFx = useReducedFx();
   // Per-pillar accent palette — tuned for light editorial cards
   const accents: Record<typeof featurePillars[number]["visual"], {
@@ -1579,14 +1122,14 @@ function Features() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-80" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
               </span>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Why SmatWay</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">{t("features.kicker")}</span>
             </div>
             <h2 className="mt-4 font-[var(--font-display)] text-4xl md:text-5xl lg:text-6xl tracking-tight leading-[1.02] text-zinc-950">
-              Built around the <span className="italic text-emerald-700">four things</span> that actually matter.
+              {t("features.title.before")} <span className="italic text-emerald-700">{t("features.title.accent")}</span> {t("features.title.after")}
             </h2>
           </div>
           <div className="hidden text-right text-[11px] font-mono uppercase tracking-[0.18em] text-zinc-500 sm:block">
-            04 / 04 · pillars
+            {t("features.count")}
           </div>
         </Reveal>
 
@@ -1594,9 +1137,10 @@ function Features() {
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:gap-6">
           {featurePillars.map((p, i) => {
             const a = accents[p.visual];
-            const [num, label] = p.eyebrow.split(" · ");
+            const num = p.n;
+            const label = t(p.eyebrowKey);
             return (
-              <Reveal key={p.title} delay={i * 0.07}>
+              <Reveal key={p.titleKey} delay={i * 0.07}>
                 <motion.div
                   whileHover={{ y: -5 }}
                   transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
@@ -1635,13 +1179,13 @@ function Features() {
                         <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em]">{label}</span>
                       </div>
                       <h3 className="mt-3 font-[var(--font-display)] text-2xl tracking-tight text-zinc-950 sm:text-[28px] leading-[1.1]">
-                        {p.title}
+                        {t(p.titleKey)}
                       </h3>
-                      <p className="mt-3 text-[14px] leading-relaxed text-zinc-600">{p.body}</p>
+                      <p className="mt-3 text-[14px] leading-relaxed text-zinc-600">{t(p.bodyKey)}</p>
 
                       {/* Subtle "learn more" affordance that slides in on hover */}
                       <div className={`mt-5 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] ${a.arrow} opacity-0 transition-all duration-500 translate-x-[-4px] group-hover:opacity-100 group-hover:translate-x-0`}>
-                        <span>Learn more</span>
+                        <span>{t("features.learnMore")}</span>
                         <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M3 8h10M9 4l4 4-4 4" />
                         </svg>
@@ -1676,6 +1220,7 @@ type ScreenKind = "search" | "trip" | "ticket";
 const screenIds: ScreenKind[] = ["search", "trip", "ticket"];
 
 function PhoneSearchScreen() {
+  const t = useT();
   // Mirrors dashboard/(travelor)/page.tsx — dark hero with white search card
   return (
     <div className="absolute inset-0 flex flex-col bg-zinc-50">
@@ -1695,10 +1240,10 @@ function PhoneSearchScreen() {
         <div className="relative">
           <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 ring-1 ring-emerald-400/30">
             <svg className="h-2 w-2 text-emerald-300" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 4.5L18 6l-4.5 1.5L12 12l-1.5-4.5L6 6l4.5-1.5L12 0z" /></svg>
-            <span className="text-[7px] font-semibold uppercase tracking-wider text-emerald-200">Trusted transporters</span>
+            <span className="text-[7px] font-semibold uppercase tracking-wider text-emerald-200">{t("phone.search.badge")}</span>
           </div>
-          <h2 className="mt-2 text-[15px] font-semibold leading-tight tracking-tight">Where are you headed?</h2>
-          <p className="mt-0.5 text-[8px] text-zinc-400">Search verified routes across cities</p>
+          <h2 className="mt-2 text-[15px] font-semibold leading-tight tracking-tight">{t("phone.search.title")}</h2>
+          <p className="mt-0.5 text-[8px] text-zinc-400">{t("phone.search.subtitle")}</p>
         </div>
       </div>
 
@@ -1706,9 +1251,9 @@ function PhoneSearchScreen() {
       <div className="mx-3 -mt-3 rounded-[20px] bg-white p-3 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.18)] ring-1 ring-zinc-100">
         <div className="space-y-2">
           {[
-            { label: "From", value: "Lagos", sub: "Lagos State" },
-            { label: "To", value: "Abuja", sub: "FCT" },
-            { label: "Date", value: "Tomorrow · 8:00 AM", sub: "" },
+            { label: t("phone.field.from"), value: t("phone.field.pickupCity"), sub: t("phone.field.chooseLocation") },
+            { label: t("phone.field.to"), value: t("phone.field.destination"), sub: t("phone.field.chooseLocation") },
+            { label: t("phone.field.date"), value: t("phone.field.preferredTime"), sub: "" },
           ].map((f, i) => (
             <motion.div
               key={f.label}
@@ -1730,7 +1275,7 @@ function PhoneSearchScreen() {
           transition={{ duration: 0.4, delay: 0.35 }}
           className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl bg-zinc-950 py-2 text-[10px] font-semibold text-white"
         >
-          Search routes
+          {t("phone.search.button")}
           <ArrowRightIcon className="h-2.5 w-2.5" />
         </motion.button>
       </div>
@@ -1738,31 +1283,30 @@ function PhoneSearchScreen() {
       {/* result preview */}
       <div className="mx-3 mt-2 space-y-1.5">
         {[
-          { driver: "Tunde A.", price: "18,000", time: "8h 30m", seats: 7 },
-          { driver: "Femi O.", price: "17,500", time: "8h 45m", seats: 11 },
+          { label: t("phone.result.driver"), meta: t("phone.result.identity"), status: t("phone.result.ready") },
+          { label: t("phone.result.vehicle"), meta: t("phone.result.documents"), status: t("phone.result.safe") },
         ].map((r, i) => (
           <motion.div
-            key={r.driver}
+            key={r.label}
             initial={{ opacity: 0, x: -6 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35, delay: 0.45 + i * 0.1 }}
             className="flex items-center gap-2 rounded-xl border border-zinc-100 bg-white p-2 shadow-sm"
           >
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 text-[9px] font-semibold text-white">
-              {r.driver[0]}
+              <CheckIcon className="h-3 w-3" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] font-semibold text-zinc-950">{r.driver}</div>
+              <div className="text-[10px] font-semibold text-zinc-950">{r.label}</div>
               <div className="flex items-center gap-1 text-[8px] text-zinc-500">
-                <svg className="h-2 w-2 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6 14.5 9l6.8.5-5.2 4.4 1.7 6.6L12 16.9l-5.8 3.6 1.7-6.6L2.7 9.5 9.5 9z" /></svg>
-                4.9 · {r.seats} seats · {r.time}
+                <CheckIcon className="h-2 w-2 text-emerald-500" />
+                {r.meta}
               </div>
             </div>
             <div className="text-right">
-              <div className="font-mono text-[10px] font-bold text-zinc-950 tabular-nums">₦{r.price}</div>
               <div className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-1 py-0 text-[7px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
                 <span className="h-1 w-1 rounded-full bg-emerald-500" />
-                Available
+                {r.status}
               </div>
             </div>
           </motion.div>
@@ -1773,6 +1317,7 @@ function PhoneSearchScreen() {
 }
 
 function PhoneTripScreen() {
+  const t = useT();
   return (
     <div className="absolute inset-0 flex flex-col bg-zinc-50">
       <div className="flex items-center justify-between px-6 pt-3 pb-2">
@@ -1786,11 +1331,11 @@ function PhoneTripScreen() {
 
       {/* page header */}
       <div className="px-4 pt-2">
-        <div className="text-[7px] font-semibold uppercase tracking-[0.15em] text-emerald-700">My Bookings</div>
-        <h2 className="mt-1 text-[15px] font-semibold tracking-tight text-zinc-950">Trip in progress</h2>
+        <div className="text-[7px] font-semibold uppercase tracking-[0.15em] text-emerald-700">{t("phone.trip.header")}</div>
+        <h2 className="mt-1 text-[15px] font-semibold tracking-tight text-zinc-950">{t("phone.trip.title")}</h2>
       </div>
 
-      {/* live trip card */}
+      {/* private trip card */}
       <div className="mx-3 mt-3 overflow-hidden rounded-[20px] bg-white p-3 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.12)] ring-1 ring-zinc-100">
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-emerald-700 ring-1 ring-inset ring-emerald-200">
@@ -1798,9 +1343,9 @@ function PhoneTripScreen() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-1 w-1 rounded-full bg-emerald-500" />
             </span>
-            En route
+            {t("phone.trip.private")}
           </span>
-          <span className="font-mono text-[8px] text-zinc-500">ETA 2h 15m</span>
+          <span className="font-mono text-[8px] text-zinc-500">{t("phone.trip.confidential")}</span>
         </div>
 
         <div className="mt-2.5 flex items-center gap-2">
@@ -1810,25 +1355,20 @@ function PhoneTripScreen() {
             <div className="h-2 w-2 rounded-full border-2 border-emerald-400 bg-white" />
           </div>
           <div className="flex-1">
-            <div className="text-[10px] font-bold text-zinc-950">Lagos</div>
+            <div className="text-[10px] font-bold text-zinc-950">{t("phone.trip.pickupDetails")}</div>
             <div className="relative my-1 h-1 w-full overflow-hidden rounded-full bg-zinc-100">
               <motion.div
                 className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
                 initial={{ width: 0 }}
-                animate={{ width: "62%" }}
+                animate={{ width: "100%" }}
                 transition={{ duration: 1.4, delay: 0.4 }}
               />
-              <motion.div
-                className="absolute inset-y-0 w-6 bg-gradient-to-r from-transparent via-white/70 to-transparent"
-                animate={{ x: ["-100%", "300%"] }}
-                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-              />
             </div>
-            <div className="text-[10px] font-bold text-zinc-950">Abuja</div>
+            <div className="text-[10px] font-bold text-zinc-950">{t("phone.trip.storedSecurely")}</div>
           </div>
           <div className="text-right">
-            <div className="font-mono text-[12px] font-bold tabular-nums text-zinc-950">62%</div>
-            <div className="text-[7px] text-zinc-400">complete</div>
+            <div className="font-mono text-[9px] font-bold uppercase tracking-wider text-zinc-950">{t("phone.trip.locked")}</div>
+            <div className="text-[7px] text-zinc-400">{t("phone.trip.details")}</div>
           </div>
         </div>
       </div>
@@ -1837,10 +1377,10 @@ function PhoneTripScreen() {
       <div className="mx-3 mt-2 flex items-center gap-2 rounded-2xl bg-white p-2.5 shadow-sm ring-1 ring-zinc-100">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-rose-500 text-[12px] font-bold text-white ring-2 ring-white">K</div>
         <div className="flex-1">
-          <div className="text-[11px] font-semibold text-zinc-950">Kamran A.</div>
+          <div className="text-[11px] font-semibold text-zinc-950">{t("phone.result.driver")}</div>
           <div className="flex items-center gap-1 text-[8px] text-zinc-500">
-            <svg className="h-2 w-2 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6 14.5 9l6.8.5-5.2 4.4 1.7 6.6L12 16.9l-5.8 3.6 1.7-6.6L2.7 9.5 9.5 9z" /></svg>
-            4.9 · Sedan · F-HY 100
+            <CheckIcon className="h-2 w-2 text-emerald-500" />
+            {t("phone.result.identity")}
           </div>
         </div>
         <div className="flex gap-1">
@@ -1853,7 +1393,7 @@ function PhoneTripScreen() {
         </div>
       </div>
 
-      {/* share link banner */}
+      {/* privacy banner */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1862,10 +1402,10 @@ function PhoneTripScreen() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[8px] font-semibold uppercase tracking-wider text-emerald-300">Share live trip</div>
-            <div className="mt-0.5 font-mono text-[9px] text-zinc-300">smatway.app/t/0482</div>
+            <div className="text-[8px] font-semibold uppercase tracking-wider text-emerald-300">{t("phone.trip.detailsPrivate")}</div>
+            <div className="mt-0.5 font-mono text-[9px] text-zinc-300">{t("phone.trip.accountOnly")}</div>
           </div>
-          <button className="rounded-lg bg-white px-2 py-1 text-[9px] font-semibold text-zinc-950">Copy</button>
+          <button className="rounded-lg bg-white px-2 py-1 text-[9px] font-semibold text-zinc-950">{t("phone.trip.locked")}</button>
         </div>
       </motion.div>
     </div>
@@ -1873,6 +1413,7 @@ function PhoneTripScreen() {
 }
 
 function PhoneTicketScreen() {
+  const t = useT();
   return (
     <div className="absolute inset-0 flex flex-col bg-zinc-50">
       <div className="flex items-center justify-between px-6 pt-3 pb-2">
@@ -1885,8 +1426,8 @@ function PhoneTicketScreen() {
       </div>
 
       <div className="px-4 pt-2">
-        <div className="text-[7px] font-semibold uppercase tracking-[0.15em] text-emerald-700">Booking Confirmed</div>
-        <h2 className="mt-1 text-[15px] font-semibold tracking-tight text-zinc-950">Trip #0482</h2>
+        <div className="text-[7px] font-semibold uppercase tracking-[0.15em] text-emerald-700">{t("phone.ticket.header")}</div>
+        <h2 className="mt-1 text-[15px] font-semibold tracking-tight text-zinc-950">{t("phone.ticket.title")}</h2>
       </div>
 
       {/* ticket card */}
@@ -1896,19 +1437,19 @@ function PhoneTicketScreen() {
         <div className="relative flex items-center justify-between">
           <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider ring-1 ring-inset ring-white/20">
             <CheckIcon className="h-2 w-2" />
-            Confirmed
+            {t("phone.ticket.confirmed")}
           </span>
-          <span className="font-mono text-[8px] text-white/80">Tomorrow 8:00 AM</span>
+          <span className="font-mono text-[8px] text-white/80">{t("phone.ticket.time")}</span>
         </div>
 
         <div className="relative mt-3 flex items-end justify-between">
           <div>
-            <div className="text-[8px] uppercase tracking-wider text-white/70">From</div>
+            <div className="text-[8px] uppercase tracking-wider text-white/70">{t("phone.field.from")}</div>
             <div className="text-[16px] font-bold leading-none">Lagos</div>
           </div>
           <ArrowRightIcon className="mb-1 h-3 w-3 text-white/80" />
           <div className="text-right">
-            <div className="text-[8px] uppercase tracking-wider text-white/70">To</div>
+            <div className="text-[8px] uppercase tracking-wider text-white/70">{t("phone.field.to")}</div>
             <div className="text-[16px] font-bold leading-none">Abuja</div>
           </div>
         </div>
@@ -1922,16 +1463,16 @@ function PhoneTicketScreen() {
 
         <div className="relative flex items-center justify-between">
           <div>
-            <div className="text-[8px] uppercase tracking-wider text-white/70">Seat</div>
+            <div className="text-[8px] uppercase tracking-wider text-white/70">{t("phone.ticket.seat")}</div>
             <div className="font-mono text-[12px] font-bold tabular-nums">3A</div>
           </div>
           <div>
-            <div className="text-[8px] uppercase tracking-wider text-white/70">Vehicle</div>
-            <div className="text-[10px] font-semibold">Sedan</div>
+            <div className="text-[8px] uppercase tracking-wider text-white/70">{t("phone.ticket.vehicle")}</div>
+            <div className="text-[10px] font-semibold">{t("phone.ticket.vehicleType")}</div>
           </div>
           <div className="text-right">
-            <div className="text-[8px] uppercase tracking-wider text-white/70">Paid</div>
-            <div className="font-mono text-[12px] font-bold tabular-nums">₦18,000</div>
+            <div className="text-[8px] uppercase tracking-wider text-white/70">{t("phone.ticket.payment")}</div>
+            <div className="font-mono text-[12px] font-bold uppercase tracking-wider">{t("visual.protected")}</div>
           </div>
         </div>
       </div>
@@ -1950,11 +1491,11 @@ function PhoneTicketScreen() {
           })}
         </div>
         <div className="flex-1">
-          <div className="text-[10px] font-semibold text-zinc-950">Boarding pass</div>
-          <div className="mt-0.5 text-[8px] text-zinc-500">Show this at boarding · works offline</div>
+          <div className="text-[10px] font-semibold text-zinc-950">{t("phone.ticket.boardingPass")}</div>
+          <div className="mt-0.5 text-[8px] text-zinc-500">{t("phone.ticket.boardingHelp")}</div>
           <div className="mt-1.5 inline-flex items-center gap-1 text-[8px] font-semibold text-emerald-700">
             <CheckIcon className="h-2 w-2" />
-            Saved to wallet
+            {t("phone.ticket.saved")}
           </div>
         </div>
       </motion.div>
@@ -1962,9 +1503,9 @@ function PhoneTicketScreen() {
       {/* status pills row */}
       <div className="mx-3 mt-2 flex gap-1.5">
         {[
-          { tone: "emerald", label: "Escrow held" },
-          { tone: "blue", label: "ID verified" },
-          { tone: "amber", label: "Insured" },
+          { tone: "emerald", label: t("phone.ticket.escrowHeld") },
+          { tone: "blue", label: t("phone.ticket.idVerified") },
+          { tone: "amber", label: t("phone.ticket.insured") },
         ].map((p) => {
           const tones: Record<string, string> = {
             emerald: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -1984,13 +1525,18 @@ function PhoneTicketScreen() {
 }
 
 function AppPreview() {
+  const t = useT();
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setIdx((x) => (x + 1) % screenIds.length), 4500);
     return () => clearInterval(t);
   }, []);
   const screenId = screenIds[idx];
-  const screenLabels: Record<ScreenKind, string> = { search: "Search Rides", trip: "Live Trip", ticket: "Ticket" };
+  const screenLabels: Record<ScreenKind, string> = {
+    search: t("appPreview.screen.search"),
+    trip: t("appPreview.screen.trip"),
+    ticket: t("appPreview.screen.ticket"),
+  };
 
   return (
     <section className="relative overflow-hidden bg-zinc-950 pt-24 pb-12 lg:pt-32 lg:pb-16 text-white">
@@ -2033,8 +1579,8 @@ function AppPreview() {
                 <div className="relative flex items-center gap-1.5">
                   <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 4.5L18 6l-4.5 1.5L12 12l-1.5-4.5L6 6l4.5-1.5L12 0z M5 14l1 3 3 1-3 1-1 3-1-3-3-1 3-1z M19 15l.8 2.4L22 18l-2.2.6L19 21l-.8-2.4L16 18l2.2-.6z" /></svg>
                   <div className="leading-none">
-                    <div className="text-[8px] font-bold uppercase tracking-[0.18em] text-white/90">Launching</div>
-                    <div className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-white">Coming Soon</div>
+                    <div className="text-[8px] font-bold uppercase tracking-[0.18em] text-white/90">{t("appPreview.sticker.top")}</div>
+                    <div className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-white">{t("appPreview.sticker.bottom")}</div>
                   </div>
                 </div>
               </motion.div>
@@ -2086,8 +1632,8 @@ function AppPreview() {
                 <CheckIcon className="h-3.5 w-3.5" />
               </div>
               <div className="leading-tight">
-                <div className="text-[10px] font-semibold text-white">{screenId === "search" ? "Routes loaded" : screenId === "trip" ? "ETA updated" : "Booking confirmed"}</div>
-                <div className="text-[9px] text-zinc-400">just now</div>
+                <div className="text-[10px] font-semibold text-white">{screenId === "search" ? t("appPreview.toast.search") : screenId === "trip" ? t("appPreview.toast.trip") : t("appPreview.toast.ticket")}</div>
+                <div className="text-[9px] text-zinc-400">{t("appPreview.toast.now")}</div>
               </div>
             </motion.div>
 
@@ -2102,8 +1648,8 @@ function AppPreview() {
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
               </div>
               <div className="leading-tight">
-                <div className="text-[10px] font-semibold text-white">Family link active</div>
-                <div className="text-[9px] text-zinc-400">2 viewers</div>
+                <div className="text-[10px] font-semibold text-white">{t("appPreview.privateChip.title")}</div>
+                <div className="text-[9px] text-zinc-400">{t("appPreview.privateChip.body")}</div>
               </div>
             </motion.div>
           </div>
@@ -2128,23 +1674,23 @@ function AppPreview() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-300" />
               </span>
-              <span className="relative text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">Coming Soon · iOS + Android</span>
+              <span className="relative text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">{t("appPreview.badge")}</span>
             </motion.div>
-            <p className="mt-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-emerald-400">In your pocket</p>
+            <p className="mt-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-emerald-400">{t("appPreview.kicker")}</p>
             <h2 className="mt-3 font-[var(--font-display)] text-4xl md:text-5xl lg:text-6xl tracking-tight leading-[1.05]">
-              Everything you need, <span className="italic text-emerald-300">in one tap.</span>
+              {t("appPreview.title.before")} <span className="italic text-emerald-300">{t("appPreview.title.accent")}</span>
             </h2>
             <p className="mt-6 max-w-md text-[16px] leading-relaxed text-zinc-400">
-              Search routes, lock seats, watch the trip update live, and rate when you arrive. The whole journey lives on one screen.
+              {t("appPreview.subtitle")}
             </p>
           </Reveal>
 
           <Reveal delay={0.1}>
             <div className="mt-10 space-y-3">
               {[
-                { title: "Instant notifications", body: "Booking, driver assignment, ETA updates — all real-time." },
-                { title: "Offline tickets", body: "Download confirmation. Works even without signal." },
-                { title: "Family share", body: "One link, your loved ones see your trip until you arrive." },
+                { title: t("appPreview.row.private.title"), body: t("appPreview.row.private.body") },
+                { title: t("appPreview.row.offline.title"), body: t("appPreview.row.offline.body") },
+                { title: t("appPreview.row.confidential.title"), body: t("appPreview.row.confidential.body") },
               ].map((row) => (
                 <div key={row.title} className="flex items-start gap-3 border-t border-white/10 pt-4">
                   <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-300">
@@ -2161,12 +1707,12 @@ function AppPreview() {
 
           <Reveal delay={0.2}>
             <div className="mt-10">
-              <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Launching later this year</div>
+              <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">{t("appPreview.launchingLater")}</div>
               <div className="flex flex-wrap items-center gap-3">
                 {/* Disabled store buttons with "Coming soon" badge */}
                 {[
-                  { kind: "ios", top: "Coming soon to", bottom: "App Store", svg: <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" /> },
-                  { kind: "android", top: "Coming soon to", bottom: "Google Play", svg: <path d="M3 20.5V3.5c0-.59.34-1.11.84-1.35L13.69 12 3.84 21.85c-.5-.25-.84-.76-.84-1.35z M14.81 13.12 5.69 22.24l11.5-6.55-2.38-2.57z M14.81 10.88l2.38-2.57-11.5-6.55 9.12 9.12z M20.16 10.81l-2.94-1.69-2.65 2.88 2.65 2.88 3-1.71c.91-.66.91-1.71-.06-2.36z" /> },
+                  { kind: "ios", top: t("appPreview.store.top"), bottom: "App Store", svg: <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" /> },
+                  { kind: "android", top: t("appPreview.store.top"), bottom: "Google Play", svg: <path d="M3 20.5V3.5c0-.59.34-1.11.84-1.35L13.69 12 3.84 21.85c-.5-.25-.84-.76-.84-1.35z M14.81 13.12 5.69 22.24l11.5-6.55-2.38-2.57z M14.81 10.88l2.38-2.57-11.5-6.55 9.12 9.12z M20.16 10.81l-2.94-1.69-2.65 2.88 2.65 2.88 3-1.71c.91-.66.91-1.71-.06-2.36z" /> },
                 ].map((b) => (
                   <div
                     key={b.kind}
@@ -2196,13 +1742,13 @@ function AppPreview() {
                     <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                     <path d="M10 21a2 2 0 0 0 4 0" />
                   </svg>
-                  <span className="relative">Notify me at launch</span>
+                  <span className="relative">{t("appPreview.notify")}</span>
                   <ArrowRightIcon className="relative h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </MagneticLink>
               </div>
               <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-zinc-500">
                 <span className="font-mono tabular-nums text-zinc-300"><CountUp to={284} duration={1600} /></span>
-                already on the waitlist · no spam, one launch-day email
+                {t("appPreview.waitlist")}
               </div>
             </div>
           </Reveal>
@@ -2219,7 +1765,7 @@ const stepsNew = [
     n: "01",
     eyebrow: "Discover",
     title: "Open the app, tell us where",
-    body: "Pick your city pair and travel date. We surface every verified transporter on that route — with seats, fare, arrival time.",
+    body: "Pick your city pair and travel date. We surface verified transporters with the trip details you need to choose confidently.",
     meta: "~30 seconds",
     visual: "search" as const,
     accent: { text: "text-emerald-300", chip: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300", dot: "bg-emerald-400", glow: "from-emerald-500/30" },
@@ -2227,18 +1773,18 @@ const stepsNew = [
   {
     n: "02",
     eyebrow: "Secure",
-    title: "Lock a seat, hold your fare",
-    body: "Pay through the app — your fare moves into escrow. The driver only gets paid when you arrive. No bargaining on the curb.",
-    meta: "0 hidden fees",
+    title: "Lock a seat, protect payment",
+    body: "Pay through the app and your payment stays protected. Funds release only after arrival.",
+    meta: "Secure checkout",
     visual: "escrow" as const,
     accent: { text: "text-amber-300", chip: "border-amber-400/30 bg-amber-500/10 text-amber-300", dot: "bg-amber-400", glow: "from-amber-500/30" },
   },
   {
     n: "03",
     eyebrow: "Arrive",
-    title: "Track every meter, share if you want",
-    body: "Watch the trip update live. Forward the share link to family. Rate the trip when you step off — it shapes the next traveler's choice.",
-    meta: "Live · shareable",
+    title: "Arrive with details kept private",
+    body: "Your booking stays in your account. Journey details stay confidential from booking through arrival. Rate the trip when you step off — it shapes the next traveler's choice.",
+    meta: "Private by default",
     visual: "track" as const,
     accent: { text: "text-sky-300", chip: "border-sky-400/30 bg-sky-500/10 text-sky-300", dot: "bg-sky-400", glow: "from-sky-500/30" },
   },
@@ -2265,9 +1811,9 @@ function StepSearchVisual() {
       {/* Result tiles */}
       <div className="mt-2 space-y-1.5">
         {[
-          { op: "GIG Mobility", seats: 3, fare: "18,000", tone: "ring-emerald-400/30 bg-emerald-500/[0.04]" },
-          { op: "ABC Coaches", seats: 7, fare: "16,500", tone: "ring-white/10 bg-white/[0.03]" },
-          { op: "Chisco Express", seats: 2, fare: "20,000", tone: "ring-white/10 bg-white/[0.03]" },
+          { op: "Verified operator", detail: "Identity checked", tone: "ring-emerald-400/30 bg-emerald-500/[0.04]" },
+          { op: "Licensed vehicle", detail: "Documents reviewed", tone: "ring-white/10 bg-white/[0.03]" },
+          { op: "Secure booking", detail: "Payment protected", tone: "ring-white/10 bg-white/[0.03]" },
         ].map((r, i) => (
           <motion.div
             key={r.op}
@@ -2279,9 +1825,9 @@ function StepSearchVisual() {
           >
             <div>
               <div className="text-[11px] font-semibold text-white">{r.op}</div>
-              <div className="font-mono text-[9px] uppercase tracking-wider text-zinc-500">{r.seats} seats left</div>
+              <div className="font-mono text-[9px] uppercase tracking-wider text-zinc-500">{r.detail}</div>
             </div>
-            <div className="font-mono text-[11px] font-semibold tabular-nums text-emerald-300">₦{r.fare}</div>
+            <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-emerald-300">Ready</div>
           </motion.div>
         ))}
       </div>
@@ -2297,7 +1843,7 @@ function StepEscrowVisual() {
         <div className="flex items-start justify-between">
           <div>
             <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-amber-400">Escrow · locked</div>
-            <div className="mt-0.5 text-[11px] font-semibold text-white">Lagos → Abuja</div>
+            <div className="mt-0.5 text-[11px] font-semibold text-white">Protected booking</div>
           </div>
           <motion.div
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15"
@@ -2313,8 +1859,8 @@ function StepEscrowVisual() {
         <div className="my-3 border-t border-dashed border-white/10" />
         <div className="flex items-end justify-between">
           <div>
-            <div className="font-mono text-[9px] uppercase tracking-wider text-zinc-500">Held amount</div>
-            <div className="font-[var(--font-display)] text-xl font-semibold tabular-nums text-white">₦18,000</div>
+            <div className="font-mono text-[9px] uppercase tracking-wider text-zinc-500">Payment status</div>
+            <div className="font-[var(--font-display)] text-xl font-semibold text-white">Protected</div>
           </div>
           <div className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-emerald-300">
             <span className="h-1 w-1 rounded-full bg-emerald-400" />
@@ -2337,7 +1883,7 @@ function StepEscrowVisual() {
 function StepTrackVisual() {
   return (
     <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-zinc-900/80 to-zinc-950/90 p-4 backdrop-blur-sm">
-      {/* Mini map — animated route */}
+      {/* Private trip status */}
       <div className="relative h-[70%] w-full overflow-hidden rounded-xl bg-gradient-to-br from-sky-500/10 via-zinc-900 to-emerald-500/10">
         {/* Grid lines */}
         <div
@@ -2349,47 +1895,26 @@ function StepTrackVisual() {
             backgroundSize: "20px 20px",
           }}
         />
-        {/* Route path */}
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 200 120" preserveAspectRatio="none">
-          <motion.path
-            d="M10 95 C 40 90, 60 40, 110 45 S 180 80, 195 20"
-            fill="none"
-            stroke="rgb(16 185 129)"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeDasharray="0 1"
-            initial={{ pathLength: 0 }}
-            whileInView={{ pathLength: 1 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 2.4, ease: [0.16, 1, 0.3, 1] }}
-          />
-          <motion.path
-            d="M10 95 C 40 90, 60 40, 110 45 S 180 80, 195 20"
-            fill="none"
-            stroke="rgb(125 211 252)"
-            strokeWidth="0.8"
-            strokeDasharray="2 3"
-            initial={{ pathLength: 0 }}
-            whileInView={{ pathLength: 1 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 2.4, delay: 0.2, ease: "linear" }}
-          />
-        </svg>
-        {/* Origin pin */}
-        <div className="absolute bottom-3 left-2 flex items-center gap-1.5 rounded-full border border-white/10 bg-zinc-950/80 px-2 py-0.5 text-[9px] font-semibold text-white backdrop-blur">
-          <span className="h-1 w-1 rounded-full bg-emerald-400" />Lagos
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-emerald-400/30 bg-emerald-500/10 shadow-[0_0_40px_rgba(16,185,129,0.18)]">
+            <svg className="h-9 w-9 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
         </div>
-        {/* Live dot */}
         <motion.div
-          className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.8)]"
-          animate={{ left: ["10%", "30%", "55%", "80%", "97.5%"], top: ["79%", "42%", "38%", "65%", "17%"] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/30"
+          animate={{ opacity: [0.25, 0.55, 0.25], scale: [0.9, 1.15, 0.9] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
-          <span className="absolute inset-0 animate-ping rounded-full bg-sky-400/60" />
+          <span className="sr-only">Private journey details</span>
         </motion.div>
-        {/* Dest pin */}
+        <div className="absolute bottom-3 left-2 flex items-center gap-1.5 rounded-full border border-white/10 bg-zinc-950/80 px-2 py-0.5 text-[9px] font-semibold text-white backdrop-blur">
+          <span className="h-1 w-1 rounded-full bg-emerald-400" />Booking private
+        </div>
         <div className="absolute right-2 top-3 flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2 py-0.5 text-[9px] font-semibold text-emerald-300 backdrop-blur">
-          <span className="h-1 w-1 rounded-full bg-emerald-400" />Abuja
+          <span className="h-1 w-1 rounded-full bg-emerald-400" />No sharing
         </div>
       </div>
       {/* Controls below map */}
@@ -2399,16 +1924,16 @@ function StepTrackVisual() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-80" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sky-400" />
           </span>
-          <span className="font-mono text-[9px] uppercase tracking-wider text-zinc-300">ETA 2h 15m</span>
+          <span className="font-mono text-[9px] uppercase tracking-wider text-zinc-300">Details locked</span>
         </div>
         <motion.button
           whileHover={{ scale: 1.03 }}
           className="inline-flex items-center gap-1.5 rounded-lg bg-white/[0.06] px-2.5 py-1 text-[10px] font-semibold text-white ring-1 ring-white/10"
         >
           <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98" />
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
-          Share link
+          Confidential
         </motion.button>
       </div>
     </div>
@@ -2598,86 +2123,6 @@ function HowItWorks() {
   );
 }
 
-// ─── SafetyBanner — trust ledger with live counters ─────────────────────────
-
-// Seed ledger — small, believable early-stage figures. Replaced 1:1 by real
-// values from /platform/overview as soon as they load.
-const seedLedgerRows = [
-  { label: "Active travelers", to: 320, suffix: "" },
-  { label: "Verified transporters", to: 48, suffix: "" },
-  { label: "Routes available right now", to: 26, suffix: "" },
-  { label: "Trips completed end-to-end", to: 410, suffix: "" },
-  { label: "Reviews collected from riders", to: 92, suffix: "" },
-];
-
-function SafetyBanner() {
-  const live = useHomepageStats();
-  // Real platform numbers when available, seeds otherwise. Each row maps
-  // 1:1 to a column from /platform/overview's `stats` payload.
-  const ledgerRows = live
-    ? [
-        { label: "Active travelers", to: live.travelers, suffix: "" },
-        { label: "Verified transporters", to: live.transporters, suffix: "" },
-        { label: "Routes available right now", to: live.activeRoutes, suffix: "" },
-        { label: "Trips completed end-to-end", to: live.completedTrips, suffix: "" },
-        { label: "Reviews collected from riders", to: live.reviews, suffix: "" },
-      ]
-    : seedLedgerRows;
-  return (
-    <section className="relative bg-[#fafaf7] py-24 lg:py-32 overflow-hidden">
-      <LiveAurora tones={["emerald", "cool"]} intensity={0.4} />
-      <LiveGrid />
-      <div className="absolute inset-0 grain" />
-      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-16 px-4 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:gap-24 lg:px-8">
-        <Reveal>
-          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Audited daily</p>
-          <h2 className="mt-3 font-[var(--font-display)] text-4xl md:text-5xl lg:text-6xl text-zinc-950 tracking-tight leading-[1.05]">
-            Trust isn't a slogan. <span className="italic">It's a ledger.</span>
-          </h2>
-          <p className="mt-6 max-w-md text-[16px] leading-relaxed text-slate-600">
-            Every safety check, every screening, every policy — counted, dated, and visible. Here's what happened on the platform today.
-          </p>
-          <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            </span>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">Live · updated every minute</span>
-          </div>
-        </Reveal>
-
-        <Reveal delay={0.1}>
-          <div className="rounded-3xl border border-zinc-200 bg-white p-2 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.1)]">
-            <div className="overflow-hidden rounded-2xl">
-              {ledgerRows.map((row, i) => (
-                <motion.div
-                  key={row.label}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.5, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                  className={`flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5 sm:py-4 ${i !== ledgerRows.length - 1 ? "border-b border-zinc-100" : ""}`}
-                >
-                  <div className="flex flex-1 min-w-0 items-center gap-2.5 sm:gap-3">
-                    <span className="font-mono text-[11px] text-zinc-400 tabular-nums shrink-0">{String(i + 1).padStart(2, "0")}</span>
-                    <span className="text-[13px] sm:text-[14px] font-medium text-zinc-700 leading-snug">{row.label}</span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-mono text-base sm:text-lg font-semibold tabular-nums text-zinc-950">
-                      <CountUp to={row.to} suffix={row.suffix} duration={1500 + i * 100} />
-                    </span>
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
 // ─── Testimonials — editorial rotator ───────────────────────────────────────
 
 // Seed voices — site feedback (the editorial blockquote on the LEFT). Only
@@ -2691,8 +2136,8 @@ const voices: Testimonial[] = [
     route: "Lagos → Abuja",
     date: "22 Apr 2026",
     trips: 6,
-    excerpt: "Driver was verified, price was set, mum got my live link.",
-    text: "First time using SmatWay last weekend — Lagos to Abuja. Fare was fixed, driver had ID on the app, and I sent the trip link to my mum so she could see me move. No haggling at the motor park. Will book again.",
+    excerpt: "Driver was verified, booking was clear, mum got my live link.",
+    text: "First time using SmatWay last weekend — Lagos to Abuja. The booking was clear, driver had ID on the app, and my journey details stayed in my account. No haggling at the motor park. Will book again.",
   },
   {
     name: "Kwame Asante", role: "Transporter · Accra", initial: "K",
@@ -3158,237 +2603,6 @@ function Testimonials() {
   );
 }
 
-// ─── Feedback — rating breakdown + sentiment chips ──────────────────────────
-
-// Seed sentiment counts — purely indicative (no real tagging system yet).
-// Kept proportional to the seed feedback count (~92) so the chips don't
-// scream "we have ten thousand reviews" before we actually do.
-const sentimentChips = [
-  { label: "On-time", count: 84 },
-  { label: "Clean vehicle", count: 71 },
-  { label: "Friendly driver", count: 63 },
-  { label: "Easy booking", count: 58 },
-  { label: "Safe trip", count: 52 },
-  { label: "Good value", count: 41 },
-];
-
-function Feedback() {
-  const reducedFx = useReducedFx();
-  // Site feedback stats — pulled from /feedback/stats. Falls back to gentle
-  // seeds (4.9 / 97 / no count badge) until the first piece of feedback lands.
-  const [siteStats, setSiteStats] = useState<{
-    count: number;
-    avgRating: number | null;
-    distribution: number[];
-    recommendRate: number | null;
-  } | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    import("@/lib/api").then(({ getSiteFeedbackStats }) =>
-      getSiteFeedbackStats()
-        .then((s) => { if (!cancelled) setSiteStats(s); })
-        .catch(() => { /* keep seed */ }),
-    );
-    return () => { cancelled = true; };
-  }, []);
-
-  const ratingValue = siteStats?.avgRating ?? 4.7;
-  const recommendValue = Math.round(siteStats?.recommendRate ?? 92);
-  const feedbackCount = siteStats?.count ?? 0;
-  // Distribution renders top-down 5★ → 1★. API returns [1★, 2★, 3★, 4★, 5★] pcts.
-  // Seed kept gentle (no impossible 86% five-star) so an empty platform doesn't
-  // brag about ratings it hasn't earned yet.
-  const seedDist: Array<{ stars: number; pct: number }> = [
-    { stars: 5, pct: 72 },
-    { stars: 4, pct: 20 },
-    { stars: 3, pct: 5 },
-    { stars: 2, pct: 2 },
-    { stars: 1, pct: 1 },
-  ];
-  const ratingDistLive: Array<{ stars: number; pct: number }> = siteStats && siteStats.count > 0
-    ? [5, 4, 3, 2, 1].map((stars) => ({ stars, pct: siteStats.distribution[stars - 1] ?? 0 }))
-    : seedDist;
-  return (
-    <section className="relative overflow-hidden py-24 lg:py-32 text-white"
-      style={{ backgroundColor: "#09090b" }}
-    >
-      {/* Deep navy-tinted base — distinct from CTA's emerald aurora */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 60% at 10% 0%, rgba(16,185,129,0.14), transparent 55%)," +
-            "radial-gradient(ellipse 60% 50% at 95% 100%, rgba(251,191,36,0.10), transparent 60%)," +
-            "linear-gradient(180deg, #0a0a0c 0%, #0b0d10 50%, #09090b 100%)",
-        }}
-      />
-
-      {/* Data-room blueprint grid — different texture than CTA */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.35]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)," +
-            "linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)",
-          backgroundSize: "64px 64px",
-          maskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 80%)",
-          WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 80%)",
-        }}
-      />
-
-      {/* Slow drifting emerald glow + warm amber counterweight — desktop only */}
-      {!reducedFx && (
-        <>
-          <motion.div
-            className="pointer-events-none absolute -top-32 left-[-8%] h-[520px] w-[520px] rounded-full blur-[140px]"
-            style={{ background: "radial-gradient(circle, rgba(16,185,129,0.28), transparent 70%)" }}
-            animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.06, 1] }}
-            transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="pointer-events-none absolute -bottom-32 right-[-8%] h-[440px] w-[440px] rounded-full blur-[130px]"
-            style={{ background: "radial-gradient(circle, rgba(251,191,36,0.18), transparent 70%)" }}
-            animate={{ x: [0, -20, 0], y: [0, 15, 0], scale: [1.04, 0.96, 1.04] }}
-            transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          />
-        </>
-      )}
-
-      <LiveDots count={22} color="emerald" dark />
-      <div className="grain pointer-events-none absolute inset-0 opacity-40" />
-      {/* Top hairline — breaks from light Testimonials above */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
-
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Reveal className="mb-12 max-w-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-1.5 backdrop-blur">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-80" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            </span>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">What riders say</span>
-          </div>
-          <h2 className="mt-4 font-[var(--font-display)] text-4xl md:text-5xl text-white tracking-tight leading-[1.05]">
-            {feedbackCount > 0 ? (
-              <><span className="italic text-emerald-300">{feedbackCount.toLocaleString()}</span> {feedbackCount === 1 ? "rider has spoken" : "riders have spoken"}. One number.</>
-            ) : (
-              <>What our <span className="italic text-emerald-300">riders</span> think.</>
-            )}
-          </h2>
-        </Reveal>
-
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-20">
-          {/* Big number */}
-          <div className="flex flex-col">
-            <div className="relative">
-              {/* Soft emerald glow under the number */}
-              <div className="pointer-events-none absolute inset-0 -z-10 blur-3xl"
-                style={{ background: "radial-gradient(ellipse 70% 60% at 30% 50%, rgba(16,185,129,0.22), transparent 65%)" }}
-              />
-              <div
-                className="font-[var(--font-display)] text-[8rem] leading-none tracking-tighter md:text-[10rem]"
-                style={{
-                  background: "linear-gradient(180deg, #ffffff 0%, #d4d4d8 100%)",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  color: "transparent",
-                  textShadow: "0 0 80px rgba(16,185,129,0.35)",
-                }}
-              >
-                <CountUp to={ratingValue} decimals={1} duration={1800} />
-              </div>
-            </div>
-            <div className="mt-2 flex items-center gap-1 text-amber-400">
-              {[0, 1, 2, 3, 4].map((s) => <StarIcon key={s} className="h-5 w-5 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]" />)}
-              <span className="ml-2 text-sm text-zinc-400">out of 5</span>
-            </div>
-            <div className="mt-3 text-sm text-zinc-400">
-              {feedbackCount > 0 ? (
-                <>Based on <span className="font-mono font-semibold text-zinc-200">{feedbackCount.toLocaleString()}</span> {feedbackCount === 1 ? "piece of" : "pieces of"} rider feedback</>
-              ) : (
-                <>Submit your own feedback from the dashboard to shape this number</>
-              )}
-            </div>
-
-            {/* Data-row micro stats — both site-feedback derived */}
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:max-w-sm">
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur">
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Would recommend</div>
-                <div className="mt-1 font-mono text-xl font-semibold tabular-nums text-white">
-                  <CountUp to={recommendValue} suffix="%" duration={1600} />
-                </div>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur">
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Five-star</div>
-                <div className="mt-1 font-mono text-xl font-semibold tabular-nums text-white">
-                  <CountUp to={Math.round(siteStats?.distribution[4] ?? 72)} suffix="%" duration={1600} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Distribution + sentiments */}
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">Rating distribution</div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-600">{feedbackCount > 0 ? "All-time" : "Sample"}</div>
-            </div>
-            <div className="space-y-2.5 rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-sm">
-              {ratingDistLive.map((r, i) => (
-                <Reveal key={r.stars} delay={i * 0.06}>
-                  <div className="flex items-center gap-4">
-                    <div className="flex w-10 items-center gap-1 font-mono text-xs text-zinc-400 tabular-nums">
-                      {r.stars}<StarIcon className="h-3 w-3 text-amber-400" />
-                    </div>
-                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: `${r.pct}%` }}
-                        viewport={{ once: true, margin: "-50px" }}
-                        transition={{ duration: 1.1, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                        className={`h-full rounded-full ${
-                          r.stars === 5
-                            ? "bg-gradient-to-r from-emerald-400 to-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]"
-                            : r.stars === 4
-                              ? "bg-emerald-500/70"
-                              : "bg-white/20"
-                        }`}
-                      />
-                    </div>
-                    <div className="w-10 text-right font-mono text-xs tabular-nums text-zinc-300">{r.pct}%</div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-
-            <div className="mt-10">
-              <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Most-mentioned</div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {sentimentChips.map((c, i) => (
-                  <motion.div
-                    key={c.label}
-                    initial={{ opacity: 0, y: 8 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    transition={{ duration: 0.4, delay: i * 0.05 }}
-                    whileHover={{ y: -2, borderColor: "rgba(16,185,129,0.4)" }}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-[13px] font-medium text-zinc-200 backdrop-blur transition-colors hover:bg-white/[0.08]"
-                  >
-                    {c.label}
-                    <span className="font-mono text-[11px] tabular-nums text-emerald-300">
-                      <CountUp to={c.count} duration={1400 + i * 80} />
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ─── CTA — bold dark editorial close with magnetic ──────────────────────────
 
 function CTA() {
@@ -3463,15 +2677,9 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <Stats />
-      <LiveTicker />
-      <PopularRoutes />
       <Features />
       <AppPreview />
       {/* <HowItWorks /> */}
-      <SafetyBanner />
-      <Feedback />
-      <Testimonials />
       <CTA />
     </>
   );

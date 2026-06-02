@@ -21,7 +21,7 @@ const dmSerif = DM_Serif_Display({
 
 export const metadata: Metadata = {
   title: "SmatWay - Smart Travel Booking Platform",
-  description: "Travel with verified transporters and affordable fares across the world.",
+  description: "Travel with verified transporters and protected booking across the world.",
   icons: {
     icon: "/smatway-favicon.svg",
     shortcut: "/smatway-favicon.svg",
@@ -36,7 +36,8 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="ar"
+      dir="rtl"
       className={`${geistSans.variable} ${geistMono.variable} ${dmSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, useInView } from "motion/react";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -110,29 +111,29 @@ function Reveal({ children, delay = 0, className = "" }: { children: React.React
   );
 }
 
-// ─── Data (content preserved verbatim) ───────────────────────────────────────
+// ─── Data ───────────────────────────────────────────────────────────────────
 
 const travelerSteps = [
-  { num: "01", icon: <SearchIcon />, title: "Search for routes", items: ["Browse routes across multiple cities", "View departure times and fares", "Check transporter ratings", "Filter by date and transport type"] },
-  { num: "02", icon: <CarIcon />, title: "Choose your ride", items: ["Compare different transporters", "Read verified passenger reviews", "View vehicle details", "Check available seats"] },
-  { num: "03", icon: <CreditCardIcon />, title: "Book and pay securely", items: ["Pay with available payment options", "Instant booking confirmation", "Get your booking reference", "Payment protected until trip completion"] },
-  { num: "04", icon: <QrCodeIcon />, title: "Get your QR code", items: ["Download your booking QR", "Show code to driver at departure", "Share your trip link with family", "Track your journey live"] },
-  { num: "05", icon: <CheckCircleIcon />, title: "Complete your journey", items: ["Board using your QR code", "Travel with full platform support", "Rate and review your experience"] },
+  { num: "01", icon: <SearchIcon />, titleKey: "how.traveler.1.title", itemKeys: ["how.traveler.1.item1", "how.traveler.1.item2", "how.traveler.1.item3", "how.traveler.1.item4"] },
+  { num: "02", icon: <CarIcon />, titleKey: "how.traveler.2.title", itemKeys: ["how.traveler.2.item1", "how.traveler.2.item2", "how.traveler.2.item3", "how.traveler.2.item4"] },
+  { num: "03", icon: <CreditCardIcon />, titleKey: "how.traveler.3.title", itemKeys: ["how.traveler.3.item1", "how.traveler.3.item2", "how.traveler.3.item3", "how.traveler.3.item4"] },
+  { num: "04", icon: <QrCodeIcon />, titleKey: "how.traveler.4.title", itemKeys: ["how.traveler.4.item1", "how.traveler.4.item2", "how.traveler.4.item3", "how.traveler.4.item4"] },
+  { num: "05", icon: <CheckCircleIcon />, titleKey: "how.traveler.5.title", itemKeys: ["how.traveler.5.item1", "how.traveler.5.item2", "how.traveler.5.item3"] },
 ];
 
 const transporterSteps = [
-  { num: "01", icon: <UsersIcon />, title: "Create your account", items: ["Submit registration documents", "Driver license and background check", "Set up payment details"] },
-  { num: "02", icon: <CarIcon />, title: "Add your vehicles", items: ["Upload vehicle registration", "Add photos and seating capacity", "Submit insurance certificates"] },
-  { num: "03", icon: <CalendarIcon />, title: "Create routes", items: ["Set departure and destination cities", "Define times, dates, and fares", "Add route descriptions"] },
-  { num: "04", icon: <UsersIcon />, title: "Receive bookings", items: ["Instant booking notifications", "Manage confirmations in real time", "Track seat availability"] },
-  { num: "05", icon: <CreditCardIcon />, title: "Get paid", items: ["Automatic payment processing", "Funds transferred after trip completion", "Transparent fee structure"] },
+  { num: "01", icon: <UsersIcon />, titleKey: "how.transporter.1.title", itemKeys: ["how.transporter.1.item1", "how.transporter.1.item2", "how.transporter.1.item3"] },
+  { num: "02", icon: <CarIcon />, titleKey: "how.transporter.2.title", itemKeys: ["how.transporter.2.item1", "how.transporter.2.item2", "how.transporter.2.item3"] },
+  { num: "03", icon: <CalendarIcon />, titleKey: "how.transporter.3.title", itemKeys: ["how.transporter.3.item1", "how.transporter.3.item2", "how.transporter.3.item3"] },
+  { num: "04", icon: <UsersIcon />, titleKey: "how.transporter.4.title", itemKeys: ["how.transporter.4.item1", "how.transporter.4.item2", "how.transporter.4.item3"] },
+  { num: "05", icon: <CreditCardIcon />, titleKey: "how.transporter.5.title", itemKeys: ["how.transporter.5.item1", "how.transporter.5.item2", "how.transporter.5.item3"] },
 ];
 
 const safetyPoints = [
-  { icon: <ShieldIcon />, title: "Verified Transporters", description: "All transporters go through rigorous checks — background verification, license review, and vehicle inspection." },
-  { icon: <UsersIcon />, title: "Real-Time Tracking", description: "Share your trip with family. They can monitor your journey live for full peace of mind." },
-  { icon: <CreditCardIcon />, title: "Secure Payments", description: "All payments are encrypted. Funds are held until trip completion." },
-  { icon: <CheckCircleIcon />, title: "24/7 Support", description: "Our team is available around the clock. Emergency contact available at any point in your journey." },
+  { icon: <ShieldIcon />, titleKey: "how.safety.verified.title", descriptionKey: "how.safety.verified.body" },
+  { icon: <UsersIcon />, titleKey: "how.safety.private.title", descriptionKey: "how.safety.private.body" },
+  { icon: <CreditCardIcon />, titleKey: "how.safety.payments.title", descriptionKey: "how.safety.payments.body" },
+  { icon: <CheckCircleIcon />, titleKey: "how.safety.support.title", descriptionKey: "how.safety.support.body" },
 ];
 
 // ─── Step card ────────────────────────────────────────────────────────────────
@@ -140,6 +141,7 @@ const safetyPoints = [
 type Step = { num: string; icon: React.ReactNode; title: string; items: string[] };
 
 function StepCard({ step, index, accent }: { step: Step; index: number; accent: "emerald" | "sky" }) {
+  const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
@@ -194,7 +196,7 @@ function StepCard({ step, index, accent }: { step: Step; index: number; accent: 
           </div>
           <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${a.chip}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${a.dot}`} />
-            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em]">Step {step.num}</span>
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em]">{t("how.stepLabel")} {step.num}</span>
           </div>
         </div>
 
@@ -228,8 +230,15 @@ function StepCard({ step, index, accent }: { step: Step; index: number; accent: 
 // ─── Journey section with tabs ───────────────────────────────────────────────
 
 function JourneySection() {
+  const t = useT();
   const [tab, setTab] = useState<"traveler" | "transporter">("traveler");
-  const steps = tab === "traveler" ? travelerSteps : transporterSteps;
+  const sourceSteps = tab === "traveler" ? travelerSteps : transporterSteps;
+  const steps = sourceSteps.map((step) => ({
+    num: step.num,
+    icon: step.icon,
+    title: t(step.titleKey),
+    items: step.itemKeys.map((key) => t(key)),
+  }));
   const accent: "emerald" | "sky" = tab === "traveler" ? "emerald" : "sky";
 
   return (
@@ -254,13 +263,13 @@ function JourneySection() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-80" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
             </span>
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">The journey</span>
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">{t("how.journey.kicker")}</span>
           </div>
           <h2 className="mt-4 font-[var(--font-display)] text-4xl md:text-5xl lg:text-6xl tracking-tight leading-[1.02] text-zinc-950">
-            Five steps. <span className="italic text-emerald-700">Two paths.</span>
+            {t("how.journey.title.before")} <span className="italic text-emerald-700">{t("how.journey.title.accent")}</span>
           </h2>
           <p className="mt-5 text-[15.5px] leading-relaxed text-zinc-600">
-            Whether you&apos;re booking a seat or running a fleet, every step is fast, clear, and secure.
+            {t("how.journey.subtitle")}
           </p>
         </Reveal>
 
@@ -280,7 +289,7 @@ function JourneySection() {
               )}
               <span className={`relative z-10 flex items-center gap-2 ${tab === "traveler" ? "text-white" : "text-zinc-600"}`}>
                 <UsersIcon className="w-4 h-4" />
-                For travelers
+                {t("how.tabs.travelers")}
               </span>
             </button>
             <button
@@ -296,7 +305,7 @@ function JourneySection() {
               )}
               <span className={`relative z-10 flex items-center gap-2 ${tab === "transporter" ? "text-white" : "text-zinc-600"}`}>
                 <CarIcon className="w-4 h-4" />
-                For transporters
+                {t("how.tabs.transporters")}
               </span>
             </button>
           </div>
@@ -316,27 +325,27 @@ function JourneySection() {
                 <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${tab === "traveler" ? "border-emerald-200 bg-emerald-50/80 text-emerald-800" : "border-sky-200 bg-sky-50/80 text-sky-800"}`}>
                   <span className={`h-1.5 w-1.5 rounded-full ${tab === "traveler" ? "bg-emerald-500" : "bg-sky-500"}`} />
                   <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em]">
-                    {tab === "traveler" ? "Traveler path" : "Transporter path"}
+                    {tab === "traveler" ? t("how.path.traveler") : t("how.path.transporter")}
                   </span>
                 </div>
                 <h3 className="mt-4 font-[var(--font-display)] text-3xl font-semibold tracking-tight text-zinc-950 sm:text-[2rem] leading-[1.1]">
                   {tab === "traveler" ? (
-                    <>Book your journey <span className={`italic ${tab === "traveler" ? "text-emerald-700" : "text-sky-700"}`}>in five steps.</span></>
+                    <>{t("how.path.travelerTitle.before")} <span className={`italic ${tab === "traveler" ? "text-emerald-700" : "text-sky-700"}`}>{t("how.path.travelerTitle.accent")}</span></>
                   ) : (
-                    <>Start earning <span className="italic text-sky-700">with your vehicles.</span></>
+                    <>{t("how.path.transporterTitle.before")} <span className="italic text-sky-700">{t("how.path.transporterTitle.accent")}</span></>
                   )}
                 </h3>
                 <p className="mt-4 max-w-md text-[14.5px] leading-relaxed text-zinc-600">
                   {tab === "traveler"
-                    ? "From search to arrival, every step is designed to be fast, clear, and secure."
-                    : "Set up your fleet, publish routes, and receive bookings — all from one dashboard."}
+                    ? t("how.path.travelerBody")
+                    : t("how.path.transporterBody")}
                 </p>
 
                 {/* Step counter pill */}
                 <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5">
-                  <span className="font-mono text-[11px] font-semibold tabular-nums text-zinc-500">{steps.length} steps</span>
+                  <span className="font-mono text-[11px] font-semibold tabular-nums text-zinc-500">{steps.length} {t("how.stepsUnit")}</span>
                   <span className="text-zinc-300">·</span>
-                  <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-500">~2 min read</span>
+                  <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t("how.readTime")}</span>
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -375,6 +384,7 @@ function JourneySection() {
 // ─── Safety section ──────────────────────────────────────────────────────────
 
 function SafetySection() {
+  const t = useT();
   return (
     <section className="relative overflow-hidden py-20 lg:py-28 text-white" style={{ backgroundColor: "#09090b" }}>
       {/* Dark base with emerald + amber glow */}
@@ -408,16 +418,16 @@ function SafetySection() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-80" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
             </span>
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">Safety</span>
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">{t("how.safety.kicker")}</span>
           </div>
           <h2 className="mt-4 font-[var(--font-display)] text-4xl md:text-5xl tracking-tight leading-[1.05] text-white">
-            Your safety is <span className="italic text-emerald-300">built in.</span>
+            {t("how.safety.title.before")} <span className="italic text-emerald-300">{t("how.safety.title.accent")}</span>
           </h2>
         </Reveal>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
           {safetyPoints.map((point, i) => (
-            <Reveal key={point.title} delay={i * 0.08}>
+            <Reveal key={point.titleKey} delay={i * 0.08}>
               <motion.div
                 whileHover={{ y: -4 }}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -432,8 +442,8 @@ function SafetySection() {
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400/15 to-emerald-500/5 text-emerald-300 ring-1 ring-emerald-400/20">
                     {point.icon}
                   </div>
-                  <h3 className="mt-4 font-[var(--font-display)] text-lg font-semibold tracking-tight text-white">{point.title}</h3>
-                  <p className="mt-2 text-[13.5px] leading-relaxed text-zinc-400">{point.description}</p>
+                  <h3 className="mt-4 font-[var(--font-display)] text-lg font-semibold tracking-tight text-white">{t(point.titleKey)}</h3>
+                  <p className="mt-2 text-[13.5px] leading-relaxed text-zinc-400">{t(point.descriptionKey)}</p>
                 </div>
               </motion.div>
             </Reveal>
@@ -447,6 +457,7 @@ function SafetySection() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function HowItWorksPage() {
+  const t = useT();
   return (
     <div className="pt-16">
       {/* ── Hero ──────────────────────────────────────────────────────────────── */}
@@ -487,18 +498,18 @@ export default function HowItWorksPage() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-80" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 </span>
-                <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">How it works</span>
+                <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">{t("how.hero.kicker")}</span>
               </div>
             </Reveal>
             <Reveal delay={0.08}>
               <h1 className="mt-6 font-[var(--font-display)] text-5xl font-semibold tracking-tight leading-[1.02] text-white sm:text-6xl lg:text-7xl">
-                Simple steps to <br className="hidden sm:block" />
-                start your <span className="italic text-emerald-300">journey.</span>
+                {t("how.hero.title.before")} <br className="hidden sm:block" />
+                {t("how.hero.title.middle")} <span className="italic text-emerald-300">{t("how.hero.title.accent")}</span>
               </h1>
             </Reveal>
             <Reveal delay={0.16}>
               <p className="mt-6 max-w-2xl text-[17px] leading-relaxed text-zinc-400">
-                Whether you&apos;re a traveler or a transporter, getting started on SmatWay is quick and straightforward.
+                {t("how.hero.subtitle")}
               </p>
             </Reveal>
 
@@ -507,15 +518,15 @@ export default function HowItWorksPage() {
               <div className="mt-10 grid grid-cols-3 gap-3 sm:max-w-lg">
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5 backdrop-blur-sm">
                   <div className="font-mono text-xl font-semibold tabular-nums text-white">5</div>
-                  <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">Steps</div>
+                  <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">{t("how.hero.stat.steps")}</div>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5 backdrop-blur-sm">
                   <div className="font-mono text-xl font-semibold tabular-nums text-white">2</div>
-                  <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">Paths</div>
+                  <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">{t("how.hero.stat.paths")}</div>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5 backdrop-blur-sm">
-                  <div className="font-mono text-xl font-semibold tabular-nums text-white">2 min</div>
-                  <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">To read</div>
+                  <div className="font-mono text-xl font-semibold tabular-nums text-white">{t("how.hero.stat.readValue")}</div>
+                  <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">{t("how.hero.stat.readLabel")}</div>
                 </div>
               </div>
             </Reveal>
@@ -540,16 +551,16 @@ export default function HowItWorksPage() {
         />
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <Reveal>
-            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-400">↓ Get started</p>
+            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-400">{t("how.cta.eyebrow")}</p>
           </Reveal>
           <Reveal delay={0.08}>
             <h2 className="mt-5 font-[var(--font-display)] text-4xl leading-[1.02] tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Ready to start your <span className="italic text-emerald-300">journey?</span>
+              {t("how.cta.title.before")} <span className="italic text-emerald-300">{t("how.cta.title.accent")}</span>
             </h2>
           </Reveal>
           <Reveal delay={0.16}>
             <p className="mx-auto mt-6 max-w-xl text-[16px] leading-relaxed text-zinc-400">
-              Join thousands of travelers and transporters already using SmatWay every day.
+              {t("how.cta.subtitle")}
             </p>
           </Reveal>
           <Reveal delay={0.24}>
@@ -558,14 +569,14 @@ export default function HowItWorksPage() {
                 href="/signup"
                 className="group inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-3.5 text-[14px] font-semibold text-zinc-950 shadow-[0_10px_30px_-10px_rgba(255,255,255,0.4)] transition-colors hover:bg-zinc-100 active:scale-[0.98]"
               >
-                Start your journey
+                {t("how.cta.primary")}
                 <ArrowRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
               </Link>
               <Link
                 href="/signin"
                 className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-7 py-3.5 text-[14px] font-semibold text-white transition hover:bg-white/10"
               >
-                I have an account
+                {t("how.cta.secondary")}
               </Link>
             </div>
           </Reveal>

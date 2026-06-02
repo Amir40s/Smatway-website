@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  transpilePackages: ["@smatway/i18n"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "purepng.com" },
