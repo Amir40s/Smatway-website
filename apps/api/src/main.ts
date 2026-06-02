@@ -15,6 +15,7 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { json, urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { LocalizedExceptionFilter } from './common/filters/localized-exception.filter';
 
 const logger = new Logger('Bootstrap');
 const maxPortAttempts = 20;
@@ -35,6 +36,7 @@ async function bootstrap() {
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
   app.use(cookieParser());
+  app.useGlobalFilters(new LocalizedExceptionFilter());
   const allowedOrigins = [
     'https://smatway.com',
     'https://admin.smatway.com',
@@ -59,7 +61,7 @@ async function bootstrap() {
     origin: allowedOrigins,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
+    allowedHeaders: 'Content-Type, Accept, Accept-Language, Authorization, X-Requested-With',
   });
 
   const startPort = resolveStartPort(3002);

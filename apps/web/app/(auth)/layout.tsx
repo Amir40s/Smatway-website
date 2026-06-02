@@ -1,6 +1,6 @@
 import Link from "next/link";
-import LeftPanelLive from "./LeftPanelLive";
 import { RequireLoggedOut } from "@/app/_components/RequireLoggedOut";
+import { LanguageSwitcher } from "@/lib/i18n/LocaleProvider";
 
 function CheckIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -30,14 +30,6 @@ function ClockIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-}
-
-function StarIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
     </svg>
   );
 }
@@ -111,12 +103,23 @@ function LeftPanel() {
           Travel built on <span className="italic text-emerald-300">trust.</span>
         </h2>
         <p className="mt-4 max-w-md text-[14px] leading-relaxed text-zinc-400">
-          Verified drivers, upfront pricing, and live tracking — for the people who wait for you to arrive.
+          Verified drivers, protected booking, and confidential journey details.
         </p>
 
-        {/* Real platform data + real reviews. Renders nothing if the API has nothing real to show. */}
-        <div className="mt-10">
-          <LeftPanelLive />
+        <div className="mt-10 grid gap-3">
+          {[
+            { icon: <ShieldIcon className="h-4 w-4" />, title: "Verified access", body: "Accounts, vehicles, and documents are checked before trips go live." },
+            { icon: <LockIcon className="h-4 w-4" />, title: "Private by default", body: "Operational numbers and customer activity stay inside the dashboard." },
+            { icon: <ClockIcon className="h-4 w-4" />, title: "Private trips", body: "Journey details stay inside the traveler account and required booking flow." },
+          ].map((item) => (
+            <div key={item.title} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 backdrop-blur-sm">
+              <div className="flex items-center gap-2 text-emerald-300">
+                {item.icon}
+                <span className="text-sm font-semibold text-white">{item.title}</span>
+              </div>
+              <p className="mt-2 text-[12px] leading-relaxed text-zinc-500">{item.body}</p>
+            </div>
+          ))}
         </div>
 
         {/* Spacer so the content sits in the upper-half on tall screens */}
@@ -152,6 +155,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
           {/* Mobile-only top accent hairline */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent lg:hidden" />
+
+          <div className="absolute right-6 top-6 z-30 md:right-10 md:top-8 lg:right-12 lg:top-10">
+            <LanguageSwitcher menuPlacement="down" />
+          </div>
 
           {/* my-auto centers vertically when content fits; lets long forms scroll naturally */}
           <div className="relative z-10 my-auto w-full max-w-md">

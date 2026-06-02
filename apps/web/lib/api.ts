@@ -4,6 +4,7 @@
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002';
+const LOCALE_STORAGE_KEY = 'smatway:locale';
 
 export type ApiErrorResponse = {
   message?: string;
@@ -42,6 +43,7 @@ export async function apiRequest<T = unknown>(
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Accept-Language': getStoredLocale(),
     ...options.headers,
   };
 
@@ -175,6 +177,12 @@ function getAuthToken(): string | null {
   return null;
 }
 
+function getStoredLocale(): string {
+  if (typeof window === 'undefined') return 'en';
+
+  return localStorage.getItem(LOCALE_STORAGE_KEY) || document.documentElement.lang || 'en';
+}
+
 export const api = {
   get: apiGet,
   post: apiPost,
@@ -211,7 +219,10 @@ export async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
     method: 'POST',
     body: formData,
     credentials: 'include',
-    headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+    headers: {
+      'Accept-Language': getStoredLocale(),
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
   });
 
   if (!response.ok) {
@@ -490,7 +501,10 @@ export async function createVehicle(data: {
     method: 'POST',
     body: formData,
     credentials: 'include',
-    headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+    headers: {
+      'Accept-Language': getStoredLocale(),
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
   });
 
   if (!response.ok) {
@@ -512,7 +526,9 @@ export async function getVehicle(id: string): Promise<any> {
 export async function updateVehicle(id: string, data: FormData): Promise<any> {
   const url = new URL(`/vehicle/${id}`, process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002').toString();
   const token = getAuthToken();
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = {
+    'Accept-Language': getStoredLocale(),
+  };
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }

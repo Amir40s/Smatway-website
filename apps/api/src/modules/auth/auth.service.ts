@@ -16,6 +16,7 @@ import { MailService } from './mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ApiLocale } from '../../common/i18n';
 
 const BCRYPT_ROUNDS = 12;
 const RESET_TOKEN_TTL_HOURS = 1;
@@ -48,7 +49,7 @@ export class AuthService {
     return user;
   }
 
-  async register(dto: RegisterDto): Promise<{ email: string; pendingVerification: true }> {
+  async register(dto: RegisterDto, locale: ApiLocale = 'en'): Promise<{ email: string; pendingVerification: true }> {
     if (dto.agreedToTerms !== true) {
       throw new BadRequestException('You must accept the terms and conditions');
     }
@@ -91,7 +92,7 @@ export class AuthService {
             bankAccountHolderName: dto.bankAccountHolderName ?? undefined,
           },
         });
-        await this.issueVerificationOtp(updated);
+        await this.issueVerificationOtp(updated, locale);
         return { email: updated.email, pendingVerification: true };
       }
       throw new ConflictException('Email already registered');
@@ -120,7 +121,7 @@ export class AuthService {
       },
     });
 
-    await this.issueVerificationOtp(user);
+    await this.issueVerificationOtp(user, locale);
     return { email: user.email, pendingVerification: true };
   }
 
@@ -181,7 +182,7 @@ export class AuthService {
     return { user: this.safeUser(verifiedUser), accessToken };
   }
 
-  async resendVerificationOtp(email: string): Promise<{ ok: true }> {
+  async resendVerificationOtp(email: string, locale: ApiLocale = 'en'): Promise<{ ok: true }> {
     const normalized = email?.trim().toLowerCase();
     if (!normalized) throw new BadRequestException('Email is required');
 
@@ -199,11 +200,11 @@ export class AuthService {
       }
     }
 
-    await this.issueVerificationOtp(user);
+    await this.issueVerificationOtp(user, locale);
     return { ok: true };
   }
 
-  private async issueVerificationOtp(user: User): Promise<void> {
+  private async issueVerificationOtp(user: User, locale: ApiLocale = 'en'): Promise<void> {
     // Invalidate any existing open codes
     await this.prisma.emailVerificationOtp.updateMany({
       where: { userId: user.id, used: false },
@@ -229,7 +230,7 @@ export class AuthService {
 
     // Send the email in the background so a slow SMTP connection doesn't block the API response.
     // The user can still pick the code up from the server log or request a resend.
-    this.mailService.sendVerificationOtp(user.email, code, user.name).catch(() => {
+    this.mailService.sendVerificationOtp(user.email, code, user.name, locale).catch(() => {
       // Already logged inside MailService.
     });
   }
@@ -281,7 +282,7 @@ export class AuthService {
     clearAuthCookies(res);
   }
 
-  async forgotPassword(email: string, origin?: string): Promise<void> {
+  async forgotPassword(email: string, origin?: string, locale: ApiLocale = 'en'): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) return;
 
@@ -310,7 +311,7 @@ export class AuthService {
 
     const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
     // Send password reset email in the background so slow SMTP doesn't block the API response
-    this.mailService.sendPasswordReset(email, resetUrl).catch(() => {
+    this.mailService.sendPasswordReset(email, resetUrl, locale).catch(() => {
       // Already logged inside MailService
     });
   }

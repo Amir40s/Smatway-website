@@ -335,7 +335,7 @@ export default function SignUpPage() {
               <TravelerIcon />
             </div>
             <div className={`mt-2.5 text-[13px] font-semibold ${accountType === "traveler" ? "text-emerald-900" : "text-zinc-900"}`}>Traveler</div>
-            <div className="text-[11px] text-zinc-500">Book seats, track trips</div>
+            <div className="text-[11px] text-zinc-500">Book seats, manage trips</div>
             {accountType === "traveler" && (
               <div className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
                 <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
@@ -493,7 +493,7 @@ export default function SignUpPage() {
               onChange={(v) => setFormData(prev => ({ ...prev, preferredCurrency: v }))}
               className={inputBase.replace("pl-10 ", "")}
             />
-            <p className="mt-1 text-[11px] text-zinc-500">Used for route prices. You can change this later in your profile.</p>
+            <p className="mt-1 text-[11px] text-zinc-500">Used for account preferences. You can change this later in your profile.</p>
           </div>
 
           {accountType === "transporter" && (

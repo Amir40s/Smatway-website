@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCurrentUser, logout, isTokenExpired, clearAuthData } from "@/lib/auth";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useLiveAvatar } from "@/app/dashboard/_Components/events";
+import { LanguageSwitcher, useLocale } from "@/lib/i18n/LocaleProvider";
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
 const travelerNav = [
@@ -88,11 +89,15 @@ function isActivePath(pathname: string, key: string) {
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
-function Sidebar({ pathname, role }: { pathname: string; role: "traveler" | "transporter" }) {
+function Sidebar({ pathname, role, isRtl }: { pathname: string; role: "traveler" | "transporter"; isRtl: boolean }) {
   const navItems = role === "transporter" ? transporterNav : travelerNav;
 
   return (
-    <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-200/70 z-30">
+    <aside
+      className={`hidden lg:flex flex-col fixed top-0 bottom-0 w-64 bg-white z-30 ${
+        isRtl ? "right-0 border-l border-slate-200/70" : "left-0 border-r border-slate-200/70"
+      }`}
+    >
       {/* Logo */}
       <div className="h-16 flex items-center px-6">
         <Link href="/dashboard" className="flex items-center gap-2.5 group">
@@ -214,6 +219,10 @@ const UserNav = memo(
       <div className="flex items-center gap-2">
         <NotificationBell userId={userId} />
 
+        <div className="shrink-0">
+          <LanguageSwitcher menuPlacement="down" />
+        </div>
+
         <div className="w-px h-6 bg-slate-200 mx-1 hidden sm:block" />
 
         <div className="relative" onClick={(e) => e.stopPropagation()}>
@@ -313,12 +322,13 @@ function Topbar({ title, role, userName, avatarUrl, userId, onOpenDrawer }: { ti
 
 // ─── Mobile drawer — full-height sidebar that slides in from the left ─────────
 function MobileDrawer({
-  open, onClose, pathname, role,
+  open, onClose, pathname, role, isRtl,
 }: {
   open: boolean;
   onClose: () => void;
   pathname: string;
   role: "traveler" | "transporter";
+  isRtl: boolean;
 }) {
   const navItems = role === "transporter" ? transporterNav : travelerNav;
 
@@ -345,11 +355,13 @@ function MobileDrawer({
           />
           {/* Drawer */}
           <motion.aside
-            initial={{ x: "-100%" }}
+            initial={{ x: isRtl ? "100%" : "-100%" }}
             animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
+            exit={{ x: isRtl ? "100%" : "-100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            className="fixed inset-y-0 left-0 z-50 w-[82%] max-w-[300px] bg-white flex flex-col shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] lg:hidden"
+            className={`fixed inset-y-0 z-50 w-[82%] max-w-[300px] bg-white flex flex-col shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] lg:hidden ${
+              isRtl ? "right-0" : "left-0"
+            }`}
             role="dialog"
             aria-modal="true"
           >
@@ -460,6 +472,7 @@ function MobileNav({ pathname, role }: { pathname: string; role: "traveler" | "t
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { locale } = useLocale();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -527,12 +540,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const role = user.userRole;
   const titles = role === "transporter" ? transporterTitles : travelerTitles;
   const title = titles[pathname] ?? "Dashboard";
+  const isRtl = locale === "ar";
 
   return (
     <div className="h-[100dvh] flex bg-[#fafafa] overflow-hidden">
-      <Sidebar pathname={pathname} role={role} />
-      <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} pathname={pathname} role={role} />
-      <div className="flex-1 lg:ml-64 flex flex-col h-[100dvh] overflow-hidden">
+      <Sidebar pathname={pathname} role={role} isRtl={isRtl} />
+      <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} pathname={pathname} role={role} isRtl={isRtl} />
+      <div className={`flex-1 flex flex-col h-[100dvh] overflow-hidden ${isRtl ? "lg:mr-64" : "lg:ml-64"}`}>
         <Topbar
           title={title}
           role={role}

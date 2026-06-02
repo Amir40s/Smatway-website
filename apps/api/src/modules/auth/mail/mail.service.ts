@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import { ApiLocale, translateApiText } from '../../../common/i18n';
 
 @Injectable()
 export class MailService {
@@ -42,21 +43,22 @@ export class MailService {
     });
   }
 
-  async sendPasswordReset(email: string, resetUrl: string): Promise<void> {
+  async sendPasswordReset(email: string, resetUrl: string, locale: ApiLocale = 'en'): Promise<void> {
     if (!this.sendingEnabled || !this.smtpConfigured) {
       this.logger.warn(`Password reset email to ${email} skipped — SMTP not configured or sending disabled.`);
       return;
     }
+    const t = (text: string) => translateApiText(text, locale);
     try {
       await this.transporter.sendMail({
         from: this.from,
         to: email,
-        subject: 'Reset your SmatWay password',
+        subject: t('Reset your SmatWay password'),
         html: `
-          <p>You requested a password reset for your SmatWay account.</p>
-          <p>Click the link below to set a new password. This link expires in 1 hour.</p>
-          <p><a href="${resetUrl}">Reset Password</a></p>
-          <p>If you did not request this, ignore this email — your password will not change.</p>
+          <p>${t('You requested a password reset for your SmatWay account.')}</p>
+          <p>${t('Click the link below to set a new password. This link expires in 1 hour.')}</p>
+          <p><a href="${resetUrl}">${t('Reset Password')}</a></p>
+          <p>${t('If you did not request this, ignore this email — your password will not change.')}</p>
         `,
       });
       this.logger.log(`Password reset email sent to ${email}`);
@@ -65,7 +67,7 @@ export class MailService {
     }
   }
 
-  async sendVerificationOtp(email: string, code: string, name?: string | null): Promise<void> {
+  async sendVerificationOtp(email: string, code: string, name?: string | null, locale: ApiLocale = 'en'): Promise<void> {
     if (!this.sendingEnabled) {
       this.logger.log(`OTP email for ${email} skipped (OTP_SEND_EMAIL=false). Code: ${code}`);
       return;
@@ -75,29 +77,30 @@ export class MailService {
       return;
     }
 
-    const greeting = name ? `Hi ${name.split(' ')[0]},` : 'Welcome to SmatWay,';
+    const t = (text: string) => translateApiText(text, locale);
+    const greeting = name ? `${t('Hi')} ${name.split(' ')[0]},` : t('Welcome to SmatWay,');
 
     try {
       await this.transporter.sendMail({
         from: this.from,
         to: email,
-        subject: `${code} is your SmatWay verification code`,
+        subject: `${code} ${t('is your SmatWay verification code')}`,
         html: `
           <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#0f172a;">
             <div style="background:linear-gradient(135deg,#10b981,#0d9488);height:4px;border-radius:4px;margin-bottom:32px;"></div>
             <h1 style="font-size:22px;font-weight:600;margin:0 0 16px 0;letter-spacing:-0.01em;">${greeting}</h1>
             <p style="font-size:15px;line-height:1.6;color:#475569;margin:0 0 24px 0;">
-              Use the code below to verify your email and finish setting up your account.
+              ${t('Use the code below to verify your email and finish setting up your account.')}
             </p>
             <div style="text-align:center;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:24px;margin:24px 0;">
               <div style="font-family:'SF Mono',Menlo,monospace;font-size:36px;font-weight:700;letter-spacing:0.4em;color:#065f46;">${code}</div>
-              <div style="font-size:12px;color:#64748b;margin-top:8px;text-transform:uppercase;letter-spacing:0.1em;">Expires in 10 minutes</div>
+              <div style="font-size:12px;color:#64748b;margin-top:8px;text-transform:uppercase;letter-spacing:0.1em;">${t('Expires in 10 minutes')}</div>
             </div>
             <p style="font-size:13px;line-height:1.6;color:#64748b;margin:24px 0 0 0;">
-              If you did not sign up for SmatWay, ignore this email — no account will be created without this code.
+              ${t('If you did not sign up for SmatWay, ignore this email — no account will be created without this code.')}
             </p>
             <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
-              SmatWay — travel the way it should be.
+              ${t('SmatWay — travel the way it should be.')}
             </div>
           </div>
         `,

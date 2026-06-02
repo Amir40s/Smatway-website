@@ -20,14 +20,15 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { User } from '@prisma/client';
+import { resolveApiLocale, translateApiText } from '../../common/i18n';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   @Post('register')
-  async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  async register(@Body() dto: RegisterDto, @Req() req: Request) {
+    return this.authService.register(dto, resolveApiLocale(req.headers['accept-language']));
   }
 
   @Throttle({ default: { limit: 10, ttl: 60000 } })
@@ -41,8 +42,8 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60000 * 15 } })
   @Post('resend-otp')
   @HttpCode(200)
-  async resendOtp(@Body() dto: ResendOtpDto) {
-    return this.authService.resendVerificationOtp(dto.email);
+  async resendOtp(@Body() dto: ResendOtpDto, @Req() req: Request) {
+    return this.authService.resendVerificationOtp(dto.email, resolveApiLocale(req.headers['accept-language']));
   }
 
   @UseGuards(LocalAuthGuard)
@@ -95,8 +96,9 @@ export class AuthController {
   @HttpCode(200)
   async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
     const origin = req.headers.origin || req.headers.referer;
-    await this.authService.forgotPassword(dto.email, typeof origin === 'string' ? origin : undefined);
-    return { message: 'If that email exists, a reset link was sent.' };
+    const locale = resolveApiLocale(req.headers['accept-language']);
+    await this.authService.forgotPassword(dto.email, typeof origin === 'string' ? origin : undefined, locale);
+    return { message: translateApiText('If that email exists, a reset link was sent.', locale) };
   }
 
   @Post('reset-password')
