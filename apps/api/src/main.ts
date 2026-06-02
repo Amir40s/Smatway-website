@@ -39,6 +39,7 @@ async function bootstrap() {
   app.useGlobalFilters(new LocalizedExceptionFilter());
   const allowedOrigins = [
     'https://smatway.com',
+    "https://smatway.com",
     'https://admin.smatway.com',
     'http://localhost:3000',
     'http://localhost:3001',

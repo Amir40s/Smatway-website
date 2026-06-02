@@ -469,6 +469,9 @@ export function LocaleProvider({
     } catch {
       // Ignore storage failures; the in-memory selection still works.
     }
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
   }, [storageKey]);
 
   const translateText = useMemo(() => createTextTranslator(locale, dictionaries), [locale, dictionaries]);
@@ -553,19 +556,17 @@ function localizeNode(root: Node, translateText: (text: string) => string, local
   if (root.nodeType !== Node.ELEMENT_NODE && root.nodeType !== Node.DOCUMENT_NODE) return;
 
   if (root.nodeType === Node.ELEMENT_NODE) {
-    applyElementAttributes(root as Element, translateText, locale);
+    const element = root as Element;
+    if (element.tagName && ["SCRIPT", "STYLE", "NOSCRIPT", "CODE", "PRE", "SVG"].includes(element.tagName)) return;
+    if (element.hasAttribute && (element.hasAttribute("data-no-localize") || element.getAttribute("translate") === "no")) return;
+
+    applyElementAttributes(element, translateText, locale);
   }
 
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
-  let current: Node | null = walker.nextNode();
-
-  while (current) {
-    if (current.nodeType === Node.TEXT_NODE) {
-      applyTextNode(current as Text, translateText, locale);
-    } else if (current.nodeType === Node.ELEMENT_NODE) {
-      applyElementAttributes(current as Element, translateText, locale);
-    }
-    current = walker.nextNode();
+  let child = root.firstChild;
+  while (child) {
+    localizeNode(child, translateText, locale);
+    child = child.nextSibling;
   }
 }
 
@@ -589,9 +590,54 @@ export function RuntimeLocalizer() {
       applyingRef.current = true;
       for (const mutation of mutations) {
         if (mutation.type === "characterData") {
-          applyTextNode(mutation.target as Text, translateText, locale);
+          const textNode = mutation.target as Text;
+          const currentVal = textNode.nodeValue ?? "";
+          const storedOriginal = textNodeOriginals.get(textNode);
+          
+          if (storedOriginal !== undefined) {
+            const expectedTranslated = locale === "en" ? storedOriginal : translateText(storedOriginal);
+            if (currentVal !== expectedTranslated) {
+              textNodeOriginals.set(textNode, currentVal);
+            }
+          } else {
+            textNodeOriginals.set(textNode, currentVal);
+          }
+
+          applyTextNode(textNode, translateText, locale);
         } else if (mutation.type === "attributes") {
-          applyElementAttributes(mutation.target as Element, translateText, locale);
+          const element = mutation.target as Element;
+          const attr = mutation.attributeName;
+          if (attr && localizedAttributes.includes(attr as any)) {
+            const currentVal = element.getAttribute(attr) ?? "";
+            const originalAttr = `data-i18n-original-${attr}`;
+            const storedOriginal = element.getAttribute(originalAttr);
+            
+            if (storedOriginal !== null) {
+              const expectedTranslated = locale === "en" ? storedOriginal : translateText(storedOriginal);
+              if (currentVal !== expectedTranslated) {
+                element.setAttribute(originalAttr, currentVal);
+              }
+            } else {
+              element.setAttribute(originalAttr, currentVal);
+            }
+          }
+          
+          if (element instanceof HTMLInputElement && ["button", "submit", "reset"].includes(element.type)) {
+            const currentVal = element.getAttribute("value") ?? "";
+            const originalAttr = "data-i18n-original-value";
+            const storedOriginal = element.getAttribute(originalAttr);
+            
+            if (storedOriginal !== null) {
+              const expectedTranslated = locale === "en" ? storedOriginal : translateText(storedOriginal);
+              if (currentVal !== expectedTranslated) {
+                element.setAttribute(originalAttr, currentVal);
+              }
+            } else {
+              element.setAttribute(originalAttr, currentVal);
+            }
+          }
+
+          applyElementAttributes(element, translateText, locale);
         } else {
           for (const node of Array.from(mutation.addedNodes)) {
             localizeNode(node, translateText, locale);

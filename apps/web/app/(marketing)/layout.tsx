@@ -4,8 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { Menu as MenuIcon, X as CloseIcon } from "lucide-react";
-import { useLocale, useT } from "@/lib/i18n/LocaleProvider";
-import { locales as supportedLocales } from "@/lib/i18n/locales";
+import { useLocale, useT, LanguageSwitcher } from "@/lib/i18n/LocaleProvider";
 
 function MapPinIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
@@ -25,16 +24,6 @@ function ArrowRightIcon() {
   );
 }
 
-function GlobeIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M2 12h20" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-    </svg>
-  );
-}
-
 function ChevronDownIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -48,65 +37,6 @@ const navLinks: { href: string; key: string }[] = [
   { href: "/", key: "nav.home" },
   { href: "/how-it-works", key: "nav.howItWorks" },
 ];
-
-function LanguageDropdown() {
-  const { locale, setLocale } = useLocale();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const selected = supportedLocales.find(l => l.code === locale) ?? supportedLocales[0];
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-zinc-900 hover:bg-slate-50 transition-all duration-200"
-        aria-label="Change language"
-      >
-        <GlobeIcon className="w-4 h-4" />
-        <span className="hidden sm:inline">{selected.nativeLabel}</span>
-        <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-      </button>
-
-      {open && (
-        <div className="animate-dropdown-in absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl border border-slate-200/80 shadow-[0_12px_40px_rgba(0,0,0,0.08)] py-2 z-50">
-          {supportedLocales.map((lang) => (
-            <button
-              key={lang.code}
-              onClick={() => { setLocale(lang.code); setOpen(false); }}
-              className={`w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 flex items-center justify-between ${
-                selected.code === lang.code
-                  ? "text-emerald-600 font-semibold bg-emerald-50/50"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-zinc-900"
-              }`}
-            >
-              <span className="flex flex-col items-start">
-                <span>{lang.nativeLabel}</span>
-                {lang.label !== lang.nativeLabel && (
-                  <span className="text-[10px] text-slate-400">{lang.label}</span>
-                )}
-              </span>
-              {selected.code === lang.code && (
-                <svg className="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m5 12 5 5L20 7" />
-                </svg>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function Navbar() {
   const pathname = usePathname();
@@ -165,7 +95,7 @@ function Navbar() {
 
           {/* Right side: Language + CTA (desktop) + Hamburger (mobile) */}
           <div className="flex items-center gap-1 sm:gap-2">
-            <LanguageDropdown />
+            <LanguageSwitcher menuPlacement="down" />
             <Link
               href="/signin"
               className="hidden md:inline-flex items-center gap-2 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 text-sm active:scale-[0.98]"
