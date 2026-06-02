@@ -20,6 +20,8 @@ type RouteForm = {
   departureDateTime: string;
   maxReachDateTime: string;
   vehicleId: string;
+  repeatDaily?: boolean;
+  repeatDurationDays?: string;
 };
 
 export default function AddRoutePage() {
@@ -37,10 +39,12 @@ export default function AddRoutePage() {
     destinationAddress: "",
     price: "",
     currency: "",
-    availableSeats: "",
+    availableSeats: "999",
     departureDateTime: "",
     maxReachDateTime: "",
     vehicleId: "",
+    repeatDaily: false,
+    repeatDurationDays: "7",
   });
 
   const [stops, setStops] = useState<{ city: string; address: string }[]>([]);
@@ -135,6 +139,8 @@ export default function AddRoutePage() {
           city: s.city.trim(),
           address: s.address.trim(),
         })),
+        repeatDaily: form.repeatDaily,
+        repeatDurationDays: form.repeatDaily && form.repeatDurationDays ? parseInt(form.repeatDurationDays) : undefined,
       });
       router.push("/dashboard/routes");
     } catch (e: any) {
@@ -294,10 +300,7 @@ export default function AddRoutePage() {
                 </span>
               </div>
             </div>
-            <div>
-              <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Available Seats</label>
-              <input required type="number" min={1} placeholder="e.g. 12" value={form.availableSeats} onChange={e => set("availableSeats", e.target.value)} className={inputClass} />
-            </div>
+
             <div>
               <label className="text-sm font-medium text-zinc-900 mb-1.5 block">
                 Price per Seat{form.currency ? ` (${currencyMap.get(form.currency)?.symbol ?? form.currency})` : ""}
@@ -327,6 +330,42 @@ export default function AddRoutePage() {
               <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Max Reach Date & Time</label>
               <input required type="datetime-local" min={form.departureDateTime || new Date().toISOString().slice(0, 16)} value={form.maxReachDateTime} onChange={e => set("maxReachDateTime", e.target.value)} className={inputClass} />
             </div>
+          </div>
+        </div>
+
+        {/* Recurring Settings */}
+        <div className="border-t border-slate-100 pt-5">
+          <h3 className="text-sm font-semibold text-zinc-900 mb-3">Recurring Settings</h3>
+          <div className="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200/60">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="repeatDaily"
+                checked={form.repeatDaily || false}
+                onChange={e => set("repeatDaily", e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <label htmlFor="repeatDaily" className="text-sm font-medium text-zinc-900 cursor-pointer">
+                Repeat this route daily
+              </label>
+            </div>
+            
+            {form.repeatDaily && (
+              <div className="max-w-[200px] animate-fadeIn">
+                <label className="text-xs font-semibold text-slate-500 mb-1 block">Repeat for (days)</label>
+                <input
+                  required
+                  type="number"
+                  min={1}
+                  max={30}
+                  placeholder="e.g. 7"
+                  value={form.repeatDurationDays || ""}
+                  onChange={e => set("repeatDurationDays", e.target.value)}
+                  className={inputClass}
+                />
+                <span className="text-[10px] text-slate-400 mt-1 block">Generates daily routes up to 30 days.</span>
+              </div>
+            )}
           </div>
         </div>
 

@@ -146,6 +146,12 @@ export default function SignUpPage() {
     bankAccountHolderName: "",
     agreedToTerms: false,
   });
+  const [transporterConfirmations, setTransporterConfirmations] = useState({
+    registered: false,
+    licenses: false,
+    compliance: false,
+    consequences: false,
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -224,6 +230,15 @@ export default function SignUpPage() {
       if (!formData.agreedToTerms) {
         console.warn("%c[Validation Fail] Terms not accepted.", "color: #ef4444; font-weight: bold;");
         throw new Error("You must accept the Terms of Use & Conditions to continue");
+      }
+      if (accountType === "transporter" && (
+        !transporterConfirmations.registered ||
+        !transporterConfirmations.licenses ||
+        !transporterConfirmations.compliance ||
+        !transporterConfirmations.consequences
+      )) {
+        console.warn("%c[Validation Fail] Transporter declarations not confirmed.", "color: #ef4444; font-weight: bold;");
+        throw new Error("You must accept all legal and regulatory transporter confirmations to continue");
       }
 
       console.log("%c📡 Sending registration payload to POST /auth/register...", "color: #10b981; font-weight: bold;");
@@ -591,6 +606,73 @@ export default function SignUpPage() {
             </div>
           </div>
 
+          {accountType === "transporter" && (
+            <div className="space-y-3 rounded-2xl border border-zinc-200 bg-amber-50/50 p-4 animate-fade-in-up">
+              <div>
+                <h4 className="text-[12px] font-bold uppercase tracking-[0.08em] text-amber-800">
+                  Legal &amp; Regulatory Confirmations
+                </h4>
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  As SmatWay cannot verify individual permits directly, you must confirm these criteria:
+                </p>
+              </div>
+              
+              <div className="space-y-2.5">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={transporterConfirmations.registered}
+                    onChange={e => setTransporterConfirmations(prev => ({ ...prev, registered: e.target.checked }))}
+                    required
+                    className="mt-0.5 cursor-pointer accent-amber-600 w-3.5 h-3.5 shrink-0"
+                  />
+                  <span className="text-[11.5px] leading-tight text-zinc-700">
+                    1) You are duly registered and authorized to operate as a transporter in all countries where you conduct business.
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={transporterConfirmations.licenses}
+                    onChange={e => setTransporterConfirmations(prev => ({ ...prev, licenses: e.target.checked }))}
+                    required
+                    className="mt-0.5 cursor-pointer accent-amber-600 w-3.5 h-3.5 shrink-0"
+                  />
+                  <span className="text-[11.5px] leading-tight text-zinc-700">
+                    2) You hold all licenses, permits, and approvals required for the countries and routes in which you operate.
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={transporterConfirmations.compliance}
+                    onChange={e => setTransporterConfirmations(prev => ({ ...prev, compliance: e.target.checked }))}
+                    required
+                    className="mt-0.5 cursor-pointer accent-amber-600 w-3.5 h-3.5 shrink-0"
+                  />
+                  <span className="text-[11.5px] leading-tight text-zinc-700">
+                    3) You comply with all applicable laws, regulations, and requirements imposed by local authorities in the jurisdictions where you operate.
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={transporterConfirmations.consequences}
+                    onChange={e => setTransporterConfirmations(prev => ({ ...prev, consequences: e.target.checked }))}
+                    required
+                    className="mt-0.5 cursor-pointer accent-amber-600 w-3.5 h-3.5 shrink-0"
+                  />
+                  <span className="text-[11.5px] leading-tight text-zinc-700">
+                    4) You agree that failure to comply with these requirements may result in the suspension or termination of your account, either generally or on an order-by-order basis.
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
+
           <label className="flex items-start gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 cursor-pointer hover:bg-zinc-50 transition-colors">
             <input
               type="checkbox"
@@ -616,7 +698,16 @@ export default function SignUpPage() {
           <div className="pt-2">
             <button
               type="submit"
-              disabled={isLoading || !formData.agreedToTerms}
+              disabled={
+                isLoading ||
+                !formData.agreedToTerms ||
+                (accountType === "transporter" && (
+                  !transporterConfirmations.registered ||
+                  !transporterConfirmations.licenses ||
+                  !transporterConfirmations.compliance ||
+                  !transporterConfirmations.consequences
+                ))
+              }
               className="group relative w-full overflow-hidden rounded-xl bg-zinc-950 px-5 py-3.5 text-[14px] font-semibold text-white shadow-[0_10px_24px_-8px_rgba(15,23,42,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] transition-all duration-300 hover:shadow-[0_14px_36px_-10px_rgba(16,185,129,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/20 to-emerald-500/0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />

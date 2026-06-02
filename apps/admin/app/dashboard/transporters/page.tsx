@@ -359,10 +359,29 @@ export default function TransportersPage() {
     }
   };
 
-  const handleStatusChange = (id: string, newStatus: Transporter["status"]) => {
-    setTransporters((curr) =>
-      curr.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
-    );
+  const handleStatusChange = async (id: string, newStatus: Transporter["status"]) => {
+    try {
+      const isSuspended = newStatus === "SUSPENDED" || newStatus === "REJECTED";
+      const reason = newStatus === "REJECTED" ? "REJECTED" : (newStatus === "SUSPENDED" ? "SUSPENDED" : null);
+
+      await adminRequest(`/users/admin/users/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          suspended: isSuspended,
+          suspensionReason: reason,
+        }),
+      });
+
+      setTransporters((curr) =>
+        curr.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
+      );
+    } catch (err) {
+      console.error("Failed to update status on server:", err);
+      // Local fallback in case of errors
+      setTransporters((curr) =>
+        curr.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
+      );
+    }
   };
 
   const handleWithdrawalStatus = (id: string, newStatus: WithdrawalRequest["status"]) => {

@@ -348,10 +348,6 @@ function TransportCard({ transport }: { transport: any }) {
                 <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
                 {dep.toLocaleDateString()} · {dep.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
-              <span className="inline-flex items-center gap-1">
-                <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
-                {transport.availableSeats} seats left
-              </span>
               <span className="text-slate-400">
                 Arrives by {maxReach.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
@@ -398,14 +394,13 @@ function TransportCard({ transport }: { transport: any }) {
                 <input
                   type="number"
                   min={1}
-                  max={transport.availableSeats}
                   value={seats}
                   onChange={(e) => setSeats(Number(e.target.value))}
                   className="w-12 text-center rounded-lg border border-slate-200 px-1 py-1.5 text-sm font-semibold tabular-nums"
                 />
                 <button
                   onClick={handleBook}
-                  disabled={booking || transport.availableSeats === 0}
+                  disabled={booking}
                   className="bg-zinc-950 hover:bg-zinc-800 disabled:opacity-50 text-white text-[12px] font-semibold px-3.5 py-2 rounded-lg transition-all active:scale-[0.98]"
                 >
                   {booking ? "..." : "Book"}

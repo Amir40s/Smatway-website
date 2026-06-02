@@ -78,6 +78,7 @@ export class UsersService {
         country: true,
         avatarUrl: true,
         isSuspended: true,
+        suspensionReason: true,
         createdAt: true,
         profile: {
           select: {
@@ -146,7 +147,9 @@ export class UsersService {
           (sum, route) => sum + route.bookings.reduce((s, b) => s + convertToUSD(Number(b.totalPrice), route.currency), 0),
           0,
         );
-        const status = t.isSuspended ? 'SUSPENDED' : 'APPROVED';
+        const status = t.isSuspended
+          ? (t.suspensionReason === 'REJECTED' ? 'REJECTED' : 'SUSPENDED')
+          : 'APPROVED';
 
         return {
           id: t.id,

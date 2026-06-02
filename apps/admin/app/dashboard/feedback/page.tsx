@@ -26,6 +26,17 @@ type FeedbackEntry = {
       departureCountry: string;
       destinationCountry: string;
       departureDateTime: string;
+      transporter?: {
+        name: string;
+        profile?: {
+          companyName: string;
+        } | null;
+      } | null;
+      vehicle?: {
+        name: string;
+        model: string;
+        plateNumber: string;
+      } | null;
     } | null;
   } | null;
 };
@@ -280,6 +291,25 @@ export default function AdminFeedbackPage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Journey Details */}
+                {entry.booking?.transport && (
+                  <div className="mt-3 text-[11.5px] text-slate-500 space-y-1 bg-white p-3 rounded-xl border border-slate-100 shadow-[inset_0_1px_2px_rgba(15,23,42,0.02)]">
+                    <h5 className="font-bold text-[10px] text-indigo-700 uppercase tracking-wider mb-1">Journey Report Details</h5>
+                    <p>
+                      <strong className="text-zinc-700 font-semibold">Transporter Business Name:</strong> {entry.booking.transport.transporter?.profile?.companyName || entry.booking.transport.transporter?.name || "N/A"}
+                    </p>
+                    <p>
+                      <strong className="text-zinc-700 font-semibold">Vehicle:</strong> {entry.booking.transport.vehicle ? `${entry.booking.transport.vehicle.name} (${entry.booking.transport.vehicle.model}) [${entry.booking.transport.vehicle.plateNumber}]` : "N/A"}
+                    </p>
+                    <p>
+                      <strong className="text-zinc-700 font-semibold">Route:</strong> {entry.booking.transport.departureCity} → {entry.booking.transport.destinationCity}
+                    </p>
+                    <p>
+                      <strong className="text-zinc-700 font-semibold">Date of Journey:</strong> {new Date(entry.booking.transport.departureDateTime).toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                )}
 
                 {/* Comment */}
                 <p className="mt-3 text-sm text-zinc-700 leading-relaxed bg-white rounded-xl border border-slate-100 p-3">

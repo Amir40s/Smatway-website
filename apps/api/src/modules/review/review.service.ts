@@ -187,6 +187,14 @@ export class ReviewService {
               select: {
                 departureCity: true,
                 destinationCity: true,
+                departureDateTime: true,
+                vehicle: {
+                  select: {
+                    name: true,
+                    model: true,
+                    plateNumber: true,
+                  },
+                },
               },
             },
           },

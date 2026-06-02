@@ -12,6 +12,9 @@ type Announcement = {
     name: string;
     email: string;
   } | null;
+  transporterName?: string | null;
+  fleet?: string | null;
+  route?: string | null;
 };
 
 export default function AnnouncementsPage() {
@@ -260,12 +263,30 @@ export default function AnnouncementsPage() {
                             isAdminAnn ? "bg-zinc-100 text-zinc-800" : "bg-sky-50 text-sky-700"
                           }`}
                         >
-                          {isAdminAnn ? "ADMIN BROADCAST" : `BY TRANSPORTER: ${ann.transporter?.name}`}
+                          {isAdminAnn ? "ADMIN BROADCAST" : `BY TRANSPORTER: ${ann.transporterName || ann.transporter?.name}`}
                         </span>
                       </div>
                       <h4 className="text-xs font-bold text-zinc-950">{ann.title}</h4>
                       <p className="text-[11px] text-slate-600 whitespace-pre-wrap">{ann.content}</p>
-                      <p className="text-[9px] text-slate-400">
+                      
+                      {!isAdminAnn && (ann.fleet || ann.route) && (
+                        <div className="bg-slate-100/60 rounded-xl p-2.5 mt-2 space-y-1 text-[10px] text-slate-500 border border-slate-200/50">
+                          {ann.fleet && (
+                            <div>
+                              <span className="font-bold text-zinc-700 uppercase tracking-wide">Fleet: </span>
+                              <span>{ann.fleet}</span>
+                            </div>
+                          )}
+                          {ann.route && (
+                            <div>
+                              <span className="font-bold text-zinc-700 uppercase tracking-wide">Route: </span>
+                              <span>{ann.route}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <p className="text-[9px] text-slate-400 mt-2">
                         Published on {new Date(ann.createdAt).toLocaleString()}
                       </p>
                     </div>

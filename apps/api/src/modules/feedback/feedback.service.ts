@@ -170,6 +170,24 @@ export class FeedbackService {
                   departureCountry: true,
                   destinationCountry: true,
                   departureDateTime: true,
+                  transporter: {
+                    select: {
+                      id: true,
+                      name: true,
+                      profile: {
+                        select: {
+                          companyName: true,
+                        },
+                      },
+                    },
+                  },
+                  vehicle: {
+                    select: {
+                      name: true,
+                      model: true,
+                      plateNumber: true,
+                    },
+                  },
                 },
               },
             },

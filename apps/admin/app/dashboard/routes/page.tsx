@@ -30,6 +30,7 @@ type Route = {
   fleetImageUrl: string | null;
   stops: { city: string; address: string }[];
   status: "ACTIVE" | "FULL" | "INACTIVE";
+  transporterName?: string;
   deleteRequested?: boolean;
   deleteReason?: string | null;
 };
@@ -145,6 +146,7 @@ export default function RoutesPage() {
               ? t.stops.map((stop: { city: string; address: string }) => ({ city: stop.city, address: stop.address }))
               : [],
             status: t.status as Route["status"],
+            transporterName: t.transporter?.name || "Magnum Transport",
             deleteRequested: t.deleteRequested || false,
             deleteReason: t.deleteReason || null,
           };
@@ -183,6 +185,7 @@ export default function RoutesPage() {
               { city: "Okara", address: "Okara Toll Plaza" },
             ],
             status: "ACTIVE",
+            transporterName: "Magnum Transport",
           },
           {
             id: "R-99201",
@@ -206,6 +209,7 @@ export default function RoutesPage() {
               { city: "Jhang", address: "Jhang Bypass" },
             ],
             status: "FULL",
+            transporterName: "Apex Logistics",
           },
           {
             id: "R-22019",
@@ -229,6 +233,7 @@ export default function RoutesPage() {
               { city: "Multan", address: "Bosan Road Terminal" },
             ],
             status: "INACTIVE",
+            transporterName: "Magnum Transport",
           },
         ]);
       })
@@ -483,7 +488,6 @@ export default function RoutesPage() {
                   <col className="w-[180px]" />
                   <col className="w-[180px]" />
                   <col className="w-[180px]" />
-                  <col className="w-[120px]" />
                   <col className="w-[110px]" />
                   <col className="w-[120px]" />
                   <col className="w-[90px]" />
@@ -494,7 +498,6 @@ export default function RoutesPage() {
                     <th className="py-3 px-4">Departure DateTime</th>
                     <th className="py-3 px-4">Arrival DateTime</th>
                     <th className="py-3 px-4">Assigned Fleet</th>
-                    <th className="py-3 px-4 text-center">Available Seats</th>
                     <th className="py-3 px-4 text-center">Bookings</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4 text-right">Actions</th>
@@ -504,7 +507,10 @@ export default function RoutesPage() {
                   {filteredRoutes.map((r) => (
                     <tr key={r.id} className="transition-colors hover:bg-slate-50/50">
                       <td className="py-4 px-4 font-semibold text-zinc-950">
-                        {r.departureCity} → {r.destinationCity}
+                        <span>{r.departureCity} → {r.destinationCity}</span>
+                        <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded mt-1.5 block w-max max-w-[180px] truncate">
+                          {r.transporterName || "Magnum Transport"}
+                        </span>
                       </td>
                       <td className="py-4 px-4 text-zinc-700">
                         {new Date(r.departureDateTime).toLocaleString()}
@@ -515,9 +521,6 @@ export default function RoutesPage() {
                       <td className="py-4 px-4">
                         <p className="font-semibold text-zinc-800 truncate" title={r.fleetName}>{r.fleetName}</p>
                         <p className="text-[9px] text-slate-400 mt-0.5 font-mono">{r.fleetPlate}</p>
-                      </td>
-                      <td className="py-4 px-4 text-center font-bold text-zinc-700">
-                        {r.availableSeats}  Left
                       </td>
                       <td className="py-4 px-4 text-center font-bold text-emerald-600">
                         {r.bookingCount} Reserved

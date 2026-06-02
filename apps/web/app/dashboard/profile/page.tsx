@@ -383,6 +383,34 @@ export default function ProfilePage() {
               `}</style>
             </form>
           </div>
+
+          {isTransporter && (
+            <div className="mt-5 p-5 rounded-2xl border border-red-200 bg-red-50/40 space-y-3">
+              <h4 className="text-[12.5px] font-bold text-red-800 uppercase tracking-wider">Profile Deletion Request</h4>
+              <p className="text-[12px] leading-relaxed text-slate-600">
+                Only SmatWay Administrators can delete registration profiles after submission. If you wish to delete your account or any submitted registration details, please request the administrator by email:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href="mailto:admin@smatway.com?subject=Profile Deletion Request - Transporter"
+                  className="inline-flex items-center gap-2 text-xs font-semibold text-red-700 hover:text-red-800 bg-red-50 border border-red-100 hover:bg-red-100/50 px-3.5 py-2 rounded-xl transition-all shadow-sm"
+                >
+                  <MailIcon className="w-3.5 h-3.5 text-red-700 animate-pulse" />
+                  Email Administrator (admin@smatway.com)
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText("admin@smatway.com");
+                    alert("Email address copied to clipboard!");
+                  }}
+                  className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-700 hover:text-zinc-800 bg-white border border-slate-200 hover:bg-slate-50 px-3.5 py-2 rounded-xl transition-all shadow-sm"
+                >
+                  Copy Email Address
+                </button>
+              </div>
+            </div>
+          )}
         </Reveal>
 
         {/* Emergency contacts */}

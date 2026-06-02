@@ -62,32 +62,72 @@ export class TransportService {
       currency = (transporter?.preferredCurrency || 'USD').toUpperCase();
     }
 
-    return this.prisma.transport.create({
-      data: {
-        transporterId,
-        vehicleId: dto.vehicleId,
-        departureCountry: dto.departureCountry.trim(),
-        departureCity: dto.departureCity.trim(),
-        departureAddress: dto.departureAddress.trim(),
-        destinationCountry: dto.destinationCountry.trim(),
-        destinationCity: dto.destinationCity.trim(),
-        destinationAddress: dto.destinationAddress.trim(),
-        transportType: vehicle.transportType,
-        price: dto.price,
-        currency,
-        availableSeats: dto.availableSeats,
-        departureDateTime: new Date(dto.departureDateTime),
-        maxReachDateTime: new Date(dto.maxReachDateTime),
-        stops: {
-          create: (dto.stops || []).map((s, index) => ({
-            city: s.city.trim(),
-            address: s.address.trim(),
-            stopOrder: index,
-          })),
+    const totalDays = dto.repeatDaily && dto.repeatDurationDays ? Math.min(Math.max(1, dto.repeatDurationDays), 30) : 1;
+
+    if (totalDays === 1) {
+      return this.prisma.transport.create({
+        data: {
+          transporterId,
+          vehicleId: dto.vehicleId,
+          departureCountry: dto.departureCountry.trim(),
+          departureCity: dto.departureCity.trim(),
+          departureAddress: dto.departureAddress.trim(),
+          destinationCountry: dto.destinationCountry.trim(),
+          destinationCity: dto.destinationCity.trim(),
+          destinationAddress: dto.destinationAddress.trim(),
+          transportType: vehicle.transportType,
+          price: dto.price,
+          currency,
+          availableSeats: dto.availableSeats,
+          departureDateTime: depDate,
+          maxReachDateTime: maxDate,
+          stops: {
+            create: (dto.stops || []).map((s, index) => ({
+              city: s.city.trim(),
+              address: s.address.trim(),
+              stopOrder: index,
+            })),
+          },
         },
-      },
-      include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } } },
+        include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } } },
+      });
+    }
+
+    const creations = Array.from({ length: totalDays }, (_, i) => {
+      const offsetMs = i * 24 * 60 * 60 * 1000;
+      const currentDepDate = new Date(depDate.getTime() + offsetMs);
+      const currentMaxDate = new Date(maxDate.getTime() + offsetMs);
+
+      return this.prisma.transport.create({
+        data: {
+          transporterId,
+          vehicleId: dto.vehicleId,
+          departureCountry: dto.departureCountry.trim(),
+          departureCity: dto.departureCity.trim(),
+          departureAddress: dto.departureAddress.trim(),
+          destinationCountry: dto.destinationCountry.trim(),
+          destinationCity: dto.destinationCity.trim(),
+          destinationAddress: dto.destinationAddress.trim(),
+          transportType: vehicle.transportType,
+          price: dto.price,
+          currency,
+          availableSeats: dto.availableSeats,
+          departureDateTime: currentDepDate,
+          maxReachDateTime: currentMaxDate,
+          stops: {
+            create: (dto.stops || []).map((s, index) => ({
+              city: s.city.trim(),
+              address: s.address.trim(),
+              stopOrder: index,
+            })),
+          },
+        },
+        include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } } },
+      });
     });
+
+    const results = await this.prisma.$transaction(creations);
+    return results[0];
   }
 
   async search(dto: SearchTransportDto) {

@@ -1,8 +1,8 @@
 import {
   Body, Controller, Delete, FileTypeValidator, Get, MaxFileSizeValidator, Param,
-  ParseFilePipe, Patch, Post, UploadedFile, UseGuards, UseInterceptors, ForbiddenException,
+  ParseFilePipe, Patch, Post, UploadedFiles, UseGuards, UseInterceptors, ForbiddenException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { VehicleService } from './vehicle.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -15,22 +15,14 @@ export class VehicleController {
   constructor(private readonly vehicleService: VehicleService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('image', { limits: { fileSize: 10 * 1024 * 1024 } }))
+  @UseInterceptors(FilesInterceptor('images', 5, { limits: { fileSize: 10 * 1024 * 1024 } }))
   create(
     @CurrentUser() user: User,
     @Body() dto: CreateVehicleDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif)$/ }),
-        ],
-        fileIsRequired: false,
-      }),
-    )
-    image?: Express.Multer.File,
+    @UploadedFiles()
+    images?: Express.Multer.File[],
   ) {
-    return this.vehicleService.create(user.id, dto, image);
+    return this.vehicleService.create(user.id, dto, images);
   }
 
   @Get('my')
@@ -52,23 +44,15 @@ export class VehicleController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('image', { limits: { fileSize: 10 * 1024 * 1024 } }))
+  @UseInterceptors(FilesInterceptor('images', 5, { limits: { fileSize: 10 * 1024 * 1024 } }))
   update(
     @Param('id') id: string,
     @CurrentUser() user: User,
     @Body() dto: Partial<CreateVehicleDto>,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif)$/ }),
-        ],
-        fileIsRequired: false,
-      }),
-    )
-    image?: Express.Multer.File,
+    @UploadedFiles()
+    images?: Express.Multer.File[],
   ) {
-    return this.vehicleService.update(id, user.id, dto, image);
+    return this.vehicleService.update(id, user.id, dto, images);
   }
 
   @Delete(':id')

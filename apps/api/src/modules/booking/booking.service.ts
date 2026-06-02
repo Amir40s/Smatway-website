@@ -18,8 +18,7 @@ export class BookingService {
   async create(travelerId: string, dto: CreateBookingDto) {
     const transport = await this.prisma.transport.findUnique({ where: { id: dto.transportId } });
     if (!transport) throw new NotFoundException('Transport not found');
-    if (transport.availableSeats < dto.seatsBooked)
-      throw new BadRequestException('Not enough seats available');
+
 
     const totalPrice = Number(transport.price) * dto.seatsBooked;
 

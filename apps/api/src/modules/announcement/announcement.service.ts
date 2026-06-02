@@ -141,19 +141,52 @@ export class AnnouncementService {
   }
 
   async getAllAnnouncementsAdmin() {
-    return this.prisma.announcement.findMany({
+    const announcements = await this.prisma.announcement.findMany({
       include: {
         transporter: {
           select: {
             id: true,
             name: true,
             email: true,
+            profile: {
+              select: {
+                companyName: true,
+              },
+            },
+          },
+        },
+        transport: {
+          include: {
+            vehicle: {
+              select: {
+                name: true,
+                model: true,
+                plateNumber: true,
+              },
+            },
           },
         },
       },
       orderBy: {
         createdAt: 'desc',
       },
+    });
+
+    return announcements.map((ann: any) => {
+      const transporterName = ann.transporter?.profile?.companyName || ann.transporter?.name || null;
+      const fleet = ann.transport?.vehicle
+        ? `${ann.transport.vehicle.name} (${ann.transport.vehicle.model}) [${ann.transport.vehicle.plateNumber}]`
+        : null;
+      const route = ann.transport
+        ? `${ann.transport.departureCity} → ${ann.transport.destinationCity}`
+        : null;
+
+      return {
+        ...ann,
+        transporterName,
+        fleet,
+        route,
+      };
     });
   }
 

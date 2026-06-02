@@ -285,6 +285,8 @@ export async function createTransport(data: {
   maxReachDateTime: string;
   vehicleId: string;
   stops?: { city: string; address: string }[];
+  repeatDaily?: boolean;
+  repeatDurationDays?: number;
 }): Promise<any> {
   return apiPost<any>('/transport', data);
 }
@@ -468,14 +470,18 @@ export async function createVehicle(data: {
   model: string;
   plateNumber: string;
   transportType: string;
-  image?: File;
+  images?: File[];
 }): Promise<any> {
   const formData = new FormData();
   formData.append('name', data.name);
   formData.append('model', data.model);
   formData.append('plateNumber', data.plateNumber);
   formData.append('transportType', data.transportType);
-  if (data.image) formData.append('image', data.image);
+  if (data.images && data.images.length > 0) {
+    data.images.forEach((img) => {
+      formData.append('images', img);
+    });
+  }
 
   const url = new URL('/vehicle', API_BASE_URL).toString();
   const token = getAuthToken();

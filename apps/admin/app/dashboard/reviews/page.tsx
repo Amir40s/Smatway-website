@@ -22,6 +22,12 @@ type Review = {
     transport?: {
       departureCity: string;
       destinationCity: string;
+      departureDateTime: string;
+      vehicle?: {
+        name: string;
+        model: string;
+        plateNumber: string;
+      } | null;
     };
   };
 };
@@ -312,9 +318,20 @@ export default function ReviewsPage() {
                       </div>
                       
                       {review.booking?.transport && (
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          Booking ID: <span className="font-mono text-[9px] font-semibold">{(review.booking.id || "").substring(0, 8).toUpperCase()}</span> · Route: {review.booking.transport.departureCity} → {review.booking.transport.destinationCity}
-                        </p>
+                        <div className="text-[11px] text-slate-500 mt-1.5 space-y-1 bg-white p-2.5 rounded-xl border border-slate-100 shadow-[inset_0_1px_2px_rgba(15,23,42,0.02)]">
+                          <p>
+                            <strong className="text-zinc-700">Transporter:</strong> {review.transporter?.name || "N/A"}
+                          </p>
+                          <p>
+                            <strong className="text-zinc-700">Vehicle:</strong> {review.booking.transport.vehicle ? `${review.booking.transport.vehicle.name} (${review.booking.transport.vehicle.model}) [${review.booking.transport.vehicle.plateNumber}]` : "N/A"}
+                          </p>
+                          <p>
+                            <strong className="text-zinc-700">Route:</strong> {review.booking.transport.departureCity} → {review.booking.transport.destinationCity}
+                          </p>
+                          <p>
+                            <strong className="text-zinc-700">Journey Date:</strong> {new Date(review.booking.transport.departureDateTime).toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
                       )}
                     </div>
                   </div>

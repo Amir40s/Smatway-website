@@ -21,14 +21,14 @@ export default function EditVehiclePage() {
   const [loading, setLoading] = useState(false);
   const [vehicleLoading, setVehicleLoading] = useState(true);
   const [error, setError] = useState("");
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [form, setForm] = useState({
     name: "",
     model: "",
     plateNumber: "",
     transportType: "CAR",
   });
-  const [image, setImage] = useState<File | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -45,8 +45,10 @@ export default function EditVehiclePage() {
           plateNumber: vehicle.plateNumber,
           transportType: vehicle.transportType,
         });
-        if (vehicle.imageUrl) {
-          setImagePreview(vehicle.imageUrl);
+        if (vehicle.imageUrls && Array.isArray(vehicle.imageUrls)) {
+          setImagePreviews(vehicle.imageUrls);
+        } else if (vehicle.imageUrl) {
+          setImagePreviews([vehicle.imageUrl]);
         }
       } catch (e) {
         setError("Failed to load vehicle");
@@ -64,24 +66,48 @@ export default function EditVehiclePage() {
   }
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    if (!["image/jpeg", "image/png", "image/gif"].includes(file.type)) {
-      setError("Please upload a valid image (JPG, PNG, or GIF). PDF does not work.");
+    if (images.length + files.length > 5) {
+      setError("You can upload a maximum of 5 images");
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be less than 5MB");
-      return;
+    const validFiles: File[] = [];
+
+    for (const file of files) {
+      if (!["image/jpeg", "image/png", "image/gif"].includes(file.type)) {
+        setError("Please upload only valid images (JPG, PNG, or GIF).");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Each image must be less than 5MB");
+        return;
+      }
+      validFiles.push(file);
     }
 
-    setImage(file);
-    const reader = new FileReader();
-    reader.onload = e => setImagePreview(e.target?.result as string);
-    reader.readAsDataURL(file);
+    // Resetting files completely if uploading new ones to match the backend expectation
+    setImages(prev => [...prev, ...validFiles]);
     setError("");
+
+    validFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        if (ev.target?.result) {
+          setImagePreviews(prev => [...prev, ev.target?.result as string]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    e.target.value = "";
+  }
+
+  function removeImage(index: number) {
+    setImages(images.filter((_, idx) => idx !== index));
+    setImagePreviews(imagePreviews.filter((_, idx) => idx !== index));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -94,8 +120,11 @@ export default function EditVehiclePage() {
       formData.append("model", form.model);
       formData.append("plateNumber", form.plateNumber);
       formData.append("transportType", form.transportType);
-      if (image) {
-        formData.append("image", image);
+      
+      if (images.length > 0) {
+        images.forEach((img) => {
+          formData.append("images", img);
+        });
       }
 
       await updateVehicle(vehicleId, formData);
@@ -125,8 +154,24 @@ export default function EditVehiclePage() {
       <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-5">
         {/* Image Upload */}
         <div>
-          <h3 className="text-sm font-semibold text-zinc-900 mb-4">Vehicle Image (Square)</h3>
-          {!imagePreview ? (
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900">Vehicle Photos (Upload up to 5)</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Upload front, side, back, and interior views of the vehicle.</p>
+            </div>
+            {imagePreviews.length < 5 && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100/50 hover:bg-emerald-100/50 transition-all"
+              >
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                Add Photos
+              </button>
+            )}
+          </div>
+
+          {imagePreviews.length === 0 ? (
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -136,33 +181,43 @@ export default function EditVehiclePage() {
                 <svg className="w-8 h-8 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <p className="text-base font-medium text-zinc-900">Upload image</p>
-                <p className="text-lg font-bold text-zinc-900 mt-2">ONLY JPG, PNG or GIF</p>
-                <p className="text-sm font-bold text-zinc-900">PDF WILL NOT WORK</p>
-                <p className="text-xs font-medium text-slate-500 mt-2">Max size: 5MB</p>
+                <p className="text-base font-medium text-zinc-900">Upload images</p>
+                <p className="text-sm font-bold text-zinc-500">Only JPG, PNG or GIF (Max 5MB each)</p>
               </div>
             </button>
           ) : (
-            <div className="space-y-3">
-              <div className="relative w-full max-w-xs mx-auto">
-                <div className="aspect-square rounded-lg overflow-hidden bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {imagePreviews.map((preview, index) => (
+                <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group">
+                  <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-1.5 right-1.5 bg-rose-600 text-white rounded-full p-1 shadow-sm opacity-90 hover:opacity-100 transition-all"
+                  >
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </button>
                 </div>
-                <p className="text-xs text-slate-500 text-center mt-2">Square crop preview</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full text-sm border border-slate-200 text-zinc-700 px-4 py-2 rounded-lg hover:bg-slate-50 transition-all"
-              >
-                Change image
-              </button>
+              ))}
+              {imagePreviews.length < 5 && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="aspect-square border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center hover:border-slate-400 transition-all"
+                >
+                  <svg className="w-6 h-6 text-slate-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="text-[11px] font-medium text-slate-500">Add More</span>
+                </button>
+              )}
             </div>
           )}
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            multiple
             onChange={handleImageChange}
             className="hidden"
           />

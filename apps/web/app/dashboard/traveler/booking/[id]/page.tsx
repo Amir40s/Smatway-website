@@ -208,6 +208,113 @@ export default function BookingDetailPage() {
         <p className="text-sm text-slate-400 mt-0.5">Booking {bookingCode}</p>
       </div>
 
+      {/* Digital Boarding Pass / Ticket */}
+      {(!isCancelled && (booking.status === "CONFIRMED" || booking.status === "COMPLETED" || booking.paymentStatus === "PAID")) && (
+        <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-2xl text-white shadow-xl overflow-hidden relative border border-zinc-800">
+          {/* Background patterns */}
+          <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-teal-500/5 blur-3xl pointer-events-none" />
+
+          {/* Ticket Header */}
+          <div className="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-400/20 rounded-full px-2 py-0.5">
+                Digital Boarding Pass
+              </div>
+              <h2 className="text-[17px] font-bold tracking-tight text-white mt-1.5">SMATWAY PASS</h2>
+            </div>
+            <div className="text-right">
+              <span className="text-[11px] text-zinc-400 uppercase tracking-wider block">Ticket Code</span>
+              <span className="text-[15px] font-mono font-bold text-white tracking-widest">{bookingCode}</span>
+            </div>
+          </div>
+
+          {/* Ticket Body */}
+          <div className="px-6 py-5 grid sm:grid-cols-2 gap-4 text-xs">
+            <div className="space-y-3.5">
+              <div>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Passenger</span>
+                <span className="font-semibold text-white text-[13px]">{booking.traveler?.name || "Passenger"}</span>
+              </div>
+              <div>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Route</span>
+                <span className="font-semibold text-white text-[13px]">{booking.transport.departureCity} → {booking.transport.destinationCity}</span>
+              </div>
+              <div>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Departure Date & Time</span>
+                <span className="font-semibold text-white text-[13px]">
+                  {dep.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} at {dep.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-3.5">
+              <div>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Vehicle Info</span>
+                <span className="font-semibold text-white text-[13px]">{booking.transport.vehicleModel || "Standard Vehicle"} ({booking.transport.vehiclePlateNumber || "N/A"})</span>
+              </div>
+              <div>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Reserved Seats</span>
+                <span className="font-semibold text-white text-[13px]">{booking.seatsBooked} {booking.seatsBooked === 1 ? "Seat" : "Seats"}</span>
+              </div>
+              <div>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Transporter</span>
+                <span className="font-semibold text-white text-[13px]">{booking.transport.transporter?.name || "Verified Transporter"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Perforated Dotted Line */}
+          <div className="relative flex items-center px-6 my-2">
+            <div className="absolute -left-3 w-6 h-6 rounded-full bg-slate-50 border-r border-slate-200 z-10 animate-pulse" />
+            <div className="w-full border-t-2 border-dashed border-zinc-800" />
+            <div className="absolute -right-3 w-6 h-6 rounded-full bg-slate-50 border-l border-slate-200 z-10 animate-pulse" />
+          </div>
+
+          {/* Ticket Footer / QR Scanner */}
+          <div className="px-6 py-6 bg-zinc-950/40 flex flex-col md:flex-row items-center gap-6 justify-between">
+            <div className="flex-1 space-y-2 text-center md:text-left">
+              <h3 className="text-sm font-semibold text-white">Boarding QR Code</h3>
+              <p className="text-[11px] text-zinc-400 leading-relaxed max-w-sm">
+                Present this digital ticket to the transporter at departure. The driver will scan this code to check you in. Works offline.
+              </p>
+              <button
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-1.5 mt-2 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-[11px] px-3 py-1.5 rounded-lg border border-zinc-700 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4" />
+                </svg>
+                Print / Save Pass
+              </button>
+            </div>
+
+            {/* QR Code Graphic & Decoded Scan Value Preview */}
+            <div className="bg-white rounded-xl p-3 flex flex-col items-center gap-2 border border-zinc-800 shadow-lg shrink-0">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(
+                  JSON.stringify({
+                    ticketCode: bookingCode,
+                    bookingId: id,
+                    passengerName: booking.traveler?.name,
+                    route: `${booking.transport.departureCity} -> ${booking.transport.destinationCity}`,
+                    date: booking.transport.departureDateTime,
+                    seats: booking.seatsBooked,
+                  })
+                )}`}
+                alt="Ticket QR Code"
+                className="w-28 h-28 object-contain"
+              />
+              <div className="w-full text-center border-t border-slate-100 pt-2">
+                <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest block">Scanned Output Preview</span>
+                <span className="text-[10px] font-mono font-bold text-emerald-600 block mt-0.5">{bookingCode}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {/* Booking Summary */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
         <div className="flex items-center gap-2 mb-3">

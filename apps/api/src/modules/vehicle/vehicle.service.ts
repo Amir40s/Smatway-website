@@ -11,18 +11,41 @@ export class VehicleService {
     private readonly storageService: StorageService,
   ) {}
 
-  async create(transporterId: string, dto: CreateVehicleDto, imageFile?: Express.Multer.File) {
+  private async resolveImageUrls(imageUrl: string | null | undefined): Promise<string[]> {
+    if (!imageUrl) return [];
+    try {
+      if (imageUrl.startsWith('[')) {
+        const parsed = JSON.parse(imageUrl);
+        if (Array.isArray(parsed)) {
+          const resolved = await Promise.all(parsed.map(p => this.storageService.resolveImageUrl(p)));
+          return resolved.filter((p): p is string => typeof p === 'string');
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+    const paths = imageUrl.split(',').map(p => p.trim()).filter(Boolean);
+    const resolved = await Promise.all(paths.map(p => this.storageService.resolveImageUrl(p)));
+    return resolved.filter((p): p is string => typeof p === 'string');
+  }
+
+  async create(transporterId: string, dto: CreateVehicleDto, imageFiles?: Express.Multer.File[]) {
     let imageUrl: string | undefined;
 
-    if (imageFile) {
-      const result = await this.storageService.uploadFile(
-        imageFile,
-        `vehicles/${transporterId}`,
+    if (imageFiles && imageFiles.length > 0) {
+      const paths = await Promise.all(
+        imageFiles.map(async (file) => {
+          const result = await this.storageService.uploadFile(
+            file,
+            `vehicles/${transporterId}`,
+          );
+          return result.filePath;
+        })
       );
-      imageUrl = result.filePath;
+      imageUrl = JSON.stringify(paths);
     }
 
-    return this.prisma.vehicle.create({
+    const vehicle = await this.prisma.vehicle.create({
       data: {
         transporterId,
         name: dto.name,
@@ -32,6 +55,9 @@ export class VehicleService {
         imageUrl,
       },
     });
+
+    const urls = await this.resolveImageUrls(vehicle.imageUrl);
+    return { ...vehicle, imageUrl: urls[0] || null, imageUrls: urls };
   }
 
   async myVehicles(transporterId: string) {
@@ -43,8 +69,8 @@ export class VehicleService {
 
     return Promise.all(
       vehicles.map(async (v) => {
-        if (!v.imageUrl) return v;
-        return { ...v, imageUrl: await this.storageService.resolveImageUrl(v.imageUrl) };
+        const urls = await this.resolveImageUrls(v.imageUrl);
+        return { ...v, imageUrl: urls[0] || null, imageUrls: urls };
       }),
     );
   }
@@ -100,21 +126,26 @@ export class VehicleService {
     });
   }
 
-  async update(id: string, transporterId: string, dto: Partial<CreateVehicleDto>, imageFile?: Express.Multer.File) {
+  async update(id: string, transporterId: string, dto: Partial<CreateVehicleDto>, imageFiles?: Express.Multer.File[]) {
     const vehicle = await this.prisma.vehicle.findUnique({ where: { id } });
     if (!vehicle) throw new NotFoundException('Vehicle not found');
     if (vehicle.transporterId !== transporterId) throw new ForbiddenException();
 
     let imageUrl = vehicle.imageUrl;
-    if (imageFile) {
-      const result = await this.storageService.uploadFile(
-        imageFile,
-        `vehicles/${transporterId}`,
+    if (imageFiles && imageFiles.length > 0) {
+      const paths = await Promise.all(
+        imageFiles.map(async (file) => {
+          const result = await this.storageService.uploadFile(
+            file,
+            `vehicles/${transporterId}`,
+          );
+          return result.filePath;
+        })
       );
-      imageUrl = result.filePath;
+      imageUrl = JSON.stringify(paths);
     }
 
-    return this.prisma.vehicle.update({
+    const updated = await this.prisma.vehicle.update({
       where: { id },
       data: {
         name: dto.name,
@@ -124,15 +155,18 @@ export class VehicleService {
         imageUrl,
       },
     });
+
+    const urls = await this.resolveImageUrls(updated.imageUrl);
+    return { ...updated, imageUrl: urls[0] || null, imageUrls: urls };
   }
 
   async getWithPresignedUrl(id: string) {
     const vehicle = await this.findOne(id);
-    if (!vehicle.imageUrl) return vehicle;
-
+    const urls = await this.resolveImageUrls(vehicle.imageUrl);
     return {
       ...vehicle,
-      imageUrl: await this.storageService.resolveImageUrl(vehicle.imageUrl),
+      imageUrl: urls[0] || null,
+      imageUrls: urls,
     };
   }
 
@@ -160,13 +194,11 @@ export class VehicleService {
 
     return Promise.all(
       vehicles.map(async (v) => {
-        let imageUrl = v.imageUrl;
-        if (imageUrl) {
-          imageUrl = await this.storageService.resolveImageUrl(imageUrl);
-        }
+        const urls = await this.resolveImageUrls(v.imageUrl);
         return {
           ...v,
-          imageUrl,
+          imageUrl: urls[0] || null,
+          imageUrls: urls,
         };
       }),
     );

@@ -169,10 +169,6 @@ export default function TransporterRoutesPage() {
                         <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
                         {dep.toLocaleDateString()} at {dep.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
-                        {seats} seats left
-                      </span>
                       <span className="font-medium text-emerald-700">
                         {bookings} {bookings === 1 ? "booking" : "bookings"}
                       </span>

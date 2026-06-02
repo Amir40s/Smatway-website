@@ -24,4 +24,12 @@ export class CreateTransportDto {
   @IsOptional()
   @IsArray()
   stops?: { city: string; address: string }[];
+
+  @IsOptional()
+  repeatDaily?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  repeatDurationDays?: number;
 }
