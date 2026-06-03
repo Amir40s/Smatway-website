@@ -50,7 +50,7 @@ function LeftPanel() {
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-emerald-500/[0.07] rounded-full blur-3xl pointer-events-none" />
 
       {/* Branding */}
-      <div className="relative z-10 flex items-center gap-3 p-8">
+      <div className="relative z-10 flex items-center gap-3 px-8 pb-8 pt-20">
         <div className="w-9 h-9 rounded-lg bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
           <span className="text-white font-bold text-sm">S</span>
         </div>
