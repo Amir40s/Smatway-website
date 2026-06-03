@@ -67,25 +67,47 @@ export class StorageService {
   async resolveImageUrl(filePathOrUrl: string | null | undefined): Promise<string | null> {
     if (!filePathOrUrl) return null;
 
+    const trimmed = filePathOrUrl.trim();
+
+    // Handle JSON array of URLs (e.g., ["http://...", "http://..."])
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return this.resolveImageUrl(parsed[0]);
+        }
+      } catch (e) {
+        // Ignore and fall through
+      }
+    }
+
+    // Handle comma-separated paths/URLs
+    if (trimmed.includes(',') && !trimmed.startsWith('http')) {
+      const paths = trimmed.split(',').map(p => p.trim()).filter(Boolean);
+      if (paths.length > 0) {
+        return this.resolveImageUrl(paths[0]);
+      }
+    }
+
     // If it's already a full HTTP/HTTPS URL:
-    if (filePathOrUrl.startsWith('http')) {
+    if (trimmed.startsWith('http')) {
       // Check if it's a legacy S3/MinIO URL (typically pointing to localhost, minio, or the public garage endpoint).
       // If it is NOT a legacy URL (e.g. it is a Cloudinary URL), return it directly.
       const publicEndpoint = process.env.GARAGE_PUBLIC_URL;
       const publicHostname = publicEndpoint ? new URL(publicEndpoint).hostname : null;
       
       const isLegacyS3Url =
-        filePathOrUrl.includes('localhost') ||
-        filePathOrUrl.includes('minio') ||
-        (publicHostname && filePathOrUrl.includes(publicHostname));
+        trimmed.includes('localhost') ||
+        trimmed.includes('minio') ||
+        (publicHostname && trimmed.includes(publicHostname));
 
       if (!isLegacyS3Url) {
-        return filePathOrUrl;
+        return trimmed;
       }
     }
 
     try {
-      return await this.generatePresignedUrl(filePathOrUrl);
+      return await this.generatePresignedUrl(trimmed);
     } catch {
       return null;
     }
