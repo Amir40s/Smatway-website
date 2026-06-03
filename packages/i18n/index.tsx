@@ -23,7 +23,7 @@ export const locales: { code: Locale; label: string; nativeLabel: string; rtl?: 
   { code: "es", label: "Spanish", nativeLabel: "Español" },
 ];
 
-export const DEFAULT_LOCALE: Locale = "ar";
+export const DEFAULT_LOCALE: Locale = "en";
 
 export function isLocale(value: unknown): value is Locale {
   return typeof value === "string" && locales.some((locale) => locale.code === value);
@@ -698,18 +698,47 @@ export function RuntimeLocalizer() {
 
 export function LanguageSwitcher({
   floating = false,
+  floatingPosition = "bottom-right",
   hideOnPaths = [],
   menuPlacement,
 }: {
   floating?: boolean;
+  floatingPosition?: "bottom-right" | "top-left" | "top-right" | "top-start" | "top-end";
   hideOnPaths?: string[];
   menuPlacement?: "up" | "down";
 }) {
   const { locale, setLocale } = useLocale();
   const [open, setOpen] = useState(false);
   const [pathname, setPathname] = useState("");
+  const detailsRef = useRef<HTMLDetailsElement | null>(null);
   const selected = locales.find((item) => item.code === locale) ?? locales[0];
-  const placement = menuPlacement ?? (floating ? "up" : "down");
+  const placement = menuPlacement ?? (floating && floatingPosition === "bottom-right" ? "up" : "down");
+  const isRtl = Boolean(selected?.rtl);
+  const topStartClass = isRtl
+    ? "fixed right-4 top-4 z-[100] pointer-events-auto"
+    : "fixed left-4 top-4 z-[100] pointer-events-auto";
+  const topEndClass = isRtl
+    ? "fixed left-4 top-4 z-[100] pointer-events-auto"
+    : "fixed right-4 top-4 z-[100] pointer-events-auto";
+  const floatingClass = floatingPosition === "top-start"
+    ? topStartClass
+    : floatingPosition === "top-end"
+    ? topEndClass
+    : floatingPosition === "top-left"
+    ? "fixed left-4 top-4 z-[100] pointer-events-auto"
+    : floatingPosition === "top-right"
+    ? "fixed right-4 top-4 z-[100] pointer-events-auto"
+    : "fixed bottom-4 right-4 z-[100] pointer-events-auto";
+  const menuAlignmentClass = floatingPosition === "top-start"
+    ? isRtl ? "right-0" : "left-0"
+    : floatingPosition === "top-end"
+    ? isRtl ? "left-0" : "right-0"
+    : floatingPosition === "top-left" ? "left-0" : "right-0";
+
+  const closeMenu = useCallback(() => {
+    setOpen(false);
+    if (detailsRef.current) detailsRef.current.open = false;
+  }, []);
 
   useEffect(() => {
     setPathname(window.location.pathname);
@@ -718,15 +747,20 @@ export function LanguageSwitcher({
   if (hideOnPaths.includes(pathname)) return null;
 
   return (
-    <div
+    <details
+      ref={detailsRef}
       data-no-localize
-      className={floating ? "fixed bottom-4 right-4 z-[80]" : "relative"}
+      className={`${floating ? floatingClass : "relative"} group`}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
     >
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-11 items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 text-[14px] font-semibold text-slate-700 shadow-[0_16px_32px_-18px_rgba(15,23,42,0.48),0_1px_2px_rgba(15,23,42,0.08)] backdrop-blur transition hover:border-slate-300 hover:text-zinc-950"
+      <summary
+        onKeyDown={(event) => {
+          if (event.key === "Escape") closeMenu();
+        }}
+        className="flex h-11 cursor-pointer list-none items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 text-[14px] font-semibold text-slate-700 shadow-[0_16px_32px_-18px_rgba(15,23,42,0.48),0_1px_2px_rgba(15,23,42,0.08)] backdrop-blur transition hover:border-slate-300 hover:text-zinc-950 [&::-webkit-details-marker]:hidden"
         aria-label="Change language"
+        aria-expanded={open}
+        aria-haspopup="listbox"
       >
         <svg
           aria-hidden="true"
@@ -743,35 +777,38 @@ export function LanguageSwitcher({
           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z" />
         </svg>
         <span>{selected.nativeLabel}</span>
-      </button>
+      </summary>
 
-      {open && (
-        <div className={`absolute right-0 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-xl shadow-slate-900/12 ${
+      <div
+        role="listbox"
+        className={`absolute ${menuAlignmentClass} z-[110] w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-xl shadow-slate-900/12 ${
           placement === "up" ? "bottom-full mb-2" : "top-full mt-2"
-        }`}>
-          {locales.map((item) => (
-            <button
-              key={item.code}
-              type="button"
-              onClick={() => {
-                setLocale(item.code);
-                setOpen(false);
-              }}
-              className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition ${
-                item.code === locale
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-zinc-950"
-              }`}
-            >
-              <span>
-                <span className="block font-semibold">{item.nativeLabel}</span>
-                <span className="block text-[11px] text-slate-400">{item.label}</span>
-              </span>
-              {item.code === locale && <span className="text-emerald-600">✓</span>}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+        }`}
+      >
+        {locales.map((item) => (
+          <button
+            key={item.code}
+            type="button"
+            role="option"
+            aria-selected={item.code === locale}
+            onClick={() => {
+              setLocale(item.code);
+              closeMenu();
+            }}
+            className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition ${
+              item.code === locale
+                ? "bg-emerald-50 text-emerald-700"
+                : "text-slate-600 hover:bg-slate-50 hover:text-zinc-950"
+            }`}
+          >
+            <span>
+              <span className="block font-semibold">{item.nativeLabel}</span>
+              <span className="block text-[11px] text-slate-400">{item.label}</span>
+            </span>
+            {item.code === locale && <span className="text-emerald-600">✓</span>}
+          </button>
+        ))}
+      </div>
+    </details>
   );
 }

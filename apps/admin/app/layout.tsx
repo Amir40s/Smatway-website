@@ -25,15 +25,15 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="ar"
-      dir="rtl"
+      lang="en"
+      dir="ltr"
       className={`${jakartaSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <LocaleProvider storageKey="smatway:locale">
           <RuntimeLocalizer />
           {children}
-          <LanguageSwitcher floating />
+          <LanguageSwitcher floating floatingPosition="top-end" />
         </LocaleProvider>
       </body>
     </html>
