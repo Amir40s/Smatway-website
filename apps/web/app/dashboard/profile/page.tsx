@@ -89,6 +89,30 @@ export default function ProfilePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+    const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
+
+    if (!nameRegex.test(fullName.trim())) {
+      setError("Please enter a valid name (minimum 2 characters, letters and spaces only, no digits)");
+      return;
+    }
+
+    if (phone && !phoneRegex.test(phone.trim())) {
+      setError("Please enter a valid phone number (e.g. +92 300 1234567)");
+      return;
+    }
+
+    if (isTransporter) {
+      if (bankAccountHolderName && !nameRegex.test(bankAccountHolderName.trim())) {
+        setError("Bank account holder name must be a valid name (letters and spaces only)");
+        return;
+      }
+      if (bankAccountNumber && !/^[0-9a-zA-Z\-\s]{5,30}$/.test(bankAccountNumber.trim())) {
+        setError("Please enter a valid bank account number");
+        return;
+      }
+    }
+
     try {
       setSaving(true);
       setError(null);
@@ -114,6 +138,19 @@ export default function ProfilePage() {
 
   async function handleAddContact(e: React.FormEvent) {
     e.preventDefault();
+    const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+    const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
+
+    if (!nameRegex.test(contactForm.name.trim())) {
+      setError("Emergency contact name must be a valid name (minimum 2 characters, letters and spaces only, no digits)");
+      return;
+    }
+
+    if (!phoneRegex.test(contactForm.phone.trim())) {
+      setError("Emergency contact phone must be a valid phone number");
+      return;
+    }
+
     try {
       setError(null);
       await addEmergencyContact(contactForm);

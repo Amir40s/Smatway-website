@@ -223,6 +223,47 @@ export default function SignUpPage() {
         console.warn("%c[Validation Fail] Missing required inputs.", "color: #ef4444; font-weight: bold;");
         throw new Error("Please fill in all fields");
       }
+
+      // Regex patterns for validation
+      const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+      // Matches letters (including unicode characters), spaces, hyphens, dots, single quotes, commas
+      const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
+
+      if (!nameRegex.test(formData.name.trim())) {
+        console.warn("[Validation Fail] Invalid name.");
+        throw new Error("Please enter a valid name (minimum 2 characters, letters and spaces only, no digits)");
+      }
+
+      if (formData.phoneNumber && !phoneRegex.test(formData.phoneNumber.trim())) {
+        console.warn("[Validation Fail] Invalid phone number.");
+        throw new Error("Please enter a valid phone number (e.g. +92 300 1234567)");
+      }
+
+      if (formData.emergencyContactName) {
+        if (!nameRegex.test(formData.emergencyContactName.trim())) {
+          console.warn("[Validation Fail] Invalid emergency contact name.");
+          throw new Error("Emergency contact name must be a valid name (letters and spaces only, no digits)");
+        }
+      }
+
+      if (formData.emergencyContactPhone) {
+        if (!phoneRegex.test(formData.emergencyContactPhone.trim())) {
+          console.warn("[Validation Fail] Invalid emergency contact phone.");
+          throw new Error("Emergency contact phone must be a valid phone number");
+        }
+      }
+
+      if (accountType === "transporter") {
+        if (formData.bankAccountHolderName && !nameRegex.test(formData.bankAccountHolderName.trim())) {
+          console.warn("[Validation Fail] Invalid bank account holder name.");
+          throw new Error("Bank account holder name must be a valid name");
+        }
+        if (formData.bankAccountNumber && !/^[0-9a-zA-Z\-\s]{5,30}$/.test(formData.bankAccountNumber.trim())) {
+          console.warn("[Validation Fail] Invalid bank account number.");
+          throw new Error("Please enter a valid bank account number");
+        }
+      }
+
       if (formData.password !== formData.confirmPassword) {
         console.warn("%c[Validation Fail] Password & confirmation mismatch.", "color: #ef4444; font-weight: bold;");
         throw new Error("Passwords do not match");

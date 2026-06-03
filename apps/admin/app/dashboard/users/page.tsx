@@ -479,7 +479,16 @@ export default function UsersPage() {
                     </div>
                   )}
                   <div>
-                    <p className="text-sm font-semibold text-zinc-950">{selectedUser.name || "Unnamed User"}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-semibold text-zinc-950">{selectedUser.name || "Unnamed User"}</p>
+                      {selectedUser.emailVerified && (
+                        <span className="inline-flex items-center justify-center rounded-full bg-emerald-100 p-0.5 text-emerald-700 animate-pulse" title="Verified User">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                          </svg>
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-slate-400">{selectedUser.email}</p>
                   </div>
                 </div>
@@ -488,6 +497,14 @@ export default function UsersPage() {
                   <div className="rounded-xl bg-slate-50 p-3">
                     <p className="text-slate-400">Role</p>
                     <p className="font-semibold text-zinc-950 mt-1">{selectedUser.role}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <p className="text-slate-400">Verification</p>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wider ${selectedUser.emailVerified ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-rose-50 text-rose-700 border border-rose-200"}`}>
+                        {selectedUser.emailVerified ? "Verified" : "Not Verified"}
+                      </span>
+                    </div>
                   </div>
                   <div className="rounded-xl bg-slate-50 p-3">
                     <p className="text-slate-400">Bookings</p>

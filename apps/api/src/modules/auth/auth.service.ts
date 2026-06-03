@@ -54,6 +54,30 @@ export class AuthService {
       throw new BadRequestException('You must accept the terms and conditions');
     }
 
+    // Server-side validation of name and phone formats
+    const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+    const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
+
+    if (dto.name && !nameRegex.test(dto.name.trim())) {
+      throw new BadRequestException('Please enter a valid name (letters and spaces only, no digits)');
+    }
+
+    if (dto.phoneNumber && !phoneRegex.test(dto.phoneNumber.trim())) {
+      throw new BadRequestException('Please enter a valid phone number');
+    }
+
+    if (dto.emergencyContactName && !nameRegex.test(dto.emergencyContactName.trim())) {
+      throw new BadRequestException('Emergency contact name must be a valid name (letters and spaces only, no digits)');
+    }
+
+    if (dto.emergencyContactPhone && !phoneRegex.test(dto.emergencyContactPhone.trim())) {
+      throw new BadRequestException('Emergency contact phone must be a valid phone number');
+    }
+
+    if (dto.bankAccountHolderName && !nameRegex.test(dto.bankAccountHolderName.trim())) {
+      throw new BadRequestException('Bank account holder name must be a valid name');
+    }
+
     const normalizedEmail = dto.email?.trim().toLowerCase();
 
     const existing = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });

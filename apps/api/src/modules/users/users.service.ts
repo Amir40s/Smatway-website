@@ -188,6 +188,8 @@ export class UsersService {
         profileImageUrl: true,
         avatarUrl: true,
         suspensionReason: true,
+        emailVerified: true,
+        emailVerifiedAt: true,
         profile: {
           select: {
             travelerBio: true,
@@ -274,6 +276,33 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+    const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
+
+    if (dto.name && !nameRegex.test(dto.name.trim())) {
+      throw new BadRequestException('Please enter a valid name (minimum 2 characters, letters and spaces only, no digits)');
+    }
+
+    if (dto.phoneNumber && !phoneRegex.test(dto.phoneNumber.trim())) {
+      throw new BadRequestException('Please enter a valid phone number');
+    }
+
+    if (dto.emergencyContactName && !nameRegex.test(dto.emergencyContactName.trim())) {
+      throw new BadRequestException('Emergency contact name must be a valid name (letters and spaces only, no digits)');
+    }
+
+    if (dto.emergencyContactPhone && !phoneRegex.test(dto.emergencyContactPhone.trim())) {
+      throw new BadRequestException('Emergency contact phone must be a valid phone number');
+    }
+
+    if (dto.bankAccountHolderName && !nameRegex.test(dto.bankAccountHolderName.trim())) {
+      throw new BadRequestException('Bank account holder name must be a valid name');
+    }
+
+    if (dto.bankAccountNumber && !/^[0-9a-zA-Z\-\s]{5,30}$/.test(dto.bankAccountNumber.trim())) {
+      throw new BadRequestException('Please enter a valid bank account number');
+    }
+
     await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -356,6 +385,8 @@ export class UsersService {
         isSuspended: true,
         suspensionReason: true,
         deletedAt: true,
+        emailVerified: true,
+        emailVerifiedAt: true,
       },
     });
 
@@ -397,6 +428,17 @@ export class UsersService {
   }
 
   async createEmergencyContact(userId: string, dto: CreateEmergencyContactDto) {
+    const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+    const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
+
+    if (!nameRegex.test(dto.name.trim())) {
+      throw new BadRequestException('Emergency contact name must be a valid name (minimum 2 characters, letters and spaces only, no digits)');
+    }
+
+    if (!phoneRegex.test(dto.phone.trim())) {
+      throw new BadRequestException('Emergency contact phone must be a valid phone number');
+    }
+
     const profile = await this.prisma.userProfile.upsert({
       where: { userId },
       update: {},
@@ -414,6 +456,17 @@ export class UsersService {
   }
 
   async updateEmergencyContact(contactId: string, dto: UpdateEmergencyContactDto) {
+    const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+    const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
+
+    if (!nameRegex.test(dto.name.trim())) {
+      throw new BadRequestException('Emergency contact name must be a valid name (minimum 2 characters, letters and spaces only, no digits)');
+    }
+
+    if (!phoneRegex.test(dto.phone.trim())) {
+      throw new BadRequestException('Emergency contact phone must be a valid phone number');
+    }
+
     const contact = await this.prisma.emergencyContact.findUnique({
       where: { id: contactId },
     });
