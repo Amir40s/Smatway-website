@@ -451,8 +451,7 @@ export function LocaleProvider({
       const stored = localStorage.getItem(storageKey);
       if (isLocale(stored)) setLocaleState(stored);
     } catch {
-      // Keep the default locale when storage is unavailable.
-    }
+     }
   }, [storageKey]);
 
   useEffect(() => {
@@ -467,8 +466,7 @@ export function LocaleProvider({
     try {
       localStorage.setItem(storageKey, nextLocale);
     } catch {
-      // Ignore storage failures; the in-memory selection still works.
-    }
+     }
     if (typeof window !== "undefined") {
       window.location.reload();
     }
