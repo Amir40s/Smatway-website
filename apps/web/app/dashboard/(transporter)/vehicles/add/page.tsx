@@ -26,6 +26,27 @@ export default function AddVehiclePage() {
     plateNumber: "",
     transportType: "CAR",
   });
+  const [features, setFeatures] = useState<string[]>([]);
+  const [customFeature, setCustomFeature] = useState("");
+
+  const coreAmenitiesList = [
+    "Reclining seats with armrests",
+    "Air Conditioning",
+    "Onboard Restroom",
+    "Overhead parcel racks",
+    "Wi-Fi",
+    "USB port",
+    "Flatscreen monitors",
+    "Individual reading light",
+  ];
+
+  function handleAddCustomFeature() {
+    if (!customFeature.trim()) return;
+    if (!features.includes(customFeature.trim())) {
+      setFeatures([...features, customFeature.trim()]);
+    }
+    setCustomFeature("");
+  }
 
   const inputClass =
     "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-150";
@@ -86,6 +107,7 @@ export default function AddVehiclePage() {
     try {
       await createVehicle({
         ...form,
+        features,
         images: images.length > 0 ? images : undefined,
       });
       router.push("/dashboard/vehicles");
@@ -202,6 +224,70 @@ export default function AddVehiclePage() {
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Features & Amenities */}
+        <div>
+          <h3 className="text-sm font-semibold text-zinc-900 mb-1.5">Core Amenities & Comfort Features</h3>
+          <p className="text-xs text-slate-500 mb-4">Select all features available in this vehicle. This helps travelers make the right choice.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            {coreAmenitiesList.map((amenity) => (
+              <label key={amenity} className="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={features.includes(amenity)}
+                  onChange={(e) => {
+                    if (e.target.checked) setFeatures([...features, amenity]);
+                    else setFeatures(features.filter(f => f !== amenity));
+                  }}
+                  className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600"
+                />
+                <span className="text-sm text-zinc-900">{amenity}</span>
+              </label>
+            ))}
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Add Other Features</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="e.g. Complimentary Snacks"
+                value={customFeature}
+                onChange={e => setCustomFeature(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddCustomFeature();
+                  }
+                }}
+                className={inputClass}
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomFeature}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 rounded-xl text-sm font-medium transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            {features.filter(f => !coreAmenitiesList.includes(f)).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {features.filter(f => !coreAmenitiesList.includes(f)).map(f => (
+                  <span key={f} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[13px] text-zinc-800 border border-slate-200">
+                    {f}
+                    <button
+                      type="button"
+                      onClick={() => setFeatures(features.filter(item => item !== f))}
+                      className="text-slate-400 hover:text-rose-500 rounded-full focus:outline-none"
+                    >
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

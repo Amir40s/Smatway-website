@@ -45,6 +45,20 @@ export class VehicleService {
       imageUrl = JSON.stringify(paths);
     }
 
+    let parsedFeatures: string[] = [];
+    if (dto.features) {
+      if (typeof dto.features === 'string') {
+        try {
+          const parsed = JSON.parse(dto.features);
+          if (Array.isArray(parsed)) parsedFeatures = parsed;
+        } catch {
+          parsedFeatures = [dto.features];
+        }
+      } else if (Array.isArray(dto.features)) {
+        parsedFeatures = dto.features;
+      }
+    }
+
     const vehicle = await this.prisma.vehicle.create({
       data: {
         transporterId,
@@ -53,6 +67,7 @@ export class VehicleService {
         plateNumber: dto.plateNumber,
         transportType: dto.transportType,
         imageUrl,
+        features: parsedFeatures,
       },
     });
 
@@ -145,6 +160,20 @@ export class VehicleService {
       imageUrl = JSON.stringify(paths);
     }
 
+    let parsedFeatures: string[] | undefined = undefined;
+    if (dto.features) {
+      if (typeof dto.features === 'string') {
+        try {
+          const parsed = JSON.parse(dto.features);
+          if (Array.isArray(parsed)) parsedFeatures = parsed;
+        } catch {
+          parsedFeatures = [dto.features];
+        }
+      } else if (Array.isArray(dto.features)) {
+        parsedFeatures = dto.features;
+      }
+    }
+
     const updated = await this.prisma.vehicle.update({
       where: { id },
       data: {
@@ -153,6 +182,7 @@ export class VehicleService {
         plateNumber: dto.plateNumber,
         transportType: dto.transportType,
         imageUrl,
+        ...(parsedFeatures !== undefined && { features: parsedFeatures }),
       },
     });
 

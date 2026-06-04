@@ -481,6 +481,7 @@ export async function createVehicle(data: {
   model: string;
   plateNumber: string;
   transportType: string;
+  features?: string[];
   images?: File[];
 }): Promise<any> {
   const formData = new FormData();
@@ -488,6 +489,9 @@ export async function createVehicle(data: {
   formData.append('model', data.model);
   formData.append('plateNumber', data.plateNumber);
   formData.append('transportType', data.transportType);
+  if (data.features && data.features.length > 0) {
+    formData.append('features', JSON.stringify(data.features));
+  }
   if (data.images && data.images.length > 0) {
     data.images.forEach((img) => {
       formData.append('images', img);

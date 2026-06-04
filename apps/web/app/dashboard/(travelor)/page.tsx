@@ -149,13 +149,28 @@ export default function SearchRidesPage() {
                 </Field>
 
                 <Field label="Departure" icon={<CalendarIcon className="w-4 h-4" />} error={isPastDate}>
-                  <input
-                    type="date"
-                    value={date}
-                    min={new Date().toISOString().split("T")[0]}
-                    onChange={(e) => setDate(e.target.value)}
-                    className={`w-full bg-transparent text-sm focus:outline-none font-medium mt-1 ${isPastDate ? "text-rose-600" : "text-zinc-900"}`}
-                  />
+                  <div className="relative mt-1 h-5">
+                    <div className={`absolute inset-0 flex items-center text-sm font-medium ${isPastDate ? "text-rose-600" : "text-zinc-900"}`}>
+                      {date ? (() => {
+                        const [y, m, d] = date.split('-');
+                        return `${d}.${m}.${y}`;
+                      })() : "Select date"}
+                    </div>
+                    <input
+                      type="date"
+                      value={date}
+                      min={new Date().toISOString().split("T")[0]}
+                      onChange={(e) => setDate(e.target.value)}
+                      onClick={(e) => {
+                        try {
+                          if ('showPicker' in HTMLInputElement.prototype) {
+                            (e.target as HTMLInputElement).showPicker();
+                          }
+                        } catch (err) {}
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
                 </Field>
 
                 <Field label="Type" icon={<CarIcon className="w-4 h-4" />}>
@@ -352,6 +367,18 @@ function TransportCard({ transport }: { transport: any }) {
                 Arrives by {maxReach.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
             </div>
+
+            {/* Vehicle Features */}
+            {vehicle?.features && vehicle.features.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {vehicle.features.map((feature: string) => (
+                  <span key={feature} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    <CheckCircleIcon className="w-3 h-3 mr-1 opacity-70" />
+                    {feature}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Transporter mini */}
             <button

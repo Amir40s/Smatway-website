@@ -182,6 +182,7 @@ model Vehicle {
   plateNumber   String
   transportType TransportType
   imageUrl      String?
+  features      String[] @default([])
   deleted       Boolean  @default(false)
   deleteRequested Boolean @default(false)
   deleteReason    String?

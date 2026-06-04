@@ -184,7 +184,7 @@ export class TransportService {
       where,
       include: {
         transporter: { select: { id: true, name: true, phoneNumber: true, profileImageUrl: true, avatarUrl: true, profile: { select: { companyName: true } } } },
-        vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, imageUrl: true } },
+        vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, imageUrl: true, features: true } },
         stops: { orderBy: { stopOrder: 'asc' } },
       },
       orderBy: { departureDateTime: 'asc' },
@@ -256,7 +256,7 @@ export class TransportService {
       where: { id },
       include: {
         transporter: { select: { id: true, name: true, phoneNumber: true, profileImageUrl: true, avatarUrl: true, profile: { select: { companyName: true } } } },
-        vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, imageUrl: true } },
+        vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, imageUrl: true, features: true } },
         stops: { orderBy: { stopOrder: 'asc' } },
       },
     });
@@ -285,7 +285,7 @@ export class TransportService {
     const transports = await this.prisma.transport.findMany({
       include: {
         transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } },
-        vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true } },
+        vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, features: true } },
         stops: { orderBy: { stopOrder: 'asc' } },
         _count: { select: { bookings: true } },
       },
