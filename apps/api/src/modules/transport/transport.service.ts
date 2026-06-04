@@ -4,6 +4,7 @@ import { StorageService } from '../../common/services/storage.service';
 import { CreateTransportDto } from './dto/create-transport.dto';
 import { SearchTransportDto } from './dto/search-transport.dto';
 import { TransportStatus } from '@prisma/client';
+import { getCountrySearchVariants } from '../../common/utils/country.util';
 
 @Injectable()
 export class TransportService {
@@ -153,7 +154,10 @@ export class TransportService {
     }
 
     if (dto.departureCountry) {
-      where.departureCountry = { contains: dto.departureCountry.trim(), mode: 'insensitive' };
+      const variants = getCountrySearchVariants(dto.departureCountry);
+      andFilters.push({
+        OR: variants.map(v => ({ departureCountry: { contains: v, mode: 'insensitive' } }))
+      });
     }
 
     if (dto.destinationCity) {
@@ -167,7 +171,10 @@ export class TransportService {
     }
 
     if (dto.destinationCountry) {
-      where.destinationCountry = { contains: dto.destinationCountry.trim(), mode: 'insensitive' };
+      const variants = getCountrySearchVariants(dto.destinationCountry);
+      andFilters.push({
+        OR: variants.map(v => ({ destinationCountry: { contains: v, mode: 'insensitive' } }))
+      });
     }
 
     if (andFilters.length > 0) {

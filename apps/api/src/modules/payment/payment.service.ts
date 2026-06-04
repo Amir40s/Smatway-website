@@ -5,37 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import * as crypto from 'crypto';
 import { BookingStatus, PaymentStatus } from '@prisma/client';
 
-function normalizeCountryCode(country?: string | null): string {
-  if (!country) return 'XX';
-
-  const trimmed = country.trim();
-  if (/^[A-Za-z]{2}$/.test(trimmed)) {
-    return trimmed.toUpperCase();
-  }
-
-  const normalized = trimmed.toLowerCase();
-  const map: Record<string, string> = {
-    nigeria: 'NG',
-    ghana: 'GH',
-    kenya: 'KE',
-    uganda: 'UG',
-    tanzania: 'TZ',
-    rwanda: 'RW',
-    ethiopia: 'ET',
-    'south africa': 'ZA',
-    egypt: 'EG',
-    morocco: 'MA',
-    algeria: 'DZ',
-    tunisia: 'TN',
-    pakistan: 'PK',
-    india: 'IN',
-    'united arab emirates': 'AE',
-    'united kingdom': 'GB',
-    'united states': 'US',
-  };
-
-  return map[normalized] || trimmed.slice(0, 2).toUpperCase();
-}
+import { normalizeCountryCode } from '../../common/utils/country.util';
 
 @Injectable()
 export class PaymentService {
