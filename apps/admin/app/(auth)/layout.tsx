@@ -62,7 +62,7 @@ function LeftPanel() {
         <div className="relative w-full max-w-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://purepng.com/public/uploads/large/purepng.com-hyundai-ioniq-white-carcarvehicletransporthyundai-961524653528qvh7u.png"
+            src="/car-full.png"
             alt="SmatWay Vehicle"
             className="w-full h-auto object-contain brightness-110 contrast-105 drop-shadow-[0_0_40px_rgba(16,185,129,0.3)]"
           />
