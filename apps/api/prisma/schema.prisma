@@ -242,6 +242,7 @@ model RouteStop {
 
 model Booking {
   id            String        @id @default(uuid())
+  bookingNumber String?       @unique
   travelerId    String
   traveler      User          @relation("TravelerBookings", fields: [travelerId], references: [id], onDelete: Cascade)
   transportId   String
@@ -371,4 +372,9 @@ model Announcement {
 
   @@index([transporterId])
   @@index([transportId])
+}
+
+model BookingSequence {
+  countryCode String @id
+  lastSerial  Int    @default(0)
 }

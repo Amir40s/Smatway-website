@@ -230,4 +230,84 @@ export class MailService {
       throw error;
     }
   }
+
+  async sendBookingTicketEmail(userEmail: string, bookingDetails: any, locale: ApiLocale = 'en'): Promise<void> {
+    const { transporter, from } = this.getTransporterAndFrom(userEmail);
+    const t = (text: string) => translateApiText(text, locale);
+    
+    if (transporter === this.transporter && !this.smtpConfigured) {
+      this.logger.warn(`Skipping ticket email to ${userEmail} — SMTP not configured.`);
+      return;
+    }
+
+    try {
+      await transporter.sendMail({
+        from: from,
+        to: userEmail,
+        subject: t('Your SmatWay Booking Ticket'),
+        html: `
+          <h2>${t('Your SmatWay Ticket')}</h2>
+          <p><strong>${t('Booking Number')}:</strong> ${bookingDetails.bookingNumber}</p>
+          <p><strong>${t('Route')}:</strong> ${bookingDetails.route}</p>
+          <p><strong>${t('Date & Time')}:</strong> ${bookingDetails.dateTime}</p>
+          <p><strong>${t('Seats')}:</strong> ${bookingDetails.seats}</p>
+          <p><strong>${t('Total Price')}:</strong> ${bookingDetails.price}</p>
+          <p><strong>${t('Transporter')}:</strong> ${bookingDetails.transporterName}</p>
+          <p>${t('Thank you for booking with SmatWay!')}</p>
+        `,
+        text: `
+          ${t('Your SmatWay Ticket')}
+          ${t('Booking Number')}: ${bookingDetails.bookingNumber}
+          ${t('Route')}: ${bookingDetails.route}
+          ${t('Date & Time')}: ${bookingDetails.dateTime}
+          ${t('Seats')}: ${bookingDetails.seats}
+          ${t('Total Price')}: ${bookingDetails.price}
+          ${t('Transporter')}: ${bookingDetails.transporterName}
+          ${t('Thank you for booking with SmatWay!')}
+        `.trim().replace(/^[ \t]+/gm, ''),
+      });
+      this.logger.log(`Ticket email sent to ${userEmail}`);
+    } catch (error) {
+      this.logger.error(`Failed to send ticket email to ${userEmail}`, error);
+      throw error;
+    }
+  }
+
+  async sendSiteFeedbackEmail(userEmail: string, rating: number, comment: string): Promise<void> {
+    const targetEmail = 'tellus@smatway.com';
+    const { transporter, from } = this.getTransporterAndFrom(targetEmail);
+    
+    if (transporter === this.transporter && !this.smtpConfigured) {
+      this.logger.warn(`Skipping Site Feedback email from ${userEmail} — SMTP not configured.`);
+      return;
+    }
+    
+    try {
+      await transporter.sendMail({
+        from: from,
+        to: targetEmail,
+        subject: `New Site Feedback from ${userEmail}`,
+        html: `
+          <h2>Site Feedback Received</h2>
+          <p><strong>Submitted by:</strong> ${userEmail}</p>
+          <p><strong>Rating:</strong> ${rating} / 5</p>
+          <p><strong>Comment:</strong></p>
+          <blockquote style="background:#f9f9f9;padding:10px;border-left:5px solid #ccc;">
+            ${comment}
+          </blockquote>
+        `,
+        text: `
+          Site Feedback Received
+          Submitted by: ${userEmail}
+          Rating: ${rating} / 5
+          Comment:
+          ${comment}
+        `.trim().replace(/^[ \t]+/gm, ''),
+      });
+      this.logger.log(`Site Feedback email sent from ${userEmail}`);
+    } catch (error) {
+      this.logger.error(`Failed to send site feedback email from ${userEmail}`, error);
+      throw error;
+    }
+  }
 }

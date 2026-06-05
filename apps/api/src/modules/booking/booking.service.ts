@@ -6,6 +6,7 @@ import { StorageService } from '../../common/services/storage.service';
 import { ChatGateway } from '../chat/chat.gateway';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { BookingStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
+import { MailService } from '../auth/mail/mail.service';
 
 @Injectable()
 export class BookingService {
@@ -13,14 +14,33 @@ export class BookingService {
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
     private readonly chatGateway: ChatGateway,
+    private readonly mailService: MailService,
   ) {}
 
   async create(travelerId: string, dto: CreateBookingDto) {
-    const transport = await this.prisma.transport.findUnique({ where: { id: dto.transportId } });
+    const transport = await this.prisma.transport.findUnique({
+      where: { id: dto.transportId },
+      include: { transporter: { select: { id: true, name: true, profile: { select: { companyName: true } } } } }
+    });
     if (!transport) throw new NotFoundException('Transport not found');
-
-
     const totalPrice = Number(transport.price) * dto.seatsBooked;
+    const countryName = transport.departureCountry || 'Unknown';
+    const countryMap: Record<string, string> = {
+      'nigeria': 'NG',
+      'ghana': 'GH',
+      'kenya': 'KE',
+      'south africa': 'ZA',
+      'united states': 'US',
+      'united kingdom': 'UK'
+    };
+    const countryCode = countryMap[countryName.toLowerCase()] || countryName.substring(0, 2).toUpperCase() || 'XX';
+    const sequence = await this.prisma.bookingSequence.upsert({
+      where: { countryCode },
+      update: { lastSerial: { increment: 1 } },
+      create: { countryCode, lastSerial: 1 },
+    });
+    
+    const bookingNumber = `${countryCode}${String(sequence.lastSerial).padStart(6, '0')}`;
 
     const [booking] = await this.prisma.$transaction([
       this.prisma.booking.create({
@@ -30,6 +50,7 @@ export class BookingService {
           seatsBooked: dto.seatsBooked,
           totalPrice,
           paymentMethod: dto.paymentMethod,
+          bookingNumber,
         },
         include: { transport: true },
       }),
@@ -38,20 +59,30 @@ export class BookingService {
         data: { availableSeats: { decrement: dto.seatsBooked } },
       }),
     ]);
-
-    // Notify the transporter in real-time
     const traveler = await this.prisma.user.findUnique({
       where: { id: travelerId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, email: true },
     });
     this.chatGateway.notifyUser(transport.transporterId, {
       type: 'booking',
       bookingId: booking.id,
-      traveler,
+      traveler: traveler ? { id: traveler.id, name: traveler.name } : null,
       seatsBooked: dto.seatsBooked,
       totalPrice,
       route: `${transport.departureCity} → ${transport.destinationCity}`,
     });
+
+    if (traveler?.email) {
+      const transporterName = transport.transporter.profile?.companyName || transport.transporter.name || 'SmatWay Transporter';
+      await this.mailService.sendBookingTicketEmail(traveler.email, {
+        bookingNumber: booking.bookingNumber,
+        route: `${transport.departureCity} → ${transport.destinationCity}`,
+        dateTime: transport.departureDateTime.toISOString(),
+        seats: dto.seatsBooked,
+        price: `${transport.currency} ${totalPrice.toFixed(2)}`,
+        transporterName,
+      }).catch(err => console.error('Failed to send booking ticket email', err));
+    }
 
     return booking;
   }
@@ -276,6 +307,19 @@ export class BookingService {
       transporter: booking.transport.transporter,
       route: `${booking.transport.departureCity} → ${booking.transport.destinationCity}`,
     });
+
+    const traveler = await this.prisma.user.findUnique({ where: { id: booking.travelerId }, select: { email: true } });
+    if (traveler?.email) {
+      const transporterName = booking.transport.transporter.name || 'SmatWay Transporter';
+      await this.mailService.sendBookingTicketEmail(traveler.email, {
+        bookingNumber: booking.bookingNumber,
+        route: `${booking.transport.departureCity} → ${booking.transport.destinationCity}`,
+        dateTime: booking.transport.departureDateTime.toISOString(),
+        seats: booking.seatsBooked,
+        price: `${booking.transport.currency} ${booking.totalPrice}`,
+        transporterName,
+      }).catch(err => console.error('Failed to send booking ticket email', err));
+    }
 
     return updated;
   }

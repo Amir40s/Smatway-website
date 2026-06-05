@@ -29,10 +29,17 @@ export class FeedbackService {
     if (trimmed.length > 1000) {
       throw new BadRequestException('Comment must be 1000 characters or fewer');
     }
-    return this.prisma.siteFeedback.create({
+    const siteFeedback = await this.prisma.siteFeedback.create({
       data: { userId, rating, comment: trimmed, bookingId: bookingId || null },
       select: { id: true, rating: true, comment: true, createdAt: true, bookingId: true },
     });
+
+    if (user.email) {
+      await this.mailService.sendSiteFeedbackEmail(user.email, rating, trimmed)
+        .catch(err => console.error('Failed to send site feedback email', err));
+    }
+
+    return siteFeedback;
   }
 
   /** Public — recent site feedback for the marketing homepage Testimonials rotator. */
