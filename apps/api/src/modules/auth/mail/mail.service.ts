@@ -5,6 +5,7 @@ import { ApiLocale, translateApiText } from '../../../common/i18n';
 @Injectable()
 export class MailService {
   private readonly transporter: nodemailer.Transporter;
+  private readonly gmailTransporter: nodemailer.Transporter;
   private readonly logger = new Logger(MailService.name);
   private readonly from: string;
   private readonly sendingEnabled: boolean;
@@ -41,17 +42,50 @@ export class MailService {
         pass: smtpPass,
       },
     });
+
+    this.gmailTransporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      requireTLS: true,
+      auth: {
+        user: 'smatway02@gmail.com',
+        pass: 'qpuw lbqn zqqy heri',
+      },
+    });
+  }
+
+  private getTransporterAndFrom(toEmail: string): { transporter: nodemailer.Transporter; from: string } {
+    const isPublicDomain = /@(gmail\\.com|outlook\\.com|hotmail\\.com)$/i.test(toEmail.trim());
+    if (!isPublicDomain) {
+      return {
+        transporter: this.gmailTransporter,
+        from: 'SmatWay <smatway02@gmail.com>',
+      };
+    }
+    return {
+      transporter: this.transporter,
+      from: this.from,
+    };
   }
 
   async sendPasswordReset(email: string, resetUrl: string, locale: ApiLocale = 'en'): Promise<void> {
-    if (!this.sendingEnabled || !this.smtpConfigured) {
-      this.logger.warn(`Password reset email to ${email} skipped — SMTP not configured or sending disabled.`);
+    if (!this.sendingEnabled) {
+      this.logger.warn(`Password reset email to ${email} skipped — sending disabled.`);
       return;
     }
+
+    const { transporter, from } = this.getTransporterAndFrom(email);
+    
+    if (transporter === this.transporter && !this.smtpConfigured) {
+      this.logger.warn(`Password reset email to ${email} skipped — SMTP not configured.`);
+      return;
+    }
+
     const t = (text: string) => translateApiText(text, locale);
     try {
-      await this.transporter.sendMail({
-        from: this.from,
+      await transporter.sendMail({
+        from: from,
         to: email,
         subject: t('Reset your SmatWay password'),
         html: `
@@ -60,6 +94,14 @@ export class MailService {
           <p><a href="${resetUrl}">${t('Reset Password')}</a></p>
           <p>${t('If you did not request this, ignore this email — your password will not change.')}</p>
         `,
+        text: `
+          ${t('You requested a password reset for your SmatWay account.')}
+          
+          ${t('Click the link below to set a new password. This link expires in 1 hour.')}
+          ${resetUrl}
+          
+          ${t('If you did not request this, ignore this email — your password will not change.')}
+        `.trim().replace(/^[ \t]+/gm, ''),
       });
       this.logger.log(`Password reset email sent to ${email}`);
     } catch (error) {
@@ -72,7 +114,10 @@ export class MailService {
       this.logger.log(`OTP email for ${email} skipped (OTP_SEND_EMAIL=false). Code: ${code}`);
       return;
     }
-    if (!this.smtpConfigured) {
+    
+    const { transporter, from } = this.getTransporterAndFrom(email);
+
+    if (transporter === this.transporter && !this.smtpConfigured) {
       this.logger.warn(`Skipping OTP email to ${email} — SMTP_USER/SMTP_PASS not configured.`);
       return;
     }
@@ -81,8 +126,8 @@ export class MailService {
     const greeting = name ? `${t('Hi')} ${name.split(' ')[0]},` : t('Welcome to SmatWay,');
 
     try {
-      await this.transporter.sendMail({
-        from: this.from,
+      await transporter.sendMail({
+        from: from,
         to: email,
         subject: `${code} ${t('is your SmatWay verification code')}`,
         html: `
@@ -104,6 +149,18 @@ export class MailService {
             </div>
           </div>
         `,
+        text: `
+          ${greeting}
+          
+          ${t('Use the code below to verify your email and finish setting up your account.')}
+          
+          ${code}
+          ${t('Expires in 10 minutes')}
+          
+          ${t('If you did not sign up for SmatWay, ignore this email — no account will be created without this code.')}
+          
+          ${t('SmatWay — travel the way it should be.')}
+        `.trim().replace(/^[ \t]+/gm, ''),
       });
       this.logger.log(`Sent OTP email to ${email}`);
     } catch (error) {
@@ -113,14 +170,18 @@ export class MailService {
   }
 
   async sendJourneyFeedbackEmail(userEmail: string, data: any): Promise<void> {
-    if (!this.smtpConfigured) {
+    const targetEmail = 'tellus@smatway.com';
+    const { transporter, from } = this.getTransporterAndFrom(targetEmail);
+    
+    if (transporter === this.transporter && !this.smtpConfigured) {
       this.logger.warn(`Skipping Journey Feedback email from ${userEmail} — SMTP not configured.`);
       return;
     }
+    
     try {
-      await this.transporter.sendMail({
-        from: this.from,
-        to: 'tellus@smatway.com',
+      await transporter.sendMail({
+        from: from,
+        to: targetEmail,
         subject: `New Journey Feedback from ${userEmail}`,
         html: `
           <h2>Rate the Journey Feedback</h2>
@@ -137,6 +198,31 @@ export class MailService {
           <p><strong>9) Did you notice the driver collecting cash?</strong><br/>${data.driverCollectedCash || 'N/A'}</p>
           <p><strong>10) Seat comfort and overload details:</strong><br/>${data.seatComfortAndOverload || 'N/A'}</p>
         `,
+        text: `
+          Rate the Journey Feedback
+          Submitted by: ${userEmail}
+          ---------------------------
+          1) How punctual was the vehicle/train?
+          ${data.punctuality || 'N/A'}
+          2) How clean was the inside and outside?
+          ${data.cleanliness || 'N/A'}
+          3) How friendly was the driver?
+          ${data.driverFriendliness || 'N/A'}
+          4) How safe did you feel?
+          ${data.safety || 'N/A'}
+          5) Was there any harassment on the way?
+          ${data.harassment || 'N/A'}
+          6) Interrupted by law enforcement agencies?
+          ${data.lawEnforcementInterruption || 'N/A'}
+          7) Anything unusual to share?
+          ${data.unusualEvents || 'N/A'}
+          8) How good was the service?
+          ${data.serviceQuality || 'N/A'}
+          9) Did you notice the driver collecting cash?
+          ${data.driverCollectedCash || 'N/A'}
+          10) Seat comfort and overload details:
+          ${data.seatComfortAndOverload || 'N/A'}
+        `.trim().replace(/^[ \t]+/gm, ''),
       });
       this.logger.log(`Journey Feedback email sent from ${userEmail}`);
     } catch (error) {
