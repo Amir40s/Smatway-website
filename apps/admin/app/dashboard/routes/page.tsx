@@ -13,8 +13,10 @@ type Fleet = {
 
 type Route = {
   id: string;
+  departureCountry: string;
   departureCity: string;
   departureAddress: string;
+  destinationCountry: string;
   destinationCity: string;
   destinationAddress: string;
   departureDateTime: string;
@@ -84,8 +86,10 @@ export default function RoutesPage() {
 
   // Form State
   const [form, setForm] = useState({
+    departureCountry: "",
     departureCity: "",
     departureAddress: "",
+    destinationCountry: "",
     destinationCity: "",
     destinationAddress: "",
     departureDateTime: "",
@@ -127,8 +131,10 @@ export default function RoutesPage() {
           
           return {
             id: t.id,
+            departureCountry: t.departureCountry || "USA",
             departureCity: t.departureCity,
             departureAddress: t.departureAddress || "Central Terminal",
+            destinationCountry: t.destinationCountry || "USA",
             destinationCity: t.destinationCity,
             destinationAddress: t.destinationAddress || "Metro Depot",
             departureDateTime: t.departureDateTime,
@@ -165,8 +171,10 @@ export default function RoutesPage() {
         setRoutesList([
           {
             id: "R-88301",
+            departureCountry: "USA",
             departureCity: "Houston",
             departureAddress: "Houston Central Terminal",
+            destinationCountry: "USA",
             destinationCity: "Austin",
             destinationAddress: "Austin Downtown Plaza",
             departureDateTime: departure1,
@@ -189,8 +197,10 @@ export default function RoutesPage() {
           },
           {
             id: "R-99201",
+            departureCountry: "USA",
             departureCity: "Dallas",
             departureAddress: "Dallas Union Station",
+            destinationCountry: "USA",
             destinationCity: "Houston",
             destinationAddress: "Houston Greyhound Bay",
             departureDateTime: departure2,
@@ -213,8 +223,10 @@ export default function RoutesPage() {
           },
           {
             id: "R-22019",
+            departureCountry: "USA",
             departureCity: "Austin",
             departureAddress: "Austin Airport Terminal 1",
+            destinationCountry: "USA",
             destinationCity: "San Antonio",
             destinationAddress: "San Antonio Riverwalk Depot",
             departureDateTime: new Date(now.getTime() + 72 * 3600000).toISOString(),
@@ -249,8 +261,10 @@ export default function RoutesPage() {
 
     const newRoute: Route = {
       id: "R-" + Math.floor(10000 + Math.random() * 90000),
+      departureCountry: form.departureCountry,
       departureCity: form.departureCity,
       departureAddress: form.departureAddress || "Central Depot",
+      destinationCountry: form.destinationCountry,
       destinationCity: form.destinationCity,
       destinationAddress: form.destinationAddress || "Arrival Terminal",
       departureDateTime: form.departureDateTime,
@@ -287,8 +301,10 @@ export default function RoutesPage() {
         r.id === editingId
           ? {
               ...r,
+              departureCountry: form.departureCountry,
               departureCity: form.departureCity,
               departureAddress: form.departureAddress,
+              destinationCountry: form.destinationCountry,
               destinationCity: form.destinationCity,
               destinationAddress: form.destinationAddress,
               departureDateTime: form.departureDateTime,
@@ -350,8 +366,10 @@ export default function RoutesPage() {
 
   const resetForm = () => {
     setForm({
+      departureCountry: "",
       departureCity: "",
       departureAddress: "",
+      destinationCountry: "",
       destinationCity: "",
       destinationAddress: "",
       departureDateTime: "",
@@ -367,8 +385,10 @@ export default function RoutesPage() {
   const openEdit = (r: Route) => {
     setEditingId(r.id);
     setForm({
+      departureCountry: r.departureCountry,
       departureCity: r.departureCity,
       departureAddress: r.departureAddress,
+      destinationCountry: r.destinationCountry,
       destinationCity: r.destinationCity,
       destinationAddress: r.destinationAddress,
       departureDateTime: r.departureDateTime.split(".")[0], // Trim ISO
@@ -384,7 +404,9 @@ export default function RoutesPage() {
   const filteredRoutes = routesList.filter((r) => {
     const q = searchQuery.toLowerCase();
     return (
+      r.departureCountry.toLowerCase().includes(q) ||
       r.departureCity.toLowerCase().includes(q) ||
+      r.destinationCountry.toLowerCase().includes(q) ||
       r.destinationCity.toLowerCase().includes(q) ||
       r.fleetName.toLowerCase().includes(q) ||
       r.fleetPlate.toLowerCase().includes(q)
@@ -507,7 +529,7 @@ export default function RoutesPage() {
                   {filteredRoutes.map((r) => (
                     <tr key={r.id} className="transition-colors hover:bg-slate-50/50">
                       <td className="py-4 px-4 font-semibold text-zinc-950">
-                        <span>{r.departureCity} → {r.destinationCity}</span>
+                        <span>{r.departureCity}, {r.departureCountry} → {r.destinationCity}, {r.destinationCountry}</span>
                         <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded mt-1.5 block w-max max-w-[180px] truncate">
                           {r.transporterName || "Magnum Transport"}
                         </span>
@@ -616,12 +638,12 @@ export default function RoutesPage() {
                 <div className="space-y-2">
                   <div>
                     <p className="text-slate-400">Departure City Terminal</p>
-                    <p className="font-semibold text-zinc-950">{selected.departureCity}</p>
+                    <p className="font-semibold text-zinc-950">{selected.departureCity}, {selected.departureCountry}</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">{selected.departureAddress}</p>
                   </div>
                   <div>
                     <p className="text-slate-400">Arrival City Terminal</p>
-                    <p className="font-semibold text-zinc-950">{selected.destinationCity}</p>
+                    <p className="font-semibold text-zinc-950">{selected.destinationCity}, {selected.destinationCountry}</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">{selected.destinationAddress}</p>
                   </div>
                   <div>
@@ -709,6 +731,17 @@ export default function RoutesPage() {
                 <h4 className="col-span-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Departure Node</h4>
 
                 <label className="grid gap-2 text-xs font-medium text-slate-500">
+                  Departure Country
+                  <input
+                    required
+                    value={form.departureCountry}
+                    onChange={(e) => setForm((c) => ({ ...c, departureCountry: e.target.value }))}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-zinc-950 outline-none focus:border-zinc-950 focus:bg-white transition-all"
+                    placeholder="E.g. USA"
+                  />
+                </label>
+
+                <label className="grid gap-2 text-xs font-medium text-slate-500">
                   Departure City
                   <input
                     required
@@ -730,6 +763,17 @@ export default function RoutesPage() {
                 </label>
 
                 <h4 className="col-span-2 pt-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Arrival Node</h4>
+
+                <label className="grid gap-2 text-xs font-medium text-slate-500">
+                  Arrival Country
+                  <input
+                    required
+                    value={form.destinationCountry}
+                    onChange={(e) => setForm((c) => ({ ...c, destinationCountry: e.target.value }))}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-zinc-950 outline-none focus:border-zinc-950 focus:bg-white transition-all"
+                    placeholder="E.g. USA"
+                  />
+                </label>
 
                 <label className="grid gap-2 text-xs font-medium text-slate-500">
                   Arrival City
