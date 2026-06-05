@@ -1,11 +1,12 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleSignOut = () => {
     // Clear cookies
@@ -153,7 +154,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-[#f5f6f8] flex overflow-hidden w-full text-zinc-950">
       {/* ─── SIDEBAR ─── */}
-      <aside className="w-64 bg-white border-r border-slate-200/70 flex flex-col shrink-0">
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-zinc-950/50 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200/70 flex flex-col shrink-0 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-slate-100">
           <div className="flex items-center gap-2.5 group">
@@ -176,7 +188,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {menuItems.map((item) => (
             <button
               key={item.label}
-              onClick={() => router.push(item.href)}
+              onClick={() => {
+                router.push(item.href);
+                setIsSidebarOpen(false);
+              }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium rounded-xl transition-all ${
                 item.active
                   ? "bg-zinc-950 text-white font-semibold shadow-sm"
@@ -206,9 +221,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* ─── MAIN CONTENT CONTAINER ─── */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="bg-white border-b border-slate-200/70 h-16 flex items-center justify-between px-8 z-10 shrink-0">
-          <h2 className="text-[15px] font-semibold text-zinc-950 tracking-tight">
-            {pathname === "/dashboard"
+        <header className="bg-white border-b border-slate-200/70 h-16 flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
+          <div className="flex items-center gap-3">
+            <button
+              className="md:hidden p-2 -ml-2 text-zinc-600 hover:text-zinc-950 hover:bg-slate-100 rounded-lg transition-colors"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h2 className="text-[15px] font-semibold text-zinc-950 tracking-tight">
+              {pathname === "/dashboard"
               ? "Overview Dashboard"
               : pathname === "/dashboard/users"
               ? "Users Management"
@@ -231,7 +255,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               : pathname === "/dashboard/settings"
                 ? "System Settings"
               : "Routes Management"}
-          </h2>
+            </h2>
+          </div>
 
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-950 text-white text-[11px] font-bold flex items-center justify-center shadow-sm">
@@ -245,7 +270,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </header>
 
         {/* Content Body */}
-        <main className="flex-1 overflow-y-auto p-8 w-full">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 w-full">{children}</main>
       </div>
     </div>
   );
