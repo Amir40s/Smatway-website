@@ -257,6 +257,7 @@ model Booking {
 
   review        Review?
   chat          Chat?
+  excessLuggages ExcessLuggage[]
 
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -378,3 +379,22 @@ model BookingSequence {
   countryCode String @id
   lastSerial  Int    @default(0)
 }
+
+model ExcessLuggage {
+  id            String        @id @default(uuid())
+  bookingId     String
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  amount        Decimal       @db.Decimal(10, 2)
+  currency      String        @default("USD")
+  description   String?
+  
+  status        PaymentStatus @default(PENDING)
+  paymentMethod PaymentMethod?
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([bookingId])
+}
+

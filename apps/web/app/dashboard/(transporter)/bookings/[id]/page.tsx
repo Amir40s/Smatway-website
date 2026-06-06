@@ -17,6 +17,7 @@ import {
 import {
   Page, Reveal, PageHeader, StatusPill, SkeletonCard, spring, RouteTimeline,
 } from "@/app/dashboard/_Components/ui";
+import { ExcessLuggageChargeModal } from "./_components/ExcessLuggageChargeModal";
 
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +35,7 @@ export default function BookingDetailPage() {
   const [chatLoading, setChatLoading] = useState(false);
   const socketRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isLuggageModalOpen, setIsLuggageModalOpen] = useState(false);
 
   useEffect(() => {
     Promise.all([getBooking(id), getCurrentUser()])
@@ -218,6 +220,16 @@ export default function BookingDetailPage() {
               <MiniStat label="Per seat" value={formatPrice(Number(booking.totalPrice) / booking.seatsBooked, booking.transport?.currency)} />
               <MiniStat label="Total" value={formatPrice(booking.totalPrice, booking.transport?.currency)} accent />
             </div>
+
+            {/* Excess Luggage Button for Transporter */}
+            <div className="p-4 border-t border-slate-100 flex justify-end bg-slate-50">
+              <button
+                onClick={() => setIsLuggageModalOpen(true)}
+                className="bg-zinc-900 hover:bg-zinc-800 text-white text-[13px] font-semibold py-2 px-4 rounded-xl transition-all"
+              >
+                + Charge Excess Luggage
+              </button>
+            </div>
           </div>
 
           {/* Actions */}
@@ -285,6 +297,15 @@ export default function BookingDetailPage() {
           )}
         </Reveal>
       </div>
+
+      <ExcessLuggageChargeModal
+        isOpen={isLuggageModalOpen}
+        onClose={() => setIsLuggageModalOpen(false)}
+        booking={booking}
+        onSuccess={() => {
+          alert("Excess luggage charge added successfully. Traveler can pay using their ticket number.");
+        }}
+      />
     </Page>
   );
 }

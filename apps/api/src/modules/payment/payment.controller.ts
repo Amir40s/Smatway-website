@@ -18,10 +18,23 @@ export class PaymentController {
     return this.paymentService.initializePayment(bookingId, user.id, callbackUrl);
   }
 
+  @Post('initialize-excess-luggage')
+  initializeExcessLuggagePayment(
+    @Body('excessLuggageId') excessLuggageId: string,
+    @Body('callbackUrl') callbackUrl?: string,
+  ) {
+    return this.paymentService.initializeExcessLuggagePayment(excessLuggageId, callbackUrl);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('verify/:reference')
   verifyPayment(@CurrentUser() user: User, @Param('reference') reference: string) {
     return this.paymentService.verifyPayment(reference, user.id);
+  }
+
+  @Get('verify-excess-luggage/:reference')
+  verifyExcessLuggagePayment(@Param('reference') reference: string) {
+    return this.paymentService.verifyExcessLuggagePayment(reference);
   }
 
   @Post('webhook')

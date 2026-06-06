@@ -281,6 +281,96 @@ export class PaymentService {
     }
   }
 
+  async initializeExcessLuggagePayment(excessLuggageId: string, callbackUrl?: string) {
+    const luggage = await this.prisma.excessLuggage.findUnique({
+      where: { id: excessLuggageId },
+      include: { booking: { include: { traveler: true, transport: true } } },
+    });
+
+    if (!luggage) {
+      throw new NotFoundException('Excess luggage charge not found');
+    }
+
+    if (luggage.status === PaymentStatus.PAID) {
+      throw new BadRequestException('Excess luggage is already paid');
+    }
+
+    // Default to Paystack for simplicity
+    if (!this.paystackSecretKey) {
+      throw new InternalServerErrorException('Paystack secret key is not configured');
+    }
+
+    let paymentCurrency = luggage.currency || 'NGN';
+    let paymentAmount = Number(luggage.amount);
+
+    const PAYSTACK_SUPPORTED_CURRENCIES = ['NGN', 'GHS', 'USD'];
+    if (!PAYSTACK_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
+      const rateUSDToNGN = 1 / 0.00067;
+      paymentAmount = paymentAmount * rateUSDToNGN;
+      paymentCurrency = 'NGN';
+    }
+
+    const amountInMinorUnits = Math.round(paymentAmount * 100);
+    const fallbackCallbackUrl = `${process.env.WEB_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/excess-luggage`;
+
+    const payload = {
+      amount: amountInMinorUnits,
+      email: luggage.booking.traveler.email,
+      reference: `el_${normalizeCountryCode(luggage.booking.transport.departureCountry)}_${luggage.id}_${Date.now()}`,
+      currency: paymentCurrency,
+      callback_url: callbackUrl || fallbackCallbackUrl,
+      metadata: {
+        excessLuggageId: luggage.id,
+        bookingId: luggage.bookingId,
+      },
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.paystackApiUrl}/transaction/initialize`, payload, {
+          headers: {
+            Authorization: `Bearer ${this.paystackSecretKey}`,
+            'Content-Type': 'application/json',
+          },
+        }),
+      );
+      return response.data.data;
+    } catch (error: any) {
+      throw new InternalServerErrorException(error.response?.data?.message || 'Payment initialization failed');
+    }
+  }
+
+  async verifyExcessLuggagePayment(reference: string) {
+    if (!this.paystackSecretKey) {
+      throw new InternalServerErrorException('Paystack secret key is not configured');
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.paystackApiUrl}/transaction/verify/${reference}`, {
+          headers: { Authorization: `Bearer ${this.paystackSecretKey}` },
+        }),
+      );
+
+      const data = response.data.data;
+      if (data.status === 'success') {
+        const luggageId = data.reference.split('_')[2]; // el_COUNTRY_LUGGAGEID_TIMESTAMP
+        const luggage = await this.prisma.excessLuggage.findUnique({ where: { id: luggageId } });
+        
+        if (luggage && luggage.status !== PaymentStatus.PAID) {
+          await this.prisma.excessLuggage.update({
+            where: { id: luggageId },
+            data: { status: PaymentStatus.PAID, paymentMethod: 'PAYSTACK' },
+          });
+        }
+        return { success: true, status: data.status, excessLuggageId: luggageId };
+      }
+      return { success: false, status: data.status };
+    } catch (error: any) {
+      throw new InternalServerErrorException('Payment verification failed');
+    }
+  }
+
   async handleWebhook(signature: string, payload: any) {
     if (!this.paystackSecretKey) return;
 
@@ -299,7 +389,20 @@ export class PaymentService {
     const data = payload.data;
 
     if (event === 'charge.success') {
-      const bookingId = data.reference.split('_')[1];
+      const parts = data.reference.split('_');
+      if (parts[0] === 'el') {
+        // Excess luggage
+        const luggageId = parts[2];
+        const luggage = await this.prisma.excessLuggage.findUnique({ where: { id: luggageId } });
+        if (luggage && luggage.status !== PaymentStatus.PAID) {
+          await this.prisma.excessLuggage.update({
+            where: { id: luggageId },
+            data: { status: PaymentStatus.PAID, paymentMethod: 'PAYSTACK' },
+          });
+        }
+      } else {
+        const bookingId = parts[1];
+
       
       const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
       if (booking && booking.paymentStatus !== PaymentStatus.PAID) {
@@ -311,6 +414,7 @@ export class PaymentService {
           },
         });
         this.logger.log(`Booking ${bookingId} marked as PAID via webhook`);
+      }
       }
     }
   }
