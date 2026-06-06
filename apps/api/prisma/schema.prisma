@@ -23,6 +23,7 @@ enum TransportType {
   MINIBUS
   TRAIN
   FERRY
+  CHARTER
 }
 
 enum TransportStatus {

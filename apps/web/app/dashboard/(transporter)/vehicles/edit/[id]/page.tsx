@@ -11,6 +11,7 @@ const transportTypes = [
   { label: "Minibus", value: "MINIBUS" },
   { label: "Ferry", value: "FERRY" },
   { label: "Train", value: "TRAIN" },
+  { label: "Charter", value: "CHARTER" },
 ];
 
 export default function EditVehiclePage() {

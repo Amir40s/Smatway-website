@@ -21,7 +21,7 @@ type Fleet = {
   id: string;
   name: string;
   plateNumber: string;
-  transportType: "CAR" | "BUS" | "VAN" | "MINIBUS" | "TRAIN";
+  transportType: "CAR" | "BUS" | "VAN" | "MINIBUS" | "TRAIN" | "CHARTER";
   seatingCapacity: number;
   transporterId: string;
   transporterName: string;
@@ -89,6 +89,8 @@ function formatTransportType(type: Fleet["transportType"]) {
       return "VIP Sedan";
     case "TRAIN":
       return "Express Rail Car";
+    case "CHARTER":
+      return "Charter";
     default:
       return type;
   }
@@ -686,6 +688,7 @@ export default function FleetsPage() {
                     <option value="VAN">Van / Sprinter</option>
                     <option value="MINIBUS">MiniBus Shuttle</option>
                     <option value="TRAIN">Express Rail Car</option>
+                    <option value="CHARTER">Charter</option>
                   </select>
                 </label>
 

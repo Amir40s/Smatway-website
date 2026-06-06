@@ -238,22 +238,29 @@ function Footer() {
             </h4>
             <ul className="space-y-3">
               <li>
-                <a
-                  href="https://res.cloudinary.com/dge3lt4u6/image/upload/v1766858233/Terms_of_use_and_condition_of_service_y3gdjj.pdf"
-                  target="_blank"
-                  className="text-slate-400 hover:text-white transition-colors duration-200 text-sm"
-                >
-                  {t("footer.privacy")}
-                </a>
+                <Link href="/terms" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
+                  Terms of Use and Conditions
+                </Link>
               </li>
               <li>
-                <a
-                  href="https://res.cloudinary.com/dge3lt4u6/image/upload/v1766858233/Terms_of_use_and_condition_of_service_y3gdjj.pdf"
-                  target="_blank"
-                  className="text-slate-400 hover:text-white transition-colors duration-200 text-sm"
-                >
-                  {t("footer.terms")}
-                </a>
+                <Link href="/privacy" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/imprint" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
+                  Imprint
+                </Link>
+              </li>
+              <li>
+                <Link href="/transporter-code-of-conduct" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
+                  Transporter Code of Conduct
+                </Link>
+              </li>
+              <li>
+                <Link href="/traveller-code-of-conduct" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
+                  Traveller Code of Conduct
+                </Link>
               </li>
             </ul>
           </div>

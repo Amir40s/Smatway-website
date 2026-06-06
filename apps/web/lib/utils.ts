@@ -15,6 +15,7 @@ export function formatTransportType(type?: string | null) {
     MINIBUS: "Minibus",
     FERRY: "Ferry",
     TRAIN: "Train",
+    CHARTER: "Charter",
   };
   return labels[normalized] ?? normalized.charAt(0) + normalized.slice(1).toLowerCase();
 }

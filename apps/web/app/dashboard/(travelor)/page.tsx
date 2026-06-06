@@ -28,6 +28,7 @@ const transportTypes = [
   { label: "Bus", value: "BUS" },
   { label: "Ferry", value: "FERRY" },
   { label: "Train", value: "TRAIN" },
+  { label: "Charter", value: "CHARTER" },
 ] as const;
 
 export default function SearchRidesPage() {
