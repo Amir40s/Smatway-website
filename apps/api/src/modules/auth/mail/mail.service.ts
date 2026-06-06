@@ -247,6 +247,10 @@ export class MailService {
         subject: t('Your SmatWay Booking Ticket'),
         html: `
           <h2>${t('Your SmatWay Ticket')}</h2>
+          <div style="margin: 20px 0;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${bookingDetails.bookingNumber}" alt="Scan Code" style="display:block;margin-bottom:10px;" />
+            <span style="font-size: 12px; color: #555;">${t('Driver can scan this code to confirm')}</span>
+          </div>
           <p><strong>${t('Booking Number')}:</strong> ${bookingDetails.bookingNumber}</p>
           <p><strong>${t('Route')}:</strong> ${bookingDetails.route}</p>
           <p><strong>${t('Date & Time')}:</strong> ${bookingDetails.dateTime}</p>

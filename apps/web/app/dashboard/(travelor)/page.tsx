@@ -372,8 +372,8 @@ function TransportCard({ transport }: { transport: any }) {
             {vehicle?.features && vehicle.features.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {vehicle.features.map((feature: string) => (
-                  <span key={feature} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                    <CheckCircleIcon className="w-3 h-3 mr-1 opacity-70" />
+                  <span key={feature} className="inline-flex items-center px-2.5 py-1 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    <CheckCircleIcon className="w-3.5 h-3.5 mr-1.5 opacity-70" />
                     {feature}
                   </span>
                 ))}

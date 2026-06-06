@@ -39,8 +39,19 @@ export class BookingService {
       update: { lastSerial: { increment: 1 } },
       create: { countryCode, lastSerial: 1 },
     });
-    
-    const bookingNumber = `${countryCode}${String(sequence.lastSerial).padStart(6, '0')}`;
+
+    const generateRandomString = (length: number) => {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    };
+
+    const now = new Date();
+    const yy = now.getFullYear().toString().slice(-2);
+    const bookingNumber = `${countryCode}-${yy}${generateRandomString(2)}-${generateRandomString(4)}`;
 
     const [booking] = await this.prisma.$transaction([
       this.prisma.booking.create({
