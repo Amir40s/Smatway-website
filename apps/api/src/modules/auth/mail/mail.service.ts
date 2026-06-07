@@ -43,10 +43,12 @@ export class MailService {
       },
     });
 
+    // Fallback transporter for corporate/business email domains where
+    // noreply@smatway.com may be restricted or blocked.
     this.gmailTransporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
-      secure: false, // true for 465, false for other ports
+      secure: false,
       requireTLS: true,
       auth: {
         user: 'smatway02@gmail.com',
@@ -56,8 +58,11 @@ export class MailService {
   }
 
   private getTransporterAndFrom(toEmail: string): { transporter: nodemailer.Transporter; from: string } {
-    const isPublicDomain = /@(gmail\\.com|outlook\\.com|hotmail\\.com)$/i.test(toEmail.trim());
-    if (!isPublicDomain) {
+    // Consumer email domains (gmail, outlook, hotmail) → use official noreply@smatway.com.
+    // Corporate/business email domains → use Gmail SMTP fallback, as some business
+    // mail servers restrict or reject emails from noreply@smatway.com.
+    const isConsumerDomain = /@(gmail\.com|outlook\.com|hotmail\.com)$/i.test(toEmail.trim());
+    if (!isConsumerDomain) {
       return {
         transporter: this.gmailTransporter,
         from: 'SmatWay <smatway02@gmail.com>',
@@ -235,29 +240,71 @@ export class MailService {
     const { transporter, from } = this.getTransporterAndFrom(userEmail);
     const t = (text: string) => translateApiText(text, locale);
     
-    if (transporter === this.transporter && !this.smtpConfigured) {
+    if (!this.smtpConfigured) {
       this.logger.warn(`Skipping ticket email to ${userEmail} — SMTP not configured.`);
       return;
     }
+
+    const qrData = encodeURIComponent(bookingDetails.bookingNumber);
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${qrData}`;
 
     try {
       await transporter.sendMail({
         from: from,
         to: userEmail,
-        subject: t('Your SmatWay Booking Ticket'),
+        subject: `${t('Your SmatWay Booking Ticket')} — ${bookingDetails.bookingNumber}`,
         html: `
-          <h2>${t('Your SmatWay Ticket')}</h2>
-          <div style="margin: 20px 0;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${bookingDetails.bookingNumber}" alt="Scan Code" style="display:block;margin-bottom:10px;" />
-            <span style="font-size: 12px; color: #555;">${t('Driver can scan this code to confirm')}</span>
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#0f172a;">
+            <!-- Header bar -->
+            <div style="background:linear-gradient(135deg,#10b981,#0d9488);height:6px;border-radius:4px;margin-bottom:28px;"></div>
+            <h1 style="font-size:22px;font-weight:700;margin:0 0 4px 0;letter-spacing:-0.01em;">${t('Your SmatWay Ticket')}</h1>
+            <p style="font-size:14px;color:#64748b;margin:0 0 28px 0;">${t('Show this ticket to the driver before boarding.')}</p>
+
+            <!-- QR scan section -->
+            <div style="background:#f0fdf4;border:2px solid #6ee7b7;border-radius:16px;padding:24px;text-align:center;margin-bottom:28px;">
+              <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#065f46;margin:0 0 16px 0;">📱 ${t('Driver Scan Code')}</p>
+              <img
+                src="${qrUrl}"
+                alt="${t('Scan code for driver')}"
+                width="220"
+                height="220"
+                style="display:block;margin:0 auto 16px auto;border:4px solid #ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.12);"
+              />
+              <div style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:18px;font-weight:700;letter-spacing:0.15em;color:#065f46;background:#ffffff;display:inline-block;padding:8px 20px;border-radius:8px;border:1px solid #bbf7d0;">
+                ${bookingDetails.bookingNumber}
+              </div>
+              <p style="font-size:12px;color:#6b7280;margin:12px 0 0 0;">${t('The driver scans this QR code to confirm your seat.')}</p>
+            </div>
+
+            <!-- Booking details -->
+            <table style="width:100%;border-collapse:collapse;font-size:14px;">
+              <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:10px 4px;color:#64748b;font-weight:500;width:40%;">${t('Route')}</td>
+                <td style="padding:10px 4px;font-weight:600;">${bookingDetails.route}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:10px 4px;color:#64748b;font-weight:500;">${t('Date & Time')}</td>
+                <td style="padding:10px 4px;font-weight:600;">${bookingDetails.dateTime}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:10px 4px;color:#64748b;font-weight:500;">${t('Seats')}</td>
+                <td style="padding:10px 4px;font-weight:600;">${bookingDetails.seats}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:10px 4px;color:#64748b;font-weight:500;">${t('Total Price')}</td>
+                <td style="padding:10px 4px;font-weight:700;color:#10b981;">${bookingDetails.price}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 4px;color:#64748b;font-weight:500;">${t('Transporter')}</td>
+                <td style="padding:10px 4px;font-weight:600;">${bookingDetails.transporterName}</td>
+              </tr>
+            </table>
+
+            <!-- Footer -->
+            <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
+              ${t('SmatWay — travel the way it should be.')}
+            </div>
           </div>
-          <p><strong>${t('Booking Number')}:</strong> ${bookingDetails.bookingNumber}</p>
-          <p><strong>${t('Route')}:</strong> ${bookingDetails.route}</p>
-          <p><strong>${t('Date & Time')}:</strong> ${bookingDetails.dateTime}</p>
-          <p><strong>${t('Seats')}:</strong> ${bookingDetails.seats}</p>
-          <p><strong>${t('Total Price')}:</strong> ${bookingDetails.price}</p>
-          <p><strong>${t('Transporter')}:</strong> ${bookingDetails.transporterName}</p>
-          <p>${t('Thank you for booking with SmatWay!')}</p>
         `,
         text: `
           ${t('Your SmatWay Ticket')}
@@ -267,6 +314,7 @@ export class MailService {
           ${t('Seats')}: ${bookingDetails.seats}
           ${t('Total Price')}: ${bookingDetails.price}
           ${t('Transporter')}: ${bookingDetails.transporterName}
+          ${t('Driver Scan Code (QR)')}: ${qrUrl}
           ${t('Thank you for booking with SmatWay!')}
         `.trim().replace(/^[ \t]+/gm, ''),
       });

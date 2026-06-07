@@ -19,6 +19,7 @@ import { FeedbackModule } from './modules/feedback/feedback.module';
 import { AnnouncementModule } from './modules/announcement/announcement.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { ExcessLuggageModule } from './modules/excess-luggage/excess-luggage.module';
+import { KillSwitchModule } from './modules/kill-switch/kill-switch.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ExcessLuggageModule } from './modules/excess-luggage/excess-luggage.mod
     AnnouncementModule,
     PaymentModule,
     ExcessLuggageModule,
+    KillSwitchModule,
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
   ],
   controllers: [AppController],
