@@ -10,7 +10,13 @@ const PUBLIC_EXACT: Set<string> = new Set([
     '/verify-email',
     '/forgot-password',
     '/reset-password',
+    '/terms',
+    '/privacy',
+    '/imprint',
+    '/transporter-code-of-conduct',
+    '/traveller-code-of-conduct',
 ]);
+
 
 const PUBLIC_PREFIXES = ['/api', '/_next', '/favicon'];
 
