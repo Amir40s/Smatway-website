@@ -233,7 +233,7 @@ export default function BookingDetailPage() {
           </div>
 
           {/* Actions */}
-          {booking.status === "PENDING" && (
+          {booking.status === "PENDING" && booking.paymentStatus !== "PAID" && (
             <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-white border border-amber-100 p-5">
               <p className="text-[13px] font-semibold text-zinc-950 mb-1">Awaiting your review</p>
               <p className="text-[12px] text-slate-600 mb-4">

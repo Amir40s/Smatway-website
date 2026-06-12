@@ -132,7 +132,7 @@ export default function RouteBookingsPage() {
                     <p className="text-sm font-semibold text-zinc-900">{booking.paymentStatus}</p>
                     {booking.paymentMethod && <p className="text-xs text-slate-500">{booking.paymentMethod}</p>}
                   </div>
-                  {booking.status === "PENDING" && (
+                  {booking.status === "PENDING" && booking.paymentStatus !== "PAID" && (
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleConfirm(booking.id)}

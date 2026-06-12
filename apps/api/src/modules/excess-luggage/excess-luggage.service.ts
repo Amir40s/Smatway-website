@@ -6,9 +6,9 @@ import { PaymentStatus } from '@prisma/client';
 export class ExcessLuggageService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createCharge(bookingNumber: string, amount: number, description?: string) {
+  async createCharge(bookingId: string, amount: number, description?: string) {
     const booking = await this.prisma.booking.findUnique({
-      where: { bookingNumber },
+      where: { id: bookingId },
       include: { transport: true },
     });
 
@@ -27,9 +27,9 @@ export class ExcessLuggageService {
     });
   }
 
-  async getChargesByBookingNumber(bookingNumber: string) {
+  async getChargesByBookingId(bookingId: string) {
     const booking = await this.prisma.booking.findUnique({
-      where: { bookingNumber },
+      where: { id: bookingId },
       include: { excessLuggages: true },
     });
 

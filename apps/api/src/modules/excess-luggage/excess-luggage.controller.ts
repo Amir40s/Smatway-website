@@ -5,17 +5,17 @@ import { ExcessLuggageService } from './excess-luggage.service';
 export class ExcessLuggageController {
   constructor(private readonly excessLuggageService: ExcessLuggageService) {}
 
-  @Post(':bookingNumber')
+  @Post(':bookingId')
   async createCharge(
-    @Param('bookingNumber') bookingNumber: string,
+    @Param('bookingId') bookingId: string,
     @Body('amount') amount: number,
     @Body('description') description?: string,
   ) {
-    return this.excessLuggageService.createCharge(bookingNumber, amount, description);
+    return this.excessLuggageService.createCharge(bookingId, amount, description);
   }
 
-  @Get(':bookingNumber')
-  async getCharges(@Param('bookingNumber') bookingNumber: string) {
-    return this.excessLuggageService.getChargesByBookingNumber(bookingNumber);
+  @Get(':bookingId')
+  async getCharges(@Param('bookingId') bookingId: string) {
+    return this.excessLuggageService.getChargesByBookingId(bookingId);
   }
 }

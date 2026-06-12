@@ -29,7 +29,7 @@ export function ExcessLuggageChargeModal({
 
     try {
       const token = localStorage.getItem("auth_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3002"}/excess-luggage/${booking.bookingNumber}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3002"}/excess-luggage/${booking.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -303,7 +303,7 @@ function BookingRow({
               {formatPrice(booking.totalPrice, booking.transport?.currency)}
             </p>
 
-            {booking.status === "PENDING" ? (
+            {booking.status === "PENDING" && booking.paymentStatus !== "PAID" ? (
               <div className="flex gap-1.5">
                 <button
                   onClick={onReject}
