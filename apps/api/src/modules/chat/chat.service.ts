@@ -1,11 +1,17 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
 export class ChatService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-  private withSenderRole<T extends { sender: { id: string }; senderId: string }>(message: T, chat: { travelerId: string; transporterId: string }) {
+  private withSenderRole<
+    T extends { sender: { id: string }; senderId: string },
+  >(message: T, chat: { travelerId: string; transporterId: string }) {
     return {
       ...message,
       sender: {
@@ -23,8 +29,11 @@ export class ChatService {
 
     if (!booking) throw new NotFoundException('Booking not found');
 
-    const isParticipant = booking.travelerId === userId || booking.transport.transporterId === userId;
-    if (!isParticipant) throw new ForbiddenException('Not part of this booking');
+    const isParticipant =
+      booking.travelerId === userId ||
+      booking.transport.transporterId === userId;
+    if (!isParticipant)
+      throw new ForbiddenException('Not part of this booking');
 
     let chat = await this.prisma.chat.findUnique({
       where: { bookingId },
@@ -50,12 +59,15 @@ export class ChatService {
 
     if (!chat) throw new NotFoundException('Chat not found');
 
-    const isParticipant = chat.travelerId === userId || chat.transporterId === userId;
+    const isParticipant =
+      chat.travelerId === userId || chat.transporterId === userId;
     if (!isParticipant) throw new ForbiddenException('Not part of this chat');
 
     const messages = await this.prisma.message.findMany({
       where: { chatId },
-      include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
+      include: {
+        sender: { select: { id: true, name: true, avatarUrl: true } },
+      },
       orderBy: { createdAt: 'desc' },
       take: limit,
     });
@@ -70,7 +82,8 @@ export class ChatService {
 
     if (!chat) throw new NotFoundException('Chat not found');
 
-    const isParticipant = chat.travelerId === userId || chat.transporterId === userId;
+    const isParticipant =
+      chat.travelerId === userId || chat.transporterId === userId;
     if (!isParticipant) throw new ForbiddenException('Not part of this chat');
 
     const message = await this.prisma.message.create({
@@ -79,7 +92,9 @@ export class ChatService {
         senderId: userId,
         content: content.trim(),
       },
-      include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
+      include: {
+        sender: { select: { id: true, name: true, avatarUrl: true } },
+      },
     });
 
     return this.withSenderRole(message as any, chat);
@@ -96,7 +111,8 @@ export class ChatService {
 
     if (!chat) return null;
 
-    const isParticipant = chat.travelerId === userId || chat.transporterId === userId;
+    const isParticipant =
+      chat.travelerId === userId || chat.transporterId === userId;
     if (!isParticipant) throw new ForbiddenException('Not part of this chat');
 
     return chat;

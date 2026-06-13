@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsString, IsArray, IsOptional } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  IsArray,
+  IsOptional,
+} from 'class-validator';
 import { TransportType } from '@prisma/client';
 
 export class CreateVehicleDto {

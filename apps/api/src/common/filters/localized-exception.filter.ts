@@ -5,11 +5,7 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import {
-  resolveApiLocale,
-  translateApiText,
-  translateApiValue,
-} from '../i18n';
+import { resolveApiLocale, translateApiText, translateApiValue } from '../i18n';
 
 @Catch(HttpException)
 export class LocalizedExceptionFilter implements ExceptionFilter<HttpException> {
@@ -21,15 +17,16 @@ export class LocalizedExceptionFilter implements ExceptionFilter<HttpException> 
     const status = exception.getStatus();
     const rawPayload = exception.getResponse();
 
-    const payload: Record<string, unknown> = typeof rawPayload === 'string'
-      ? {
-          statusCode: status,
-          message: translateApiText(rawPayload, locale),
-          error: translateApiText(exception.name, locale),
-        }
-      : {
-          ...(rawPayload as Record<string, unknown>),
-        };
+    const payload: Record<string, unknown> =
+      typeof rawPayload === 'string'
+        ? {
+            statusCode: status,
+            message: translateApiText(rawPayload, locale),
+            error: translateApiText(exception.name, locale),
+          }
+        : {
+            ...(rawPayload as Record<string, unknown>),
+          };
 
     payload.statusCode ??= status;
     payload.message = translateApiValue(payload.message, locale);

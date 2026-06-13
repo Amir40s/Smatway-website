@@ -39,7 +39,7 @@ async function bootstrap() {
   app.useGlobalFilters(new LocalizedExceptionFilter());
   const allowedOrigins = [
     'https://smatway.com',
-    "https://smatway.com",
+    'https://smatway.com',
     'https://admin.smatway.com',
     'http://localhost:3000',
     'http://localhost:3001',
@@ -48,7 +48,9 @@ async function bootstrap() {
   ];
 
   if (process.env.ALLOWED_REDIRECT_URLS) {
-    const urls = process.env.ALLOWED_REDIRECT_URLS.split(',').map((u) => u.trim());
+    const urls = process.env.ALLOWED_REDIRECT_URLS.split(',').map((u) =>
+      u.trim(),
+    );
     urls.forEach((url) => {
       // Clean up any weird trailing characters from cut-and-paste typos (like > or spaces)
       const cleanUrl = url.replace(/>+$/, '').trim();
@@ -62,7 +64,8 @@ async function bootstrap() {
     origin: allowedOrigins,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Accept, Accept-Language, Authorization, X-Requested-With',
+    allowedHeaders:
+      'Content-Type, Accept, Accept-Language, Authorization, X-Requested-With',
   });
 
   const startPort = resolveStartPort(3002);
@@ -74,7 +77,9 @@ async function bootstrap() {
       await app.listen(selectedPort, '0.0.0.0');
 
       if (selectedPort !== startPort) {
-        logger.warn(`Port ${startPort} is busy. Falling back to port ${selectedPort}.`);
+        logger.warn(
+          `Port ${startPort} is busy. Falling back to port ${selectedPort}.`,
+        );
       }
 
       logger.log(`API listening on port ${selectedPort}`);
@@ -94,6 +99,8 @@ async function bootstrap() {
     }
   }
 
-  throw new Error(`No free port found in range ${startPort}-${startPort + maxPortAttempts - 1}`);
+  throw new Error(
+    `No free port found in range ${startPort}-${startPort + maxPortAttempts - 1}`,
+  );
 }
 bootstrap();

@@ -1,4 +1,14 @@
-import { Body, Controller, ForbiddenException, Get, Param, Post, Query, UseGuards, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+  Delete,
+} from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -17,7 +27,12 @@ export class ReviewController {
   @Post()
   @UseGuards(JwtAuthGuard)
   createReview(@CurrentUser() user: User, @Body() dto: CreateReviewDto) {
-    return this.reviewService.createReview(dto.bookingId, user.id, dto.rating, dto.feedback);
+    return this.reviewService.createReview(
+      dto.bookingId,
+      user.id,
+      dto.rating,
+      dto.feedback,
+    );
   }
 
   @Get('transporter/:transporterId/stats')
@@ -36,19 +51,28 @@ export class ReviewController {
     if (user.role !== 'ADMIN') {
       throw new ForbiddenException('Only admin can read feedbacks');
     }
-    return this.reviewService.getTransporterReviews(transporterId, parseInt(page), parseInt(limit));
+    return this.reviewService.getTransporterReviews(
+      transporterId,
+      parseInt(page),
+      parseInt(limit),
+    );
   }
 
   @Get('transporter/:transporterId/profile')
   @UseGuards(JwtAuthGuard)
-  getFullProfile(@CurrentUser() user: User, @Param('transporterId') transporterId: string) {
+  getFullProfile(
+    @CurrentUser() user: User,
+    @Param('transporterId') transporterId: string,
+  ) {
     return this.reviewService.getTransporterFullProfile(transporterId, user);
   }
 
   /** Public — latest platform-wide reviews for the marketing homepage Testimonials section. No auth required. */
   @Get('recent')
   getRecent(@Query('limit') limit: string = '6') {
-    return this.reviewService.getRecentPlatformReviews(parseInt(limit, 10) || 6);
+    return this.reviewService.getRecentPlatformReviews(
+      parseInt(limit, 10) || 6,
+    );
   }
 
   @Get('admin/all')

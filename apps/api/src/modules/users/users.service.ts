@@ -1,19 +1,45 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { StorageService } from '../../common/services/storage.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
-import { CreateEmergencyContactDto, UpdateEmergencyContactDto } from './dto/emergency-contact.dto';
+import {
+  CreateEmergencyContactDto,
+  UpdateEmergencyContactDto,
+} from './dto/emergency-contact.dto';
 import { UpdateNotificationPreferencesDto } from './dto/notification-preferences.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
 const exchangeRatesToUSD: Record<string, number> = {
-  PKR: 0.0036, INR: 0.012, EUR: 1.08, GBP: 1.26, AED: 0.27, SAR: 0.27,
-  EGP: 0.021, ETB: 0.017, ZMW: 0.038, MWK: 0.00057, MZN: 0.016, SLE: 0.000044,
-  XOF: 0.0017, XAF: 0.0017, MAD: 0.10, DZD: 0.0074, TND: 0.32,
-  KES: 0.0076, ZAR: 0.054, RWF: 0.00077, UGX: 0.00026, GHS: 0.071, NGN: 0.00067,
+  PKR: 0.0036,
+  INR: 0.012,
+  EUR: 1.08,
+  GBP: 1.26,
+  AED: 0.27,
+  SAR: 0.27,
+  EGP: 0.021,
+  ETB: 0.017,
+  ZMW: 0.038,
+  MWK: 0.00057,
+  MZN: 0.016,
+  SLE: 0.000044,
+  XOF: 0.0017,
+  XAF: 0.0017,
+  MAD: 0.1,
+  DZD: 0.0074,
+  TND: 0.32,
+  KES: 0.0076,
+  ZAR: 0.054,
+  RWF: 0.00077,
+  UGX: 0.00026,
+  GHS: 0.071,
+  NGN: 0.00067,
   USD: 1.0,
 };
 
@@ -28,7 +54,7 @@ export class UsersService {
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
-  ) { }
+  ) {}
 
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -47,7 +73,6 @@ export class UsersService {
     });
 
     if (!user) throw new NotFoundException('User not found');
-
 
     const avatarUrl = await this.storageService.resolveImageUrl(user.avatarUrl);
 
@@ -140,15 +165,24 @@ export class UsersService {
 
     return Promise.all(
       transporters.map(async (t) => {
-        const avatarUrl = await this.storageService.resolveImageUrl(t.avatarUrl);
+        const avatarUrl = await this.storageService.resolveImageUrl(
+          t.avatarUrl,
+        );
         const fleetCount = t.vehicles.length;
         const routeCount = t.transports.length;
         const totalEarnings = t.transports.reduce(
-          (sum, route) => sum + route.bookings.reduce((s, b) => s + convertToUSD(Number(b.totalPrice), route.currency), 0),
+          (sum, route) =>
+            sum +
+            route.bookings.reduce(
+              (s, b) => s + convertToUSD(Number(b.totalPrice), route.currency),
+              0,
+            ),
           0,
         );
         const status = t.isSuspended
-          ? (t.suspensionReason === 'REJECTED' ? 'REJECTED' : 'SUSPENDED')
+          ? t.suspensionReason === 'REJECTED'
+            ? 'REJECTED'
+            : 'SUSPENDED'
           : 'APPROVED';
 
         return {
@@ -226,11 +260,16 @@ export class UsersService {
 
     return Promise.all(
       users.map(async (user) => {
-        const avatarUrl = await this.storageService.resolveImageUrl(user.avatarUrl || user.profileImageUrl || null);
+        const avatarUrl = await this.storageService.resolveImageUrl(
+          user.avatarUrl || user.profileImageUrl || null,
+        );
         const bookingHistory = user.bookings.slice(0, 3).map((booking) => ({
           id: booking.id,
           route: `${booking.transport.departureCity} → ${booking.transport.destinationCity}`,
-          amount: convertToUSD(Number(booking.totalPrice), booking.transport.currency),
+          amount: convertToUSD(
+            Number(booking.totalPrice),
+            booking.transport.currency,
+          ),
           currency: 'USD',
           status: booking.status,
           paymentStatus: booking.paymentStatus,
@@ -239,7 +278,10 @@ export class UsersService {
 
         const convertedBookings = user.bookings.map((booking) => ({
           ...booking,
-          totalPrice: convertToUSD(Number(booking.totalPrice), booking.transport.currency),
+          totalPrice: convertToUSD(
+            Number(booking.totalPrice),
+            booking.transport.currency,
+          ),
           transport: {
             ...booking.transport,
             currency: 'USD',
@@ -258,7 +300,10 @@ export class UsersService {
             .slice(0, 3)
             .map((booking) => ({
               id: booking.id,
-              amount: convertToUSD(Number(booking.totalPrice), booking.transport.currency),
+              amount: convertToUSD(
+                Number(booking.totalPrice),
+                booking.transport.currency,
+              ),
               currency: 'USD',
               paymentStatus: booking.paymentStatus,
               createdAt: booking.createdAt,
@@ -280,26 +325,46 @@ export class UsersService {
     const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
 
     if (dto.name && !nameRegex.test(dto.name.trim())) {
-      throw new BadRequestException('Please enter a valid name (minimum 2 characters, letters and spaces only, no digits)');
+      throw new BadRequestException(
+        'Please enter a valid name (minimum 2 characters, letters and spaces only, no digits)',
+      );
     }
 
     if (dto.phoneNumber && !phoneRegex.test(dto.phoneNumber.trim())) {
       throw new BadRequestException('Please enter a valid phone number');
     }
 
-    if (dto.emergencyContactName && !nameRegex.test(dto.emergencyContactName.trim())) {
-      throw new BadRequestException('Emergency contact name must be a valid name (letters and spaces only, no digits)');
+    if (
+      dto.emergencyContactName &&
+      !nameRegex.test(dto.emergencyContactName.trim())
+    ) {
+      throw new BadRequestException(
+        'Emergency contact name must be a valid name (letters and spaces only, no digits)',
+      );
     }
 
-    if (dto.emergencyContactPhone && !phoneRegex.test(dto.emergencyContactPhone.trim())) {
-      throw new BadRequestException('Emergency contact phone must be a valid phone number');
+    if (
+      dto.emergencyContactPhone &&
+      !phoneRegex.test(dto.emergencyContactPhone.trim())
+    ) {
+      throw new BadRequestException(
+        'Emergency contact phone must be a valid phone number',
+      );
     }
 
-    if (dto.bankAccountHolderName && !nameRegex.test(dto.bankAccountHolderName.trim())) {
-      throw new BadRequestException('Bank account holder name must be a valid name');
+    if (
+      dto.bankAccountHolderName &&
+      !nameRegex.test(dto.bankAccountHolderName.trim())
+    ) {
+      throw new BadRequestException(
+        'Bank account holder name must be a valid name',
+      );
     }
 
-    if (dto.bankAccountNumber && !/^[0-9a-zA-Z\-\s]{5,30}$/.test(dto.bankAccountNumber.trim())) {
+    if (
+      dto.bankAccountNumber &&
+      !/^[0-9a-zA-Z\-\s]{5,30}$/.test(dto.bankAccountNumber.trim())
+    ) {
       throw new BadRequestException('Please enter a valid bank account number');
     }
 
@@ -324,7 +389,9 @@ export class UsersService {
         emergencyContactPhone: dto.emergencyContactPhone,
         companyName: dto.companyName,
         licenseNumber: dto.licenseNumber,
-        licenseExpiry: dto.licenseExpiry ? new Date(dto.licenseExpiry) : undefined,
+        licenseExpiry: dto.licenseExpiry
+          ? new Date(dto.licenseExpiry)
+          : undefined,
         vehicleType: dto.vehicleType,
         bankName: dto.bankName,
         bankAccountNumber: dto.bankAccountNumber,
@@ -339,7 +406,9 @@ export class UsersService {
         emergencyContactPhone: dto.emergencyContactPhone,
         companyName: dto.companyName,
         licenseNumber: dto.licenseNumber,
-        licenseExpiry: dto.licenseExpiry ? new Date(dto.licenseExpiry) : undefined,
+        licenseExpiry: dto.licenseExpiry
+          ? new Date(dto.licenseExpiry)
+          : undefined,
         vehicleType: dto.vehicleType,
         bankName: dto.bankName,
         bankAccountNumber: dto.bankAccountNumber,
@@ -362,17 +431,28 @@ export class UsersService {
       data: {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.email !== undefined ? { email: dto.email } : {}),
-        ...(dto.phoneNumber !== undefined ? { phoneNumber: dto.phoneNumber } : {}),
+        ...(dto.phoneNumber !== undefined
+          ? { phoneNumber: dto.phoneNumber }
+          : {}),
         ...(dto.country !== undefined ? { country: dto.country } : {}),
         ...(dto.role !== undefined ? { role: dto.role } : {}),
-        ...(dto.accountType !== undefined ? { accountType: dto.accountType } : {}),
+        ...(dto.accountType !== undefined
+          ? { accountType: dto.accountType }
+          : {}),
         ...(dto.suspended !== undefined
           ? {
               isSuspended: dto.suspended,
-              suspensionReason: dto.suspended ? (dto.suspensionReason?.trim() || null) : null,
+              suspensionReason: dto.suspended
+                ? dto.suspensionReason?.trim() || null
+                : null,
             }
           : {}),
-        ...(dto.deletedAt !== undefined ? { deletedAt: dto.deletedAt ? new Date(dto.deletedAt) : null, isSuspended: true } : {}),
+        ...(dto.deletedAt !== undefined
+          ? {
+              deletedAt: dto.deletedAt ? new Date(dto.deletedAt) : null,
+              isSuspended: true,
+            }
+          : {}),
       },
       select: {
         id: true,
@@ -432,11 +512,15 @@ export class UsersService {
     const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
 
     if (!nameRegex.test(dto.name.trim())) {
-      throw new BadRequestException('Emergency contact name must be a valid name (minimum 2 characters, letters and spaces only, no digits)');
+      throw new BadRequestException(
+        'Emergency contact name must be a valid name (minimum 2 characters, letters and spaces only, no digits)',
+      );
     }
 
     if (!phoneRegex.test(dto.phone.trim())) {
-      throw new BadRequestException('Emergency contact phone must be a valid phone number');
+      throw new BadRequestException(
+        'Emergency contact phone must be a valid phone number',
+      );
     }
 
     const profile = await this.prisma.userProfile.upsert({
@@ -455,16 +539,23 @@ export class UsersService {
     });
   }
 
-  async updateEmergencyContact(contactId: string, dto: UpdateEmergencyContactDto) {
+  async updateEmergencyContact(
+    contactId: string,
+    dto: UpdateEmergencyContactDto,
+  ) {
     const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
     const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
 
     if (!nameRegex.test(dto.name.trim())) {
-      throw new BadRequestException('Emergency contact name must be a valid name (minimum 2 characters, letters and spaces only, no digits)');
+      throw new BadRequestException(
+        'Emergency contact name must be a valid name (minimum 2 characters, letters and spaces only, no digits)',
+      );
     }
 
     if (!phoneRegex.test(dto.phone.trim())) {
-      throw new BadRequestException('Emergency contact phone must be a valid phone number');
+      throw new BadRequestException(
+        'Emergency contact phone must be a valid phone number',
+      );
     }
 
     const contact = await this.prisma.emergencyContact.findUnique({
@@ -517,7 +608,10 @@ export class UsersService {
     return prefs;
   }
 
-  async updateNotificationPreferences(userId: string, dto: UpdateNotificationPreferencesDto) {
+  async updateNotificationPreferences(
+    userId: string,
+    dto: UpdateNotificationPreferencesDto,
+  ) {
     const profile = await this.prisma.userProfile.upsert({
       where: { userId },
       update: {},
@@ -545,7 +639,10 @@ export class UsersService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    const isPasswordValid = await bcrypt.compare(dto.currentPassword, user.passwordHash || '');
+    const isPasswordValid = await bcrypt.compare(
+      dto.currentPassword,
+      user.passwordHash || '',
+    );
     if (!isPasswordValid) {
       throw new BadRequestException('Current password is incorrect');
     }
@@ -592,7 +689,9 @@ export class UsersService {
       bookingWindow,
     ] = await Promise.all([
       this.prisma.user.count({ where: { deletedAt: null } }),
-      this.prisma.user.count({ where: { accountType: 'TRANSPORTER', deletedAt: null } }),
+      this.prisma.user.count({
+        where: { accountType: 'TRANSPORTER', deletedAt: null },
+      }),
       this.prisma.vehicle.count({ where: { deleted: false } }),
       this.prisma.transport.count(),
       this.prisma.booking.count(),
@@ -619,7 +718,9 @@ export class UsersService {
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: {
-          traveler: { select: { id: true, name: true, email: true, avatarUrl: true } },
+          traveler: {
+            select: { id: true, name: true, email: true, avatarUrl: true },
+          },
           transport: {
             select: {
               id: true,
@@ -649,10 +750,11 @@ export class UsersService {
       }),
     ]);
 
-
-
     const totalRevenue = revenueBookings.reduce((sum: number, booking: any) => {
-      return sum + convertToUSD(Number(booking.totalPrice), booking.transport?.currency);
+      return (
+        sum +
+        convertToUSD(Number(booking.totalPrice), booking.transport?.currency)
+      );
     }, 0);
 
     const daySeries = dayKeys.map(({ key, label }) => ({
@@ -675,12 +777,21 @@ export class UsersService {
 
       bucket.bookings += 1;
       if (booking.paymentStatus === 'PAID') {
-        bucket.revenue += convertToUSD(Number(booking.totalPrice), booking.transport?.currency);
+        bucket.revenue += convertToUSD(
+          Number(booking.totalPrice),
+          booking.transport?.currency,
+        );
       }
     });
 
-    const bookingAnalytics = daySeries.map(({ label, bookings }) => ({ label, value: bookings }));
-    const revenueAnalytics = daySeries.map(({ label, revenue }) => ({ label, value: revenue }));
+    const bookingAnalytics = daySeries.map(({ label, bookings }) => ({
+      label,
+      value: bookings,
+    }));
+    const revenueAnalytics = daySeries.map(({ label, revenue }) => ({
+      label,
+      value: revenue,
+    }));
 
     const activities = [
       ...recentUsers.map((user) => ({
@@ -695,13 +806,18 @@ export class UsersService {
         description: `Booking ID: ${booking.id.slice(0, 8).toUpperCase()} (Amount: $${convertToUSD(Number(booking.totalPrice), booking.transport.currency).toFixed(2)})`,
         time: booking.createdAt,
       })),
-    ].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 5);
+    ]
+      .sort((a, b) => b.time.getTime() - a.time.getTime())
+      .slice(0, 5);
 
     const recentBookingsPayload = recentBookings.map((booking) => ({
       id: booking.id,
       createdAt: booking.createdAt,
       seatsBooked: booking.seatsBooked,
-      totalPrice: convertToUSD(Number(booking.totalPrice), booking.transport.currency),
+      totalPrice: convertToUSD(
+        Number(booking.totalPrice),
+        booking.transport.currency,
+      ),
       status: booking.status,
       paymentStatus: booking.paymentStatus,
       traveler: booking.traveler,
@@ -712,7 +828,8 @@ export class UsersService {
         departureDateTime: booking.transport.departureDateTime,
         currency: 'USD',
         transporterName:
-          booking.transport.transporter.profile?.companyName || booking.transport.transporter.name,
+          booking.transport.transporter.profile?.companyName ||
+          booking.transport.transporter.name,
       },
     }));
 
@@ -738,12 +855,19 @@ export class UsersService {
       this.prisma.user.findMany({ take: 30, orderBy: { createdAt: 'desc' } }),
       this.prisma.booking.findMany({
         take: 30,
-        include: { traveler: { select: { name: true, email: true } }, transport: { select: { departureCity: true, destinationCity: true } } },
+        include: {
+          traveler: { select: { name: true, email: true } },
+          transport: { select: { departureCity: true, destinationCity: true } },
+        },
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.transport.findMany({
         take: 30,
-        include: { transporter: { select: { name: true, profile: { select: { companyName: true } } } } },
+        include: {
+          transporter: {
+            select: { name: true, profile: { select: { companyName: true } } },
+          },
+        },
         orderBy: { createdAt: 'desc' },
       }),
     ]);
@@ -754,7 +878,10 @@ export class UsersService {
       logs.push({
         id: `log-usr-${u.id.substring(0, 8)}`,
         user: u.name || u.email,
-        action: u.accountType === 'TRANSPORTER' ? 'Transporter Account Registered' : 'Traveler Account Registered',
+        action:
+          u.accountType === 'TRANSPORTER'
+            ? 'Transporter Account Registered'
+            : 'Traveler Account Registered',
         module: 'Users',
         timestamp: u.createdAt,
         ipAddress: `192.168.1.${10 + (index % 50)}`,
@@ -797,7 +924,10 @@ export class UsersService {
     transports.forEach((t, index) => {
       logs.push({
         id: `log-rte-${t.id.substring(0, 8)}`,
-        user: t.transporter?.profile?.companyName || t.transporter?.name || 'Transporter',
+        user:
+          t.transporter?.profile?.companyName ||
+          t.transporter?.name ||
+          'Transporter',
         action: `Published route departure: ${t.departureCity} → ${t.destinationCity} (Capacity: ${t.availableSeats} seats)`,
         module: 'Routes',
         timestamp: t.createdAt,
@@ -805,6 +935,11 @@ export class UsersService {
       });
     });
 
-    return logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 100);
+    return logs
+      .sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      )
+      .slice(0, 100);
   }
 }

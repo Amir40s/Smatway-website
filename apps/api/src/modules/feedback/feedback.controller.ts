@@ -1,4 +1,12 @@
-import { Body, Controller, ForbiddenException, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { FeedbackService } from './feedback.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -18,7 +26,12 @@ export class FeedbackController {
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@CurrentUser() user: User, @Body() dto: CreateSiteFeedbackDto) {
-    return this.feedbackService.create(user.id, dto.rating, dto.comment, dto.bookingId);
+    return this.feedbackService.create(
+      user.id,
+      dto.rating,
+      dto.comment,
+      dto.bookingId,
+    );
   }
 
   @Get('mine')

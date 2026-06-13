@@ -1,6 +1,13 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { CreateAnnouncementDto, CreateAdminAnnouncementDto } from './dto/create-announcement.dto';
+import {
+  CreateAnnouncementDto,
+  CreateAdminAnnouncementDto,
+} from './dto/create-announcement.dto';
 
 @Injectable()
 export class AnnouncementService {
@@ -59,8 +66,12 @@ export class AnnouncementService {
       },
     });
 
-    const transporterIds = Array.from(new Set(bookings.map((b) => b.transport.transporterId)));
-    const transportIds = Array.from(new Set(bookings.map((b) => b.transportId)));
+    const transporterIds = Array.from(
+      new Set(bookings.map((b) => b.transport.transporterId)),
+    );
+    const transportIds = Array.from(
+      new Set(bookings.map((b) => b.transportId)),
+    );
 
     // 2. Query announcements: pulls relevant admin system-wide or targeted announcements alongside regular transporter ones
     const announcements = await this.prisma.announcement.findMany({
@@ -95,7 +106,7 @@ export class AnnouncementService {
             id: true,
             name: true,
             avatarUrl: true,
-            profile: { select: { companyName: true } }
+            profile: { select: { companyName: true } },
           },
         },
         transport: true,
@@ -107,12 +118,14 @@ export class AnnouncementService {
 
     return announcements.map((ann: any) => ({
       ...ann,
-      transporter: ann.transporter ? {
-        ...ann.transporter,
-        name: ann.transporter.profile?.companyName || ann.transporter.name,
-      } : {
-        name: 'SmatWay Administrator',
-      },
+      transporter: ann.transporter
+        ? {
+            ...ann.transporter,
+            name: ann.transporter.profile?.companyName || ann.transporter.name,
+          }
+        : {
+            name: 'SmatWay Administrator',
+          },
     }));
   }
 
@@ -173,7 +186,8 @@ export class AnnouncementService {
     });
 
     return announcements.map((ann: any) => {
-      const transporterName = ann.transporter?.profile?.companyName || ann.transporter?.name || null;
+      const transporterName =
+        ann.transporter?.profile?.companyName || ann.transporter?.name || null;
       const fleet = ann.transport?.vehicle
         ? `${ann.transport.vehicle.name} (${ann.transport.vehicle.model}) [${ann.transport.vehicle.plateNumber}]`
         : null;

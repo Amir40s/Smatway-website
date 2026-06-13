@@ -10,12 +10,18 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Get('booking/:bookingId')
-  async getChatByBooking(@Param('bookingId') bookingId: string, @CurrentUser() user: User) {
+  async getChatByBooking(
+    @Param('bookingId') bookingId: string,
+    @CurrentUser() user: User,
+  ) {
     return this.chatService.getChatByBooking(bookingId, user.id);
   }
 
   @Get(':chatId/messages')
-  async getMessages(@Param('chatId') chatId: string, @CurrentUser() user: User) {
+  async getMessages(
+    @Param('chatId') chatId: string,
+    @CurrentUser() user: User,
+  ) {
     const messages = await this.chatService.getMessages(chatId, user.id);
     return messages.reverse();
   }
@@ -30,7 +36,10 @@ export class ChatController {
   }
 
   @Post('booking/:bookingId')
-  async initChat(@Param('bookingId') bookingId: string, @CurrentUser() user: User) {
+  async initChat(
+    @Param('bookingId') bookingId: string,
+    @CurrentUser() user: User,
+  ) {
     return this.chatService.getOrCreateChat(bookingId, user.id);
   }
 }

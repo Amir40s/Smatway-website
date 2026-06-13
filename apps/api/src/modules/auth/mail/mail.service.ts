@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import * as QRCode from 'qrcode';
 import { ApiLocale, translateApiText } from '../../../common/i18n';
 
 @Injectable()
@@ -17,7 +18,8 @@ export class MailService {
 
     this.smtpConfigured = smtpUser.length > 0 && smtpPass.length > 0;
     this.sendingEnabled = /^(true|1)$/i.test(process.env.OTP_SEND_EMAIL ?? '');
-    this.from = process.env.MAIL_FROM?.trim() || 'SmatWay <noreply@smatway.com>';
+    this.from =
+      process.env.MAIL_FROM?.trim() || 'SmatWay <noreply@smatway.com>';
 
     if (!this.sendingEnabled) {
       this.logger.warn(
@@ -57,11 +59,16 @@ export class MailService {
     });
   }
 
-  private getTransporterAndFrom(toEmail: string): { transporter: nodemailer.Transporter; from: string } {
+  private getTransporterAndFrom(toEmail: string): {
+    transporter: nodemailer.Transporter;
+    from: string;
+  } {
     // Consumer email domains (gmail, outlook, hotmail) → use official noreply@smatway.com.
     // Corporate/business email domains → use Gmail SMTP fallback, as some business
     // mail servers restrict or reject emails from noreply@smatway.com.
-    const isConsumerDomain = /@(gmail\.com|outlook\.com|hotmail\.com)$/i.test(toEmail.trim());
+    const isConsumerDomain = /@(gmail\.com|outlook\.com|hotmail\.com)$/i.test(
+      toEmail.trim(),
+    );
     if (!isConsumerDomain) {
       return {
         transporter: this.gmailTransporter,
@@ -74,16 +81,24 @@ export class MailService {
     };
   }
 
-  async sendPasswordReset(email: string, resetUrl: string, locale: ApiLocale = 'en'): Promise<void> {
+  async sendPasswordReset(
+    email: string,
+    resetUrl: string,
+    locale: ApiLocale = 'en',
+  ): Promise<void> {
     if (!this.sendingEnabled) {
-      this.logger.warn(`Password reset email to ${email} skipped — sending disabled.`);
+      this.logger.warn(
+        `Password reset email to ${email} skipped — sending disabled.`,
+      );
       return;
     }
 
     const { transporter, from } = this.getTransporterAndFrom(email);
-    
+
     if (transporter === this.transporter && !this.smtpConfigured) {
-      this.logger.warn(`Password reset email to ${email} skipped — SMTP not configured.`);
+      this.logger.warn(
+        `Password reset email to ${email} skipped — SMTP not configured.`,
+      );
       return;
     }
 
@@ -106,7 +121,9 @@ export class MailService {
           ${resetUrl}
           
           ${t('If you did not request this, ignore this email — your password will not change.')}
-        `.trim().replace(/^[ \t]+/gm, ''),
+        `
+          .trim()
+          .replace(/^[ \t]+/gm, ''),
       });
       this.logger.log(`Password reset email sent to ${email}`);
     } catch (error) {
@@ -114,21 +131,32 @@ export class MailService {
     }
   }
 
-  async sendVerificationOtp(email: string, code: string, name?: string | null, locale: ApiLocale = 'en'): Promise<void> {
+  async sendVerificationOtp(
+    email: string,
+    code: string,
+    name?: string | null,
+    locale: ApiLocale = 'en',
+  ): Promise<void> {
     if (!this.sendingEnabled) {
-      this.logger.log(`OTP email for ${email} skipped (OTP_SEND_EMAIL=false). Code: ${code}`);
+      this.logger.log(
+        `OTP email for ${email} skipped (OTP_SEND_EMAIL=false). Code: ${code}`,
+      );
       return;
     }
-    
+
     const { transporter, from } = this.getTransporterAndFrom(email);
 
     if (transporter === this.transporter && !this.smtpConfigured) {
-      this.logger.warn(`Skipping OTP email to ${email} — SMTP_USER/SMTP_PASS not configured.`);
+      this.logger.warn(
+        `Skipping OTP email to ${email} — SMTP_USER/SMTP_PASS not configured.`,
+      );
       return;
     }
 
     const t = (text: string) => translateApiText(text, locale);
-    const greeting = name ? `${t('Hi')} ${name.split(' ')[0]},` : t('Welcome to SmatWay,');
+    const greeting = name
+      ? `${t('Hi')} ${name.split(' ')[0]},`
+      : t('Welcome to SmatWay,');
 
     try {
       await transporter.sendMail({
@@ -165,7 +193,9 @@ export class MailService {
           ${t('If you did not sign up for SmatWay, ignore this email — no account will be created without this code.')}
           
           ${t('SmatWay — travel the way it should be.')}
-        `.trim().replace(/^[ \t]+/gm, ''),
+        `
+          .trim()
+          .replace(/^[ \t]+/gm, ''),
       });
       this.logger.log(`Sent OTP email to ${email}`);
     } catch (error) {
@@ -177,12 +207,14 @@ export class MailService {
   async sendJourneyFeedbackEmail(userEmail: string, data: any): Promise<void> {
     const targetEmail = 'tellus@smatway.com';
     const { transporter, from } = this.getTransporterAndFrom(targetEmail);
-    
+
     if (transporter === this.transporter && !this.smtpConfigured) {
-      this.logger.warn(`Skipping Journey Feedback email from ${userEmail} — SMTP not configured.`);
+      this.logger.warn(
+        `Skipping Journey Feedback email from ${userEmail} — SMTP not configured.`,
+      );
       return;
     }
-    
+
     try {
       await transporter.sendMail({
         from: from,
@@ -227,26 +259,51 @@ export class MailService {
           ${data.driverCollectedCash || 'N/A'}
           10) Seat comfort and overload details:
           ${data.seatComfortAndOverload || 'N/A'}
-        `.trim().replace(/^[ \t]+/gm, ''),
+        `
+          .trim()
+          .replace(/^[ \t]+/gm, ''),
       });
       this.logger.log(`Journey Feedback email sent from ${userEmail}`);
     } catch (error) {
-      this.logger.error(`Failed to send journey feedback email from ${userEmail}`, error);
+      this.logger.error(
+        `Failed to send journey feedback email from ${userEmail}`,
+        error,
+      );
       throw error;
     }
   }
 
-  async sendBookingTicketEmail(userEmail: string, bookingDetails: any, locale: ApiLocale = 'en'): Promise<void> {
+  async sendBookingTicketEmail(
+    userEmail: string,
+    bookingDetails: any,
+    locale: ApiLocale = 'en',
+  ): Promise<void> {
     const { transporter, from } = this.getTransporterAndFrom(userEmail);
     const t = (text: string) => translateApiText(text, locale);
-    
+
     if (!this.smtpConfigured) {
-      this.logger.warn(`Skipping ticket email to ${userEmail} — SMTP not configured.`);
+      this.logger.warn(
+        `Skipping ticket email to ${userEmail} — SMTP not configured.`,
+      );
       return;
     }
 
+    let qrBuffer: Buffer | undefined;
+    try {
+      qrBuffer = await QRCode.toBuffer(bookingDetails.bookingNumber, {
+        margin: 2,
+        width: 220,
+      });
+    } catch (qrErr) {
+      this.logger.error(
+        `Failed to generate QR code for booking ${bookingDetails.bookingNumber}`,
+        qrErr,
+      );
+    }
+
     const qrData = encodeURIComponent(bookingDetails.bookingNumber);
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${qrData}`;
+    const qrFallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${qrData}`;
+    const qrSrc = qrBuffer ? 'cid:qrcode' : qrFallbackUrl;
 
     try {
       await transporter.sendMail({
@@ -264,7 +321,7 @@ export class MailService {
             <div style="background:#f0fdf4;border:2px solid #6ee7b7;border-radius:16px;padding:24px;text-align:center;margin-bottom:28px;">
               <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#065f46;margin:0 0 16px 0;">📱 ${t('Driver Scan Code')}</p>
               <img
-                src="${qrUrl}"
+                src="${qrSrc}"
                 alt="${t('Scan code for driver')}"
                 width="220"
                 height="220"
@@ -314,9 +371,20 @@ export class MailService {
           ${t('Seats')}: ${bookingDetails.seats}
           ${t('Total Price')}: ${bookingDetails.price}
           ${t('Transporter')}: ${bookingDetails.transporterName}
-          ${t('Driver Scan Code (QR)')}: ${qrUrl}
+          ${t('Driver Scan Code (QR)')}: ${qrFallbackUrl}
           ${t('Thank you for booking with SmatWay!')}
-        `.trim().replace(/^[ \t]+/gm, ''),
+        `
+          .trim()
+          .replace(/^[ \t]+/gm, ''),
+        attachments: qrBuffer
+          ? [
+              {
+                filename: 'qrcode.png',
+                content: qrBuffer,
+                cid: 'qrcode',
+              },
+            ]
+          : [],
       });
       this.logger.log(`Ticket email sent to ${userEmail}`);
     } catch (error) {
@@ -325,15 +393,21 @@ export class MailService {
     }
   }
 
-  async sendSiteFeedbackEmail(userEmail: string, rating: number, comment: string): Promise<void> {
+  async sendSiteFeedbackEmail(
+    userEmail: string,
+    rating: number,
+    comment: string,
+  ): Promise<void> {
     const targetEmail = 'tellus@smatway.com';
     const { transporter, from } = this.getTransporterAndFrom(targetEmail);
-    
+
     if (transporter === this.transporter && !this.smtpConfigured) {
-      this.logger.warn(`Skipping Site Feedback email from ${userEmail} — SMTP not configured.`);
+      this.logger.warn(
+        `Skipping Site Feedback email from ${userEmail} — SMTP not configured.`,
+      );
       return;
     }
-    
+
     try {
       await transporter.sendMail({
         from: from,
@@ -354,11 +428,16 @@ export class MailService {
           Rating: ${rating} / 5
           Comment:
           ${comment}
-        `.trim().replace(/^[ \t]+/gm, ''),
+        `
+          .trim()
+          .replace(/^[ \t]+/gm, ''),
       });
       this.logger.log(`Site Feedback email sent from ${userEmail}`);
     } catch (error) {
-      this.logger.error(`Failed to send site feedback email from ${userEmail}`, error);
+      this.logger.error(
+        `Failed to send site feedback email from ${userEmail}`,
+        error,
+      );
       throw error;
     }
   }

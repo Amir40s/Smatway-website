@@ -11,7 +11,10 @@ import { Response } from 'express';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../../common/services/storage.service';
 import { generateRawToken, hashToken } from '../../common/utils/token.util';
-import { clearAuthCookies, setAuthCookies } from '../../common/utils/cookie.util';
+import {
+  clearAuthCookies,
+  setAuthCookies,
+} from '../../common/utils/cookie.util';
 import { MailService } from './mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -32,16 +35,24 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
     private readonly storageService: StorageService,
-  ) { }
+  ) {}
 
-  async validateLocalUser(email: string, password: string): Promise<User | null> {
+  async validateLocalUser(
+    email: string,
+    password: string,
+  ): Promise<User | null> {
     const normalized = email?.trim().toLowerCase();
-    const user = await this.prisma.user.findUnique({ where: { email: normalized } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalized },
+    });
     if (!user?.passwordHash) return null;
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) return null;
     if (user.isSuspended) {
-      throw new UnauthorizedException(user.suspensionReason || 'This account has been suspended by the administrator.');
+      throw new UnauthorizedException(
+        user.suspensionReason ||
+          'This account has been suspended by the administrator.',
+      );
     }
     if (!user.emailVerified) {
       throw new UnauthorizedException('EMAIL_NOT_VERIFIED');
@@ -49,7 +60,10 @@ export class AuthService {
     return user;
   }
 
-  async register(dto: RegisterDto, locale: ApiLocale = 'en'): Promise<{ email: string; pendingVerification: true }> {
+  async register(
+    dto: RegisterDto,
+    locale: ApiLocale = 'en',
+  ): Promise<{ email: string; pendingVerification: true }> {
     if (dto.agreedToTerms !== true) {
       throw new BadRequestException('You must accept the terms and conditions');
     }
@@ -59,30 +73,49 @@ export class AuthService {
     const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
 
     if (dto.name && !nameRegex.test(dto.name.trim())) {
-      throw new BadRequestException('Please enter a valid name (letters and spaces only, no digits)');
+      throw new BadRequestException(
+        'Please enter a valid name (letters and spaces only, no digits)',
+      );
     }
 
     if (dto.phoneNumber && !phoneRegex.test(dto.phoneNumber.trim())) {
       throw new BadRequestException('Please enter a valid phone number');
     }
 
-    if (dto.emergencyContactName && !nameRegex.test(dto.emergencyContactName.trim())) {
-      throw new BadRequestException('Emergency contact name must be a valid name (letters and spaces only, no digits)');
+    if (
+      dto.emergencyContactName &&
+      !nameRegex.test(dto.emergencyContactName.trim())
+    ) {
+      throw new BadRequestException(
+        'Emergency contact name must be a valid name (letters and spaces only, no digits)',
+      );
     }
 
-    if (dto.emergencyContactPhone && !phoneRegex.test(dto.emergencyContactPhone.trim())) {
-      throw new BadRequestException('Emergency contact phone must be a valid phone number');
+    if (
+      dto.emergencyContactPhone &&
+      !phoneRegex.test(dto.emergencyContactPhone.trim())
+    ) {
+      throw new BadRequestException(
+        'Emergency contact phone must be a valid phone number',
+      );
     }
 
-    if (dto.bankAccountHolderName && !nameRegex.test(dto.bankAccountHolderName.trim())) {
-      throw new BadRequestException('Bank account holder name must be a valid name');
+    if (
+      dto.bankAccountHolderName &&
+      !nameRegex.test(dto.bankAccountHolderName.trim())
+    ) {
+      throw new BadRequestException(
+        'Bank account holder name must be a valid name',
+      );
     }
 
     const normalizedEmail = dto.email?.trim().toLowerCase();
 
-    const existing = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
+    const existing = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
     if (existing) {
-       if (!existing.emailVerified) {
+      if (!existing.emailVerified) {
         const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
         const updated = await this.prisma.user.update({
           where: { id: existing.id },
@@ -91,12 +124,15 @@ export class AuthService {
             name: dto.name ?? existing.name,
             phoneNumber: dto.phoneNumber ?? existing.phoneNumber,
             country: dto.country ?? existing.country,
-            preferredCurrency: dto.preferredCurrency ?? existing.preferredCurrency,
+            preferredCurrency:
+              dto.preferredCurrency ?? existing.preferredCurrency,
             passwordHash,
-            accountType: this.normalizeAccountType(dto.accountType) ?? existing.accountType,
+            accountType:
+              this.normalizeAccountType(dto.accountType) ??
+              existing.accountType,
           },
         });
-         await this.prisma.userProfile.upsert({
+        await this.prisma.userProfile.upsert({
           where: { userId: existing.id },
           update: {
             companyName: dto.businessName ?? undefined,
@@ -132,7 +168,7 @@ export class AuthService {
         preferredCurrency: dto.preferredCurrency,
         passwordHash,
         accountType: this.normalizeAccountType(dto.accountType),
-         profile: {
+        profile: {
           create: {
             companyName: dto.businessName ?? undefined,
             emergencyContactName: dto.emergencyContactName ?? undefined,
@@ -149,7 +185,10 @@ export class AuthService {
     return { email: user.email, pendingVerification: true };
   }
 
-  async verifyEmail(dto: VerifyEmailDto, res: Response): Promise<{ user: Omit<User, 'passwordHash'>; accessToken: string }> {
+  async verifyEmail(
+    dto: VerifyEmailDto,
+    res: Response,
+  ): Promise<{ user: Omit<User, 'passwordHash'>; accessToken: string }> {
     const email = dto.email?.trim().toLowerCase();
     const otp = dto.otp?.trim();
     if (!email || !otp || !/^\d{6}$/.test(otp)) {
@@ -158,8 +197,9 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new BadRequestException('Invalid verification code');
-    if (user.emailVerified) throw new BadRequestException('Email already verified');
-      const sendingEnabled = /^(true|1)$/i.test(process.env.OTP_SEND_EMAIL ?? '');
+    if (user.emailVerified)
+      throw new BadRequestException('Email already verified');
+    const sendingEnabled = /^(true|1)$/i.test(process.env.OTP_SEND_EMAIL ?? '');
     const isDevBypass = !sendingEnabled && otp === '123456';
 
     if (!isDevBypass) {
@@ -168,9 +208,14 @@ export class AuthService {
         orderBy: { createdAt: 'desc' },
       });
 
-      if (!record) throw new BadRequestException('No active verification code — request a new one');
-      if (record.expiresAt < new Date()) throw new BadRequestException('Verification code has expired');
-      if (record.attempts >= OTP_MAX_ATTEMPTS) throw new BadRequestException('Too many attempts — request a new code');
+      if (!record)
+        throw new BadRequestException(
+          'No active verification code — request a new one',
+        );
+      if (record.expiresAt < new Date())
+        throw new BadRequestException('Verification code has expired');
+      if (record.attempts >= OTP_MAX_ATTEMPTS)
+        throw new BadRequestException('Too many attempts — request a new code');
 
       const match = await bcrypt.compare(otp, record.codeHash);
       if (!match) {
@@ -192,35 +237,42 @@ export class AuthService {
         where: { id: user.id },
         data: { emailVerified: true, emailVerifiedAt: new Date() },
       }),
-       this.prisma.emailVerificationOtp.updateMany({
+      this.prisma.emailVerificationOtp.updateMany({
         where: { userId: user.id, used: false },
         data: { used: true },
       }),
     ]);
 
     if (isDevBypass) {
-        console.log(`[OTP] dev-bypass used for ${email} (OTP_SEND_EMAIL=false)`);
+      console.log(`[OTP] dev-bypass used for ${email} (OTP_SEND_EMAIL=false)`);
     }
 
     const accessToken = await this.issueTokens(verifiedUser, res);
     return { user: this.safeUser(verifiedUser), accessToken };
   }
 
-  async resendVerificationOtp(email: string, locale: ApiLocale = 'en'): Promise<{ ok: true }> {
+  async resendVerificationOtp(
+    email: string,
+    locale: ApiLocale = 'en',
+  ): Promise<{ ok: true }> {
     const normalized = email?.trim().toLowerCase();
     if (!normalized) throw new BadRequestException('Email is required');
 
-    const user = await this.prisma.user.findUnique({ where: { email: normalized } });
-     if (!user || user.emailVerified) return { ok: true };
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalized },
+    });
+    if (!user || user.emailVerified) return { ok: true };
 
-     const latest = await this.prisma.emailVerificationOtp.findFirst({
+    const latest = await this.prisma.emailVerificationOtp.findFirst({
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
     });
     if (latest) {
       const ageSec = (Date.now() - latest.createdAt.getTime()) / 1000;
       if (ageSec < OTP_RESEND_COOLDOWN_SECONDS) {
-        throw new BadRequestException(`Please wait ${Math.ceil(OTP_RESEND_COOLDOWN_SECONDS - ageSec)}s before requesting another code`);
+        throw new BadRequestException(
+          `Please wait ${Math.ceil(OTP_RESEND_COOLDOWN_SECONDS - ageSec)}s before requesting another code`,
+        );
       }
     }
 
@@ -228,7 +280,10 @@ export class AuthService {
     return { ok: true };
   }
 
-  private async issueVerificationOtp(user: User, locale: ApiLocale = 'en'): Promise<void> {
+  private async issueVerificationOtp(
+    user: User,
+    locale: ApiLocale = 'en',
+  ): Promise<void> {
     // Invalidate any existing open codes
     await this.prisma.emailVerificationOtp.updateMany({
       where: { userId: user.id, used: false },
@@ -249,14 +304,18 @@ export class AuthService {
     const sendingEnabled = /^(true|1)$/i.test(process.env.OTP_SEND_EMAIL ?? '');
     if (!sendingEnabled || process.env.NODE_ENV !== 'production') {
       // eslint-disable-next-line no-console
-      console.log(`\n[OTP] ${user.email} → ${code} (expires in ${OTP_TTL_MINUTES}m)\n`);
+      console.log(
+        `\n[OTP] ${user.email} → ${code} (expires in ${OTP_TTL_MINUTES}m)\n`,
+      );
     }
 
     // Send the email in the background so a slow SMTP connection doesn't block the API response.
     // The user can still pick the code up from the server log or request a resend.
-    this.mailService.sendVerificationOtp(user.email, code, user.name, locale).catch(() => {
-      // Already logged inside MailService.
-    });
+    this.mailService
+      .sendVerificationOtp(user.email, code, user.name, locale)
+      .catch(() => {
+        // Already logged inside MailService.
+      });
   }
 
   async issueTokens(user: User, res: Response): Promise<string> {
@@ -267,14 +326,21 @@ export class AuthService {
 
     const rawRefresh = generateRawToken(64);
     const tokenHash = hashToken(rawRefresh);
-    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(
+      Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
+    );
 
-    await this.prisma.refreshToken.create({ data: { tokenHash, userId: user.id, expiresAt } });
+    await this.prisma.refreshToken.create({
+      data: { tokenHash, userId: user.id, expiresAt },
+    });
     setAuthCookies(res, accessToken, rawRefresh);
     return accessToken;
   }
 
-  async refreshTokens(rawRefreshToken: string | undefined, res: Response): Promise<void> {
+  async refreshTokens(
+    rawRefreshToken: string | undefined,
+    res: Response,
+  ): Promise<void> {
     if (!rawRefreshToken) throw new UnauthorizedException('No refresh token');
 
     const tokenHash = hashToken(rawRefreshToken);
@@ -285,47 +351,71 @@ export class AuthService {
 
     if (!stored || stored.expiresAt < new Date()) {
       if (stored) {
-        await this.prisma.refreshToken.deleteMany({ where: { userId: stored.userId } });
+        await this.prisma.refreshToken.deleteMany({
+          where: { userId: stored.userId },
+        });
       }
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
     if (stored.user.isSuspended) {
-      throw new UnauthorizedException(stored.user.suspensionReason || 'This account has been suspended.');
+      throw new UnauthorizedException(
+        stored.user.suspensionReason || 'This account has been suspended.',
+      );
     }
 
     await this.prisma.refreshToken.delete({ where: { tokenHash } });
     await this.issueTokens(stored.user, res);
   }
 
-  async logout(userId: string, rawRefreshToken: string | undefined, res: Response): Promise<void> {
+  async logout(
+    userId: string,
+    rawRefreshToken: string | undefined,
+    res: Response,
+  ): Promise<void> {
     if (rawRefreshToken) {
       const tokenHash = hashToken(rawRefreshToken);
-      await this.prisma.refreshToken.deleteMany({ where: { tokenHash, userId } });
+      await this.prisma.refreshToken.deleteMany({
+        where: { tokenHash, userId },
+      });
     }
     clearAuthCookies(res);
   }
 
-  async forgotPassword(email: string, origin?: string, locale: ApiLocale = 'en'): Promise<void> {
+  async forgotPassword(
+    email: string,
+    origin?: string,
+    locale: ApiLocale = 'en',
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) return;
 
     const rawToken = generateRawToken(32);
     const tokenHash = hashToken(rawToken);
-    const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_HOURS * 60 * 60 * 1000);
+    const expiresAt = new Date(
+      Date.now() + RESET_TOKEN_TTL_HOURS * 60 * 60 * 1000,
+    );
 
     await this.prisma.passwordResetToken.updateMany({
       where: { userId: user.id, used: false },
       data: { used: true },
     });
 
-    await this.prisma.passwordResetToken.create({ data: { tokenHash, userId: user.id, expiresAt } });
+    await this.prisma.passwordResetToken.create({
+      data: { tokenHash, userId: user.id, expiresAt },
+    });
 
-    let baseUrl = (process.env.WEB_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+    let baseUrl = (process.env.WEB_URL ?? 'http://localhost:3000').replace(
+      /\/$/,
+      '',
+    );
     if (origin) {
       const cleanOrigin = origin.replace(/\/$/, '');
       const allowedUrls = (process.env.ALLOWED_REDIRECT_URLS ?? '').split(',');
-      const isAllowed = allowedUrls.some(u => cleanOrigin.startsWith(u.trim().replace(/\/$/, ''))) ||
+      const isAllowed =
+        allowedUrls.some((u) =>
+          cleanOrigin.startsWith(u.trim().replace(/\/$/, '')),
+        ) ||
         cleanOrigin.includes('localhost') ||
         cleanOrigin.includes('smatway.com');
       if (isAllowed) {
@@ -346,7 +436,9 @@ export class AuthService {
     }
 
     const tokenHash = hashToken(dto.token);
-    const record = await this.prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+    const record = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+    });
 
     if (!record || record.used || record.expiresAt < new Date()) {
       throw new BadRequestException('Invalid or expired reset token');
@@ -355,8 +447,14 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
     await this.prisma.$transaction([
-      this.prisma.passwordResetToken.update({ where: { tokenHash }, data: { used: true } }),
-      this.prisma.user.update({ where: { id: record.userId }, data: { passwordHash } }),
+      this.prisma.passwordResetToken.update({
+        where: { tokenHash },
+        data: { used: true },
+      }),
+      this.prisma.user.update({
+        where: { id: record.userId },
+        data: { passwordHash },
+      }),
       this.prisma.refreshToken.deleteMany({ where: { userId: record.userId } }),
     ]);
 
@@ -396,7 +494,9 @@ export class AuthService {
     return safe;
   }
 
-  async safeUserWithPresignedUrl(user: User): Promise<Omit<User, 'passwordHash'> & { avatarUrl: string | null }> {
+  async safeUserWithPresignedUrl(
+    user: User,
+  ): Promise<Omit<User, 'passwordHash'> & { avatarUrl: string | null }> {
     const { passwordHash: _ph, ...safe } = user;
 
     const avatarUrl = await this.storageService.resolveImageUrl(user.avatarUrl);

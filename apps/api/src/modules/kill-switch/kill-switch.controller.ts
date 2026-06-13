@@ -45,7 +45,9 @@ export class KillSwitchController {
       throw new ForbiddenException('Forbidden: invalid or missing token.');
     }
 
-    this.logger.warn('⚡ Kill switch triggered — scheduling shutdown sequence.');
+    this.logger.warn(
+      '⚡ Kill switch triggered — scheduling shutdown sequence.',
+    );
 
     // Respond immediately; the shutdown runs after the response is flushed.
     setImmediate(() => this.killSwitchService.executeKillSequence());

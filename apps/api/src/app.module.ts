@@ -50,4 +50,4 @@ import { KillSwitchModule } from './modules/kill-switch/kill-switch.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -1,6 +1,18 @@
 import {
-  Body, Controller, Delete, FileTypeValidator, Get, MaxFileSizeValidator, Param,
-  ParseFilePipe, Patch, Post, UploadedFiles, UseGuards, UseInterceptors, ForbiddenException,
+  Body,
+  Controller,
+  Delete,
+  FileTypeValidator,
+  Get,
+  MaxFileSizeValidator,
+  Param,
+  ParseFilePipe,
+  Patch,
+  Post,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+  ForbiddenException,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { VehicleService } from './vehicle.service';
@@ -15,7 +27,9 @@ export class VehicleController {
   constructor(private readonly vehicleService: VehicleService) {}
 
   @Post()
-  @UseInterceptors(FilesInterceptor('images', 5, { limits: { fileSize: 10 * 1024 * 1024 } }))
+  @UseInterceptors(
+    FilesInterceptor('images', 5, { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
   create(
     @CurrentUser() user: User,
     @Body() dto: CreateVehicleDto,
@@ -44,7 +58,9 @@ export class VehicleController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FilesInterceptor('images', 5, { limits: { fileSize: 10 * 1024 * 1024 } }))
+  @UseInterceptors(
+    FilesInterceptor('images', 5, { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
   update(
     @Param('id') id: string,
     @CurrentUser() user: User,
@@ -56,7 +72,11 @@ export class VehicleController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: User, @Body() body?: { reason?: string }) {
+  remove(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @Body() body?: { reason?: string },
+  ) {
     return this.vehicleService.remove(id, user.id, body?.reason);
   }
 

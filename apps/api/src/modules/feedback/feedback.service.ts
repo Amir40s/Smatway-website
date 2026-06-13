@@ -1,4 +1,8 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../../common/services/storage.service';
 import { MailService } from '../auth/mail/mail.service';
@@ -11,7 +15,12 @@ export class FeedbackService {
     private readonly mailService: MailService,
   ) {}
 
-  async create(userId: string, rating: number, comment: string, bookingId?: string) {
+  async create(
+    userId: string,
+    rating: number,
+    comment: string,
+    bookingId?: string,
+  ) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.accountType !== 'TRAVELER') {
       throw new ForbiddenException('Only travelers can give feedback');
@@ -31,12 +40,21 @@ export class FeedbackService {
     }
     const siteFeedback = await this.prisma.siteFeedback.create({
       data: { userId, rating, comment: trimmed, bookingId: bookingId || null },
-      select: { id: true, rating: true, comment: true, createdAt: true, bookingId: true },
+      select: {
+        id: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+        bookingId: true,
+      },
     });
 
     if (user.email) {
-      await this.mailService.sendSiteFeedbackEmail(user.email, rating, trimmed)
-        .catch(err => console.error('Failed to send site feedback email', err));
+      await this.mailService
+        .sendSiteFeedbackEmail(user.email, rating, trimmed)
+        .catch((err) =>
+          console.error('Failed to send site feedback email', err),
+        );
     }
 
     return siteFeedback;
@@ -68,7 +86,9 @@ export class FeedbackService {
       items.map(async (f) => {
         const rawAvatar = f.user.profileImageUrl || f.user.avatarUrl || null;
         const avatarUrl = rawAvatar
-          ? await this.storageService.resolveImageUrl(rawAvatar).catch(() => null)
+          ? await this.storageService
+              .resolveImageUrl(rawAvatar)
+              .catch(() => null)
           : null;
         return {
           id: f.id,
@@ -114,7 +134,9 @@ export class FeedbackService {
       const idx = Math.min(Math.max(r.rating, 1), 5) - 1;
       buckets[idx as 0 | 1 | 2 | 3 | 4] += 1;
     }
-    const distribution = buckets.map((n) => Math.round((n / count) * 1000) / 10);
+    const distribution = buckets.map(
+      (n) => Math.round((n / count) * 1000) / 10,
+    );
     const fourPlus = buckets[3] + buckets[4];
     const recommendRate = Math.round((fourPlus / count) * 1000) / 10;
     return { count, avgRating, distribution, recommendRate };
@@ -153,14 +175,22 @@ export class FeedbackService {
       items.map(async (f) => {
         const rawAvatar = f.user.profileImageUrl || f.user.avatarUrl || null;
         const avatarUrl = rawAvatar
-          ? await this.storageService.resolveImageUrl(rawAvatar).catch(() => null)
+          ? await this.storageService
+              .resolveImageUrl(rawAvatar)
+              .catch(() => null)
           : null;
 
         let booking: {
           id: string;
           status: string;
           seatsBooked: number;
-          transport: { departureCity: string; destinationCity: string; departureCountry: string; destinationCountry: string; departureDateTime: Date } | null;
+          transport: {
+            departureCity: string;
+            destinationCity: string;
+            departureCountry: string;
+            destinationCountry: string;
+            departureDateTime: Date;
+          } | null;
         } | null = null;
 
         if (f.bookingId) {

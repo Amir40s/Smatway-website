@@ -1,5 +1,8 @@
 import {
-  BadRequestException, ForbiddenException, Injectable, NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../../common/services/storage.service';
@@ -20,20 +23,31 @@ export class BookingService {
   async create(travelerId: string, dto: CreateBookingDto) {
     const transport = await this.prisma.transport.findUnique({
       where: { id: dto.transportId },
-      include: { transporter: { select: { id: true, name: true, profile: { select: { companyName: true } } } } }
+      include: {
+        transporter: {
+          select: {
+            id: true,
+            name: true,
+            profile: { select: { companyName: true } },
+          },
+        },
+      },
     });
     if (!transport) throw new NotFoundException('Transport not found');
     const totalPrice = Number(transport.price) * dto.seatsBooked;
     const countryName = transport.departureCountry || 'Unknown';
     const countryMap: Record<string, string> = {
-      'nigeria': 'NG',
-      'ghana': 'GH',
-      'kenya': 'KE',
+      nigeria: 'NG',
+      ghana: 'GH',
+      kenya: 'KE',
       'south africa': 'ZA',
       'united states': 'US',
-      'united kingdom': 'UK'
+      'united kingdom': 'UK',
     };
-    const countryCode = countryMap[countryName.toLowerCase()] || countryName.substring(0, 2).toUpperCase() || 'XX';
+    const countryCode =
+      countryMap[countryName.toLowerCase()] ||
+      countryName.substring(0, 2).toUpperCase() ||
+      'XX';
     const sequence = await this.prisma.bookingSequence.upsert({
       where: { countryCode },
       update: { lastSerial: { increment: 1 } },
@@ -84,15 +98,22 @@ export class BookingService {
     });
 
     if (traveler?.email) {
-      const transporterName = transport.transporter.profile?.companyName || transport.transporter.name || 'SmatWay Transporter';
-      await this.mailService.sendBookingTicketEmail(traveler.email, {
-        bookingNumber: booking.bookingNumber,
-        route: `${transport.departureCity} → ${transport.destinationCity}`,
-        dateTime: transport.departureDateTime.toISOString(),
-        seats: dto.seatsBooked,
-        price: `${transport.currency} ${totalPrice.toFixed(2)}`,
-        transporterName,
-      }).catch(err => console.error('Failed to send booking ticket email', err));
+      const transporterName =
+        transport.transporter.profile?.companyName ||
+        transport.transporter.name ||
+        'SmatWay Transporter';
+      await this.mailService
+        .sendBookingTicketEmail(traveler.email, {
+          bookingNumber: booking.bookingNumber,
+          route: `${transport.departureCity} → ${transport.destinationCity}`,
+          dateTime: transport.departureDateTime.toISOString(),
+          seats: dto.seatsBooked,
+          price: `${transport.currency} ${totalPrice.toFixed(2)}`,
+          transporterName,
+        })
+        .catch((err) =>
+          console.error('Failed to send booking ticket email', err),
+        );
     }
 
     return booking;
@@ -105,7 +126,14 @@ export class BookingService {
         transport: {
           include: {
             vehicle: true,
-            transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } },
+            transporter: {
+              select: {
+                id: true,
+                name: true,
+                phoneNumber: true,
+                profile: { select: { companyName: true } },
+              },
+            },
             stops: { orderBy: { stopOrder: 'asc' } },
           },
         },
@@ -120,16 +148,20 @@ export class BookingService {
           ...booking.transport,
           vehicle: booking.transport.vehicle
             ? {
-              ...booking.transport.vehicle,
-              imageUrl: booking.transport.vehicle.imageUrl
-                ? await this.storageService.resolveImageUrl(booking.transport.vehicle.imageUrl)
-                : null,
-            }
+                ...booking.transport.vehicle,
+                imageUrl: booking.transport.vehicle.imageUrl
+                  ? await this.storageService.resolveImageUrl(
+                      booking.transport.vehicle.imageUrl,
+                    )
+                  : null,
+              }
             : null,
           transporter: booking.transport.transporter
             ? {
                 ...booking.transport.transporter,
-                name: booking.transport.transporter.profile?.companyName || booking.transport.transporter.name,
+                name:
+                  booking.transport.transporter.profile?.companyName ||
+                  booking.transport.transporter.name,
               }
             : null,
         },
@@ -141,32 +173,56 @@ export class BookingService {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: {
-        traveler: { select: { id: true, name: true, phoneNumber: true, email: true, avatarUrl: true } },
+        traveler: {
+          select: {
+            id: true,
+            name: true,
+            phoneNumber: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
         transport: {
-          include: { 
+          include: {
             vehicle: true,
-            transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } },
-            stops: { orderBy: { stopOrder: 'asc' } }
+            transporter: {
+              select: {
+                id: true,
+                name: true,
+                phoneNumber: true,
+                profile: { select: { companyName: true } },
+              },
+            },
+            stops: { orderBy: { stopOrder: 'asc' } },
           },
         },
       },
     });
     if (!booking) throw new NotFoundException('Booking not found');
-    if (booking.travelerId !== userId && booking.transport.transporterId !== userId)
+    if (
+      booking.travelerId !== userId &&
+      booking.transport.transporterId !== userId
+    )
       throw new ForbiddenException();
-      
+
     if (booking.transport?.transporter) {
-      booking.transport.transporter.name = booking.transport.transporter.profile?.companyName || booking.transport.transporter.name;
+      booking.transport.transporter.name =
+        booking.transport.transporter.profile?.companyName ||
+        booking.transport.transporter.name;
     }
 
     let resolvedVehicle = booking.transport.vehicle;
     if (resolvedVehicle?.imageUrl) {
-      resolvedVehicle.imageUrl = await this.storageService.resolveImageUrl(resolvedVehicle.imageUrl);
+      resolvedVehicle.imageUrl = await this.storageService.resolveImageUrl(
+        resolvedVehicle.imageUrl,
+      );
     }
-    
+
     let resolvedTraveler = booking.traveler;
     if (resolvedTraveler?.avatarUrl) {
-      resolvedTraveler.avatarUrl = await this.storageService.resolveImageUrl(resolvedTraveler.avatarUrl);
+      resolvedTraveler.avatarUrl = await this.storageService.resolveImageUrl(
+        resolvedTraveler.avatarUrl,
+      );
     }
 
     return {
@@ -175,7 +231,7 @@ export class BookingService {
       transport: {
         ...booking.transport,
         vehicle: resolvedVehicle,
-      }
+      },
     };
   }
 
@@ -185,8 +241,18 @@ export class BookingService {
         transport: { transporterId },
       },
       include: {
-        transport: { include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } } } },
-        traveler: { select: { id: true, name: true, phoneNumber: true, email: true, avatarUrl: true } },
+        transport: {
+          include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } } },
+        },
+        traveler: {
+          select: {
+            id: true,
+            name: true,
+            phoneNumber: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -198,35 +264,52 @@ export class BookingService {
           ...booking.transport,
           vehicle: booking.transport.vehicle
             ? {
-              ...booking.transport.vehicle,
-              imageUrl: booking.transport.vehicle.imageUrl
-                ? await this.storageService.resolveImageUrl(booking.transport.vehicle.imageUrl)
-                : null,
-            }
+                ...booking.transport.vehicle,
+                imageUrl: booking.transport.vehicle.imageUrl
+                  ? await this.storageService.resolveImageUrl(
+                      booking.transport.vehicle.imageUrl,
+                    )
+                  : null,
+              }
             : null,
         },
         user: booking.traveler
           ? {
-            ...booking.traveler,
-            avatarUrl: booking.traveler.avatarUrl
-              ? await this.storageService.resolveImageUrl(booking.traveler.avatarUrl)
-              : null,
-          }
+              ...booking.traveler,
+              avatarUrl: booking.traveler.avatarUrl
+                ? await this.storageService.resolveImageUrl(
+                    booking.traveler.avatarUrl,
+                  )
+                : null,
+            }
           : null,
       })),
     );
   }
 
   async transportBookings(transportId: string, transporterId: string) {
-    const transport = await this.prisma.transport.findUnique({ where: { id: transportId } });
+    const transport = await this.prisma.transport.findUnique({
+      where: { id: transportId },
+    });
     if (!transport) throw new NotFoundException('Transport not found');
-    if (transport.transporterId !== transporterId) throw new ForbiddenException();
+    if (transport.transporterId !== transporterId)
+      throw new ForbiddenException();
 
     const bookings = await this.prisma.booking.findMany({
       where: { transportId },
       include: {
-        transport: { include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } } } },
-        traveler: { select: { id: true, name: true, phoneNumber: true, email: true, avatarUrl: true } },
+        transport: {
+          include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } } },
+        },
+        traveler: {
+          select: {
+            id: true,
+            name: true,
+            phoneNumber: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -238,20 +321,24 @@ export class BookingService {
           ...booking.transport,
           vehicle: booking.transport.vehicle
             ? {
-              ...booking.transport.vehicle,
-              imageUrl: booking.transport.vehicle.imageUrl
-                ? await this.storageService.resolveImageUrl(booking.transport.vehicle.imageUrl)
-                : null,
-            }
+                ...booking.transport.vehicle,
+                imageUrl: booking.transport.vehicle.imageUrl
+                  ? await this.storageService.resolveImageUrl(
+                      booking.transport.vehicle.imageUrl,
+                    )
+                  : null,
+              }
             : null,
         },
         user: booking.traveler
           ? {
-            ...booking.traveler,
-            avatarUrl: booking.traveler.avatarUrl
-              ? await this.storageService.resolveImageUrl(booking.traveler.avatarUrl)
-              : null,
-          }
+              ...booking.traveler,
+              avatarUrl: booking.traveler.avatarUrl
+                ? await this.storageService.resolveImageUrl(
+                    booking.traveler.avatarUrl,
+                  )
+                : null,
+            }
           : null,
       })),
     );
@@ -299,11 +386,14 @@ export class BookingService {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: {
-        transport: { include: { transporter: { select: { id: true, name: true } } } },
+        transport: {
+          include: { transporter: { select: { id: true, name: true } } },
+        },
       },
     });
     if (!booking) throw new NotFoundException('Booking not found');
-    if (booking.transport.transporterId !== transporterId) throw new ForbiddenException();
+    if (booking.transport.transporterId !== transporterId)
+      throw new ForbiddenException();
     if (booking.status !== BookingStatus.PENDING)
       throw new BadRequestException('Only pending bookings can be confirmed');
 
@@ -319,17 +409,25 @@ export class BookingService {
       route: `${booking.transport.departureCity} → ${booking.transport.destinationCity}`,
     });
 
-    const traveler = await this.prisma.user.findUnique({ where: { id: booking.travelerId }, select: { email: true } });
+    const traveler = await this.prisma.user.findUnique({
+      where: { id: booking.travelerId },
+      select: { email: true },
+    });
     if (traveler?.email) {
-      const transporterName = booking.transport.transporter.name || 'SmatWay Transporter';
-      await this.mailService.sendBookingTicketEmail(traveler.email, {
-        bookingNumber: booking.bookingNumber,
-        route: `${booking.transport.departureCity} → ${booking.transport.destinationCity}`,
-        dateTime: booking.transport.departureDateTime.toISOString(),
-        seats: booking.seatsBooked,
-        price: `${booking.transport.currency} ${booking.totalPrice}`,
-        transporterName,
-      }).catch(err => console.error('Failed to send booking ticket email', err));
+      const transporterName =
+        booking.transport.transporter.name || 'SmatWay Transporter';
+      await this.mailService
+        .sendBookingTicketEmail(traveler.email, {
+          bookingNumber: booking.bookingNumber,
+          route: `${booking.transport.departureCity} → ${booking.transport.destinationCity}`,
+          dateTime: booking.transport.departureDateTime.toISOString(),
+          seats: booking.seatsBooked,
+          price: `${booking.transport.currency} ${booking.totalPrice}`,
+          transporterName,
+        })
+        .catch((err) =>
+          console.error('Failed to send booking ticket email', err),
+        );
     }
 
     return updated;
@@ -339,11 +437,14 @@ export class BookingService {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: {
-        transport: { include: { transporter: { select: { id: true, name: true } } } },
+        transport: {
+          include: { transporter: { select: { id: true, name: true } } },
+        },
       },
     });
     if (!booking) throw new NotFoundException('Booking not found');
-    if (booking.transport.transporterId !== transporterId) throw new ForbiddenException();
+    if (booking.transport.transporterId !== transporterId)
+      throw new ForbiddenException();
     if (booking.status !== BookingStatus.PENDING)
       throw new BadRequestException('Only pending bookings can be rejected');
 
@@ -372,11 +473,14 @@ export class BookingService {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: {
-        transport: { include: { transporter: { select: { id: true, name: true } } } },
+        transport: {
+          include: { transporter: { select: { id: true, name: true } } },
+        },
       },
     });
     if (!booking) throw new NotFoundException('Booking not found');
-    if (booking.transport.transporterId !== transporterId) throw new ForbiddenException();
+    if (booking.transport.transporterId !== transporterId)
+      throw new ForbiddenException();
 
     const updated = await this.prisma.booking.update({
       where: { id },
@@ -393,7 +497,11 @@ export class BookingService {
     return updated;
   }
 
-  async updatePaymentMethod(id: string, travelerId: string, paymentMethod: PaymentMethod) {
+  async updatePaymentMethod(
+    id: string,
+    travelerId: string,
+    paymentMethod: PaymentMethod,
+  ) {
     const booking = await this.prisma.booking.findUnique({ where: { id } });
     if (!booking) throw new NotFoundException('Booking not found');
     if (booking.travelerId !== travelerId) throw new ForbiddenException();
@@ -407,11 +515,25 @@ export class BookingService {
   async getAllBookings() {
     const bookings = await this.prisma.booking.findMany({
       include: {
-        traveler: { select: { id: true, name: true, email: true, phoneNumber: true, avatarUrl: true } },
+        traveler: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phoneNumber: true,
+            avatarUrl: true,
+          },
+        },
         transport: {
           include: {
             vehicle: { select: { name: true, plateNumber: true } },
-            transporter: { select: { id: true, name: true, profile: { select: { companyName: true } } } },
+            transporter: {
+              select: {
+                id: true,
+                name: true,
+                profile: { select: { companyName: true } },
+              },
+            },
           },
         },
       },
@@ -425,7 +547,9 @@ export class BookingService {
           ? {
               ...booking.traveler,
               avatarUrl: booking.traveler.avatarUrl
-                ? await this.storageService.resolveImageUrl(booking.traveler.avatarUrl)
+                ? await this.storageService.resolveImageUrl(
+                    booking.traveler.avatarUrl,
+                  )
                 : null,
             }
           : null,
@@ -433,19 +557,29 @@ export class BookingService {
     );
   }
 
-  async updateBookingAdmin(id: string, dto: { status?: BookingStatus; paymentStatus?: PaymentStatus }) {
+  async updateBookingAdmin(
+    id: string,
+    dto: { status?: BookingStatus; paymentStatus?: PaymentStatus },
+  ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: { transport: true },
     });
     if (!booking) throw new NotFoundException('Booking not found');
 
-    if (dto.status === BookingStatus.CANCELLED && booking.status !== BookingStatus.CANCELLED) {
+    if (
+      dto.status === BookingStatus.CANCELLED &&
+      booking.status !== BookingStatus.CANCELLED
+    ) {
       await this.prisma.transport.update({
         where: { id: booking.transportId },
         data: { availableSeats: { increment: booking.seatsBooked } },
       });
-    } else if (dto.status && dto.status !== BookingStatus.CANCELLED && booking.status === BookingStatus.CANCELLED) {
+    } else if (
+      dto.status &&
+      dto.status !== BookingStatus.CANCELLED &&
+      booking.status === BookingStatus.CANCELLED
+    ) {
       await this.prisma.transport.update({
         where: { id: booking.transportId },
         data: { availableSeats: { decrement: booking.seatsBooked } },

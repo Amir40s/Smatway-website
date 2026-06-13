@@ -34,24 +34,27 @@ export function getCountrySearchVariants(country?: string | null): string[] {
   if (!country) return [];
   const trimmed = country.trim();
   const normalized = trimmed.toLowerCase();
-  
-  const reverseMap = Object.entries(COUNTRY_MAP).reduce((acc, [key, val]) => {
-    acc[val.toLowerCase()] = key;
-    return acc;
-  }, {} as Record<string, string>);
+
+  const reverseMap = Object.entries(COUNTRY_MAP).reduce(
+    (acc, [key, val]) => {
+      acc[val.toLowerCase()] = key;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
   const variants = new Set<string>([trimmed]);
 
   if (COUNTRY_MAP[normalized]) {
     variants.add(COUNTRY_MAP[normalized]); // e.g. 'NG'
   }
-  
+
   if (reverseMap[normalized]) {
     variants.add(reverseMap[normalized]); // e.g. 'nigeria'
   }
 
   // To support partial matches like "pak" which might be stored
   // we could also add the first 3 letters? Not necessary, contains covers it if they type "pak".
-  
+
   return Array.from(variants);
 }

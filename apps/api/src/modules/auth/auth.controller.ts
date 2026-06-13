@@ -24,17 +24,23 @@ import { resolveApiLocale, translateApiText } from '../../common/i18n';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
   async register(@Body() dto: RegisterDto, @Req() req: Request) {
-    return this.authService.register(dto, resolveApiLocale(req.headers['accept-language']));
+    return this.authService.register(
+      dto,
+      resolveApiLocale(req.headers['accept-language']),
+    );
   }
 
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('verify-email')
   @HttpCode(200)
-  async verifyEmail(@Body() dto: VerifyEmailDto, @Res({ passthrough: false }) res: Response) {
+  async verifyEmail(
+    @Body() dto: VerifyEmailDto,
+    @Res({ passthrough: false }) res: Response,
+  ) {
     const result = await this.authService.verifyEmail(dto, res);
     res.json(result);
   }
@@ -43,15 +49,24 @@ export class AuthController {
   @Post('resend-otp')
   @HttpCode(200)
   async resendOtp(@Body() dto: ResendOtpDto, @Req() req: Request) {
-    return this.authService.resendVerificationOtp(dto.email, resolveApiLocale(req.headers['accept-language']));
+    return this.authService.resendVerificationOtp(
+      dto.email,
+      resolveApiLocale(req.headers['accept-language']),
+    );
   }
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(200)
   async login(@Req() req: Request, @Res({ passthrough: false }) res: Response) {
-    const accessToken = await this.authService.issueTokens(req.user as User, res);
-    res.json({ user: this.authService.safeUser(req.user as User), accessToken });
+    const accessToken = await this.authService.issueTokens(
+      req.user as User,
+      res,
+    );
+    res.json({
+      user: this.authService.safeUser(req.user as User),
+      accessToken,
+    });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -63,7 +78,10 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(200)
-  async refresh(@Req() req: Request, @Res({ passthrough: false }) res: Response) {
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: false }) res: Response,
+  ) {
     await this.authService.refreshTokens(req.cookies?.refresh_token, res);
     res.json({ ok: true });
   }
@@ -97,13 +115,25 @@ export class AuthController {
   async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
     const origin = req.headers.origin || req.headers.referer;
     const locale = resolveApiLocale(req.headers['accept-language']);
-    await this.authService.forgotPassword(dto.email, typeof origin === 'string' ? origin : undefined, locale);
-    return { message: translateApiText('If that email exists, a reset link was sent.', locale) };
+    await this.authService.forgotPassword(
+      dto.email,
+      typeof origin === 'string' ? origin : undefined,
+      locale,
+    );
+    return {
+      message: translateApiText(
+        'If that email exists, a reset link was sent.',
+        locale,
+      ),
+    };
   }
 
   @Post('reset-password')
   @HttpCode(200)
-  async resetPassword(@Body() dto: ResetPasswordDto, @Res({ passthrough: false }) res: Response) {
+  async resetPassword(
+    @Body() dto: ResetPasswordDto,
+    @Res({ passthrough: false }) res: Response,
+  ) {
     await this.authService.resetPassword(dto, res);
     res.json({ ok: true });
   }
@@ -111,7 +141,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('verify-password')
   @HttpCode(200)
-  async verifyPassword(@CurrentUser() user: User, @Body() dto: { password: string }) {
+  async verifyPassword(
+    @CurrentUser() user: User,
+    @Body() dto: { password: string },
+  ) {
     await this.authService.verifyPassword(user.id, dto.password);
     return { ok: true };
   }

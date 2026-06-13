@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { TransportStatus } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../../common/services/storage.service';
@@ -11,25 +15,38 @@ export class VehicleService {
     private readonly storageService: StorageService,
   ) {}
 
-  private async resolveImageUrls(imageUrl: string | null | undefined): Promise<string[]> {
+  private async resolveImageUrls(
+    imageUrl: string | null | undefined,
+  ): Promise<string[]> {
     if (!imageUrl) return [];
     try {
       if (imageUrl.startsWith('[')) {
         const parsed = JSON.parse(imageUrl);
         if (Array.isArray(parsed)) {
-          const resolved = await Promise.all(parsed.map(p => this.storageService.resolveImageUrl(p)));
+          const resolved = await Promise.all(
+            parsed.map((p) => this.storageService.resolveImageUrl(p)),
+          );
           return resolved.filter((p): p is string => typeof p === 'string');
         }
       }
     } catch (e) {
       // Ignore
     }
-    const paths = imageUrl.split(',').map(p => p.trim()).filter(Boolean);
-    const resolved = await Promise.all(paths.map(p => this.storageService.resolveImageUrl(p)));
+    const paths = imageUrl
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
+    const resolved = await Promise.all(
+      paths.map((p) => this.storageService.resolveImageUrl(p)),
+    );
     return resolved.filter((p): p is string => typeof p === 'string');
   }
 
-  async create(transporterId: string, dto: CreateVehicleDto, imageFiles?: Express.Multer.File[]) {
+  async create(
+    transporterId: string,
+    dto: CreateVehicleDto,
+    imageFiles?: Express.Multer.File[],
+  ) {
     let imageUrl: string | undefined;
 
     if (imageFiles && imageFiles.length > 0) {
@@ -40,7 +57,7 @@ export class VehicleService {
             `vehicles/${transporterId}`,
           );
           return result.filePath;
-        })
+        }),
       );
       imageUrl = JSON.stringify(paths);
     }
@@ -110,7 +127,9 @@ export class VehicleService {
       where: { vehicleId: id, status: TransportStatus.ACTIVE },
     });
     if (activeRoutes > 0) {
-      throw new ForbiddenException('Cannot delete vehicle with active routes. Delete routes first.');
+      throw new ForbiddenException(
+        'Cannot delete vehicle with active routes. Delete routes first.',
+      );
     }
 
     return this.prisma.vehicle.update({
@@ -141,7 +160,12 @@ export class VehicleService {
     });
   }
 
-  async update(id: string, transporterId: string, dto: Partial<CreateVehicleDto>, imageFiles?: Express.Multer.File[]) {
+  async update(
+    id: string,
+    transporterId: string,
+    dto: Partial<CreateVehicleDto>,
+    imageFiles?: Express.Multer.File[],
+  ) {
     const vehicle = await this.prisma.vehicle.findUnique({ where: { id } });
     if (!vehicle) throw new NotFoundException('Vehicle not found');
     if (vehicle.transporterId !== transporterId) throw new ForbiddenException();
@@ -155,7 +179,7 @@ export class VehicleService {
             `vehicles/${transporterId}`,
           );
           return result.filePath;
-        })
+        }),
       );
       imageUrl = JSON.stringify(paths);
     }

@@ -44,7 +44,9 @@ export class StorageService {
             return reject(error);
           }
           if (!result) {
-            return reject(new Error('Cloudinary upload returned undefined result'));
+            return reject(
+              new Error('Cloudinary upload returned undefined result'),
+            );
           }
           // With Cloudinary, the secure_url is persistent and doesn't require dynamic presigning.
           // We return result.secure_url for both filePath and presignedUrl to match the application's expected structure.
@@ -64,7 +66,9 @@ export class StorageService {
 
   // Call this everywhere an image URL needs to be served to a browser.
   // Handles null, raw S3 keys, new Cloudinary URLs, and old full-URL records safely.
-  async resolveImageUrl(filePathOrUrl: string | null | undefined): Promise<string | null> {
+  async resolveImageUrl(
+    filePathOrUrl: string | null | undefined,
+  ): Promise<string | null> {
     if (!filePathOrUrl) return null;
 
     const trimmed = filePathOrUrl.trim();
@@ -83,7 +87,10 @@ export class StorageService {
 
     // Handle comma-separated paths/URLs
     if (trimmed.includes(',') && !trimmed.startsWith('http')) {
-      const paths = trimmed.split(',').map(p => p.trim()).filter(Boolean);
+      const paths = trimmed
+        .split(',')
+        .map((p) => p.trim())
+        .filter(Boolean);
       if (paths.length > 0) {
         return this.resolveImageUrl(paths[0]);
       }
@@ -94,8 +101,10 @@ export class StorageService {
       // Check if it's a legacy S3/MinIO URL (typically pointing to localhost, minio, or the public garage endpoint).
       // If it is NOT a legacy URL (e.g. it is a Cloudinary URL), return it directly.
       const publicEndpoint = process.env.GARAGE_PUBLIC_URL;
-      const publicHostname = publicEndpoint ? new URL(publicEndpoint).hostname : null;
-      
+      const publicHostname = publicEndpoint
+        ? new URL(publicEndpoint).hostname
+        : null;
+
       const isLegacyS3Url =
         trimmed.includes('localhost') ||
         trimmed.includes('minio') ||
@@ -136,9 +145,12 @@ export class StorageService {
         })
       : this.s3Client;
 
-    return getSignedUrl(client, new GetObjectCommand({ Bucket: this.bucketName, Key: key }), {
-      expiresIn: 7 * 24 * 60 * 60,
-    });
+    return getSignedUrl(
+      client,
+      new GetObjectCommand({ Bucket: this.bucketName, Key: key }),
+      {
+        expiresIn: 7 * 24 * 60 * 60,
+      },
+    );
   }
 }
-

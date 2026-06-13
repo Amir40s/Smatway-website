@@ -1,4 +1,10 @@
-import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  SubscribeMessage,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 
@@ -8,7 +14,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private userSockets = new Map<string, string>();
 
-  constructor(private chatService: ChatService) { }
+  constructor(private chatService: ChatService) {}
 
   handleConnection(client: Socket) {
     const userId = client.handshake.query.userId as string;
@@ -19,22 +25,33 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: Socket) {
-    const userId = Array.from(this.userSockets.entries()).find(([_, id]) => id === client.id)?.[0];
+    const userId = Array.from(this.userSockets.entries()).find(
+      ([_, id]) => id === client.id,
+    )?.[0];
     if (userId) {
       this.userSockets.delete(userId);
     }
   }
 
   @SubscribeMessage('message')
-  async handleMessage(client: Socket, payload: { chatId: string; content: string; userId: string }) {
+  async handleMessage(
+    client: Socket,
+    payload: { chatId: string; content: string; userId: string },
+  ) {
     try {
-      const senderId = (client.handshake.query.userId as string) || payload.userId;
-      const message = await this.chatService.sendMessage(payload.chatId, senderId, payload.content);
+      const senderId =
+        (client.handshake.query.userId as string) || payload.userId;
+      const message = await this.chatService.sendMessage(
+        payload.chatId,
+        senderId,
+        payload.content,
+      );
       const chat = await this.chatService.getChatById(payload.chatId);
 
       this.server.to(`chat:${payload.chatId}`).emit('message', message);
       if (chat) {
-        const receiverId = senderId === chat.travelerId ? chat.transporterId : chat.travelerId;
+        const receiverId =
+          senderId === chat.travelerId ? chat.transporterId : chat.travelerId;
         this.server.to(`user:${receiverId}`).emit('notification', {
           type: 'message',
           message,
@@ -42,7 +59,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       client.emit('error', { message: errorMessage });
     }
   }

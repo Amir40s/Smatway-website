@@ -11,7 +11,11 @@ export class ExcessLuggageController {
     @Body('amount') amount: number,
     @Body('description') description?: string,
   ) {
-    return this.excessLuggageService.createCharge(bookingId, amount, description);
+    return this.excessLuggageService.createCharge(
+      bookingId,
+      amount,
+      description,
+    );
   }
 
   @Get(':bookingId')

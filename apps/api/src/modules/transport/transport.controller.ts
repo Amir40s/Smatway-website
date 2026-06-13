@@ -1,5 +1,14 @@
 import {
-  Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, ForbiddenException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { TransportService } from './transport.service';
 import { CreateTransportDto } from './dto/create-transport.dto';
@@ -45,13 +54,21 @@ export class TransportController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @CurrentUser() user: User, @Body() dto: Partial<CreateTransportDto>) {
+  update(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @Body() dto: Partial<CreateTransportDto>,
+  ) {
     return this.transportService.update(id, user.id, dto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: User, @Body() body?: { reason?: string }) {
+  remove(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @Body() body?: { reason?: string },
+  ) {
     return this.transportService.remove(id, user.id, body?.reason);
   }
 
@@ -75,7 +92,10 @@ export class TransportController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('vehicle/:vehicleId')
-  deleteByVehicle(@Param('vehicleId') vehicleId: string, @CurrentUser() user: User) {
+  deleteByVehicle(
+    @Param('vehicleId') vehicleId: string,
+    @CurrentUser() user: User,
+  ) {
     return this.transportService.deleteByVehicle(vehicleId, user.id);
   }
 }

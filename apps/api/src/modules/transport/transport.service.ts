@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../../common/services/storage.service';
 import { CreateTransportDto } from './dto/create-transport.dto';
@@ -25,9 +30,14 @@ export class TransportService {
       },
     });
 
-    const avgRating = reviews.length > 0
-      ? Math.round((reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length) * 10) / 10
-      : 0;
+    const avgRating =
+      reviews.length > 0
+        ? Math.round(
+            (reviews.reduce((sum: number, r: any) => sum + r.rating, 0) /
+              reviews.length) *
+              10,
+          ) / 10
+        : 0;
 
     return {
       averageRating: avgRating,
@@ -36,9 +46,12 @@ export class TransportService {
   }
 
   async create(transporterId: string, dto: CreateTransportDto) {
-    const vehicle = await this.prisma.vehicle.findUnique({ where: { id: dto.vehicleId } });
+    const vehicle = await this.prisma.vehicle.findUnique({
+      where: { id: dto.vehicleId },
+    });
     if (!vehicle) throw new NotFoundException('Vehicle not found');
-    if (vehicle.transporterId !== transporterId) throw new ForbiddenException('Vehicle does not belong to you');
+    if (vehicle.transporterId !== transporterId)
+      throw new ForbiddenException('Vehicle does not belong to you');
 
     const depDate = new Date(dto.departureDateTime);
     if (depDate < new Date()) {
@@ -50,7 +63,9 @@ export class TransportService {
       throw new BadRequestException('Max reach date cannot be in the past');
     }
     if (maxDate <= depDate) {
-      throw new BadRequestException('Max reach date must be after departure date');
+      throw new BadRequestException(
+        'Max reach date must be after departure date',
+      );
     }
 
     // Fallback currency resolution: DTO → transporter's preferredCurrency → USD
@@ -63,7 +78,10 @@ export class TransportService {
       currency = (transporter?.preferredCurrency || 'USD').toUpperCase();
     }
 
-    const totalDays = dto.repeatDaily && dto.repeatDurationDays ? Math.min(Math.max(1, dto.repeatDurationDays), 30) : 1;
+    const totalDays =
+      dto.repeatDaily && dto.repeatDurationDays
+        ? Math.min(Math.max(1, dto.repeatDurationDays), 30)
+        : 1;
 
     if (totalDays === 1) {
       return this.prisma.transport.create({
@@ -148,7 +166,11 @@ export class TransportService {
       andFilters.push({
         OR: [
           { departureCity: { contains: depCityTrim, mode: 'insensitive' } },
-          { stops: { some: { city: { contains: depCityTrim, mode: 'insensitive' } } } },
+          {
+            stops: {
+              some: { city: { contains: depCityTrim, mode: 'insensitive' } },
+            },
+          },
         ],
       });
     }
@@ -156,7 +178,9 @@ export class TransportService {
     if (dto.departureCountry) {
       const variants = getCountrySearchVariants(dto.departureCountry);
       andFilters.push({
-        OR: variants.map(v => ({ departureCountry: { contains: v, mode: 'insensitive' } }))
+        OR: variants.map((v) => ({
+          departureCountry: { contains: v, mode: 'insensitive' },
+        })),
       });
     }
 
@@ -165,7 +189,11 @@ export class TransportService {
       andFilters.push({
         OR: [
           { destinationCity: { contains: destCityTrim, mode: 'insensitive' } },
-          { stops: { some: { city: { contains: destCityTrim, mode: 'insensitive' } } } },
+          {
+            stops: {
+              some: { city: { contains: destCityTrim, mode: 'insensitive' } },
+            },
+          },
         ],
       });
     }
@@ -173,7 +201,9 @@ export class TransportService {
     if (dto.destinationCountry) {
       const variants = getCountrySearchVariants(dto.destinationCountry);
       andFilters.push({
-        OR: variants.map(v => ({ destinationCountry: { contains: v, mode: 'insensitive' } }))
+        OR: variants.map((v) => ({
+          destinationCountry: { contains: v, mode: 'insensitive' },
+        })),
       });
     }
 
@@ -190,8 +220,27 @@ export class TransportService {
     const transports = await this.prisma.transport.findMany({
       where,
       include: {
-        transporter: { select: { id: true, name: true, phoneNumber: true, profileImageUrl: true, avatarUrl: true, profile: { select: { companyName: true } } } },
-        vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, imageUrl: true, features: true } },
+        transporter: {
+          select: {
+            id: true,
+            name: true,
+            phoneNumber: true,
+            profileImageUrl: true,
+            avatarUrl: true,
+            profile: { select: { companyName: true } },
+          },
+        },
+        vehicle: {
+          select: {
+            id: true,
+            name: true,
+            model: true,
+            transportType: true,
+            plateNumber: true,
+            imageUrl: true,
+            features: true,
+          },
+        },
         stops: { orderBy: { stopOrder: 'asc' } },
       },
       orderBy: { departureDateTime: 'asc' },
@@ -199,8 +248,12 @@ export class TransportService {
 
     // Chronological Stop-Order Filtering: Ensure traveler's departure precedes destination along the route.
     const validTransports = transports.filter((transport) => {
-      const depCity = dto.departureCity ? dto.departureCity.trim().toLowerCase() : null;
-      const destCity = dto.destinationCity ? dto.destinationCity.trim().toLowerCase() : null;
+      const depCity = dto.departureCity
+        ? dto.departureCity.trim().toLowerCase()
+        : null;
+      const destCity = dto.destinationCity
+        ? dto.destinationCity.trim().toLowerCase()
+        : null;
 
       let depIndex = -2;
       let destIndex = -2;
@@ -211,7 +264,9 @@ export class TransportService {
       } else if (transport.departureCity.toLowerCase().includes(depCity)) {
         depIndex = -1;
       } else {
-        const stopIdx = transport.stops.findIndex(s => s.city.toLowerCase().includes(depCity));
+        const stopIdx = transport.stops.findIndex((s) =>
+          s.city.toLowerCase().includes(depCity),
+        );
         if (stopIdx !== -1) {
           depIndex = stopIdx;
         }
@@ -223,7 +278,9 @@ export class TransportService {
       } else if (transport.destinationCity.toLowerCase().includes(destCity)) {
         destIndex = 999999;
       } else {
-        const stopIdx = transport.stops.findIndex(s => s.city.toLowerCase().includes(destCity));
+        const stopIdx = transport.stops.findIndex((s) =>
+          s.city.toLowerCase().includes(destCity),
+        );
         if (stopIdx !== -1) {
           destIndex = stopIdx;
         }
@@ -243,14 +300,21 @@ export class TransportService {
           ...transport,
           transporter: {
             ...transport.transporter,
-            name: transport.transporter.profile?.companyName || transport.transporter.name,
-            profileImageUrl: await this.storageService.resolveImageUrl(transport.transporter.profileImageUrl || transport.transporter.avatarUrl),
+            name:
+              transport.transporter.profile?.companyName ||
+              transport.transporter.name,
+            profileImageUrl: await this.storageService.resolveImageUrl(
+              transport.transporter.profileImageUrl ||
+                transport.transporter.avatarUrl,
+            ),
             ...stats,
           },
           vehicle: transport.vehicle
             ? {
                 ...transport.vehicle,
-                imageUrl: await this.storageService.resolveImageUrl(transport.vehicle.imageUrl),
+                imageUrl: await this.storageService.resolveImageUrl(
+                  transport.vehicle.imageUrl,
+                ),
               }
             : null,
         };
@@ -262,8 +326,27 @@ export class TransportService {
     const transport: any = await this.prisma.transport.findUnique({
       where: { id },
       include: {
-        transporter: { select: { id: true, name: true, phoneNumber: true, profileImageUrl: true, avatarUrl: true, profile: { select: { companyName: true } } } },
-        vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, imageUrl: true, features: true } },
+        transporter: {
+          select: {
+            id: true,
+            name: true,
+            phoneNumber: true,
+            profileImageUrl: true,
+            avatarUrl: true,
+            profile: { select: { companyName: true } },
+          },
+        },
+        vehicle: {
+          select: {
+            id: true,
+            name: true,
+            model: true,
+            transportType: true,
+            plateNumber: true,
+            imageUrl: true,
+            features: true,
+          },
+        },
         stops: { orderBy: { stopOrder: 'asc' } },
       },
     });
@@ -275,14 +358,20 @@ export class TransportService {
       ...transport,
       transporter: {
         ...transport.transporter,
-        name: transport.transporter.profile?.companyName || transport.transporter.name,
-        profileImageUrl: await this.storageService.resolveImageUrl(transport.transporter.profileImageUrl),
+        name:
+          transport.transporter.profile?.companyName ||
+          transport.transporter.name,
+        profileImageUrl: await this.storageService.resolveImageUrl(
+          transport.transporter.profileImageUrl,
+        ),
         ...stats,
       },
       vehicle: transport.vehicle
         ? {
             ...transport.vehicle,
-            imageUrl: await this.storageService.resolveImageUrl(transport.vehicle.imageUrl),
+            imageUrl: await this.storageService.resolveImageUrl(
+              transport.vehicle.imageUrl,
+            ),
           }
         : null,
     };
@@ -291,8 +380,24 @@ export class TransportService {
   async getAllTransports() {
     const transports = await this.prisma.transport.findMany({
       include: {
-        transporter: { select: { id: true, name: true, phoneNumber: true, profile: { select: { companyName: true } } } },
-        vehicle: { select: { id: true, name: true, model: true, transportType: true, plateNumber: true, features: true } },
+        transporter: {
+          select: {
+            id: true,
+            name: true,
+            phoneNumber: true,
+            profile: { select: { companyName: true } },
+          },
+        },
+        vehicle: {
+          select: {
+            id: true,
+            name: true,
+            model: true,
+            transportType: true,
+            plateNumber: true,
+            features: true,
+          },
+        },
         stops: { orderBy: { stopOrder: 'asc' } },
         _count: { select: { bookings: true } },
       },
@@ -304,7 +409,10 @@ export class TransportService {
         ...transport,
         transporter: {
           ...transport.transporter,
-          name: transport.transporter?.profile?.companyName || transport.transporter?.name || '',
+          name:
+            transport.transporter?.profile?.companyName ||
+            transport.transporter?.name ||
+            '',
         },
       })),
     );
@@ -313,7 +421,11 @@ export class TransportService {
   async myRoutes(transporterId: string) {
     const transports = await this.prisma.transport.findMany({
       where: { transporterId },
-      include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } }, _count: { select: { bookings: true } } },
+      include: {
+        vehicle: true,
+        stops: { orderBy: { stopOrder: 'asc' } },
+        _count: { select: { bookings: true } },
+      },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -326,27 +438,41 @@ export class TransportService {
         vehicle: transport.vehicle
           ? {
               ...transport.vehicle,
-              imageUrl: await this.storageService.resolveImageUrl(transport.vehicle.imageUrl),
+              imageUrl: await this.storageService.resolveImageUrl(
+                transport.vehicle.imageUrl,
+              ),
             }
           : null,
       })),
     );
   }
 
-  async update(id: string, transporterId: string, dto: Partial<CreateTransportDto>) {
+  async update(
+    id: string,
+    transporterId: string,
+    dto: Partial<CreateTransportDto>,
+  ) {
     const transport = await this.prisma.transport.findUnique({ where: { id } });
     if (!transport) throw new NotFoundException('Transport not found');
-    if (transport.transporterId !== transporterId) throw new ForbiddenException();
+    if (transport.transporterId !== transporterId)
+      throw new ForbiddenException();
 
     let transportType: typeof transport.transportType | undefined;
     if (dto.vehicleId) {
-      const vehicle = await this.prisma.vehicle.findUnique({ where: { id: dto.vehicleId } });
-      if (!vehicle || vehicle.transporterId !== transporterId) throw new ForbiddenException('Invalid vehicle');
+      const vehicle = await this.prisma.vehicle.findUnique({
+        where: { id: dto.vehicleId },
+      });
+      if (!vehicle || vehicle.transporterId !== transporterId)
+        throw new ForbiddenException('Invalid vehicle');
       transportType = vehicle.transportType;
     }
 
-    const finalDepDate = dto.departureDateTime ? new Date(dto.departureDateTime) : new Date(transport.departureDateTime);
-    const finalMaxDate = dto.maxReachDateTime ? new Date(dto.maxReachDateTime) : new Date(transport.maxReachDateTime);
+    const finalDepDate = dto.departureDateTime
+      ? new Date(dto.departureDateTime)
+      : new Date(transport.departureDateTime);
+    const finalMaxDate = dto.maxReachDateTime
+      ? new Date(dto.maxReachDateTime)
+      : new Date(transport.maxReachDateTime);
 
     if (dto.departureDateTime && finalDepDate < new Date()) {
       throw new BadRequestException('Departure date cannot be in the past');
@@ -355,22 +481,33 @@ export class TransportService {
       throw new BadRequestException('Max reach date cannot be in the past');
     }
     if (finalMaxDate <= finalDepDate) {
-      throw new BadRequestException('Max reach date must be after departure date');
+      throw new BadRequestException(
+        'Max reach date must be after departure date',
+      );
     }
 
     const updateData: any = {
       ...dto,
       transportType,
-      departureDateTime: dto.departureDateTime ? new Date(dto.departureDateTime) : undefined,
-      maxReachDateTime: dto.maxReachDateTime ? new Date(dto.maxReachDateTime) : undefined,
+      departureDateTime: dto.departureDateTime
+        ? new Date(dto.departureDateTime)
+        : undefined,
+      maxReachDateTime: dto.maxReachDateTime
+        ? new Date(dto.maxReachDateTime)
+        : undefined,
     };
 
-    if (dto.departureCountry) updateData.departureCountry = dto.departureCountry.trim();
+    if (dto.departureCountry)
+      updateData.departureCountry = dto.departureCountry.trim();
     if (dto.departureCity) updateData.departureCity = dto.departureCity.trim();
-    if (dto.departureAddress) updateData.departureAddress = dto.departureAddress.trim();
-    if (dto.destinationCountry) updateData.destinationCountry = dto.destinationCountry.trim();
-    if (dto.destinationCity) updateData.destinationCity = dto.destinationCity.trim();
-    if (dto.destinationAddress) updateData.destinationAddress = dto.destinationAddress.trim();
+    if (dto.departureAddress)
+      updateData.departureAddress = dto.departureAddress.trim();
+    if (dto.destinationCountry)
+      updateData.destinationCountry = dto.destinationCountry.trim();
+    if (dto.destinationCity)
+      updateData.destinationCity = dto.destinationCity.trim();
+    if (dto.destinationAddress)
+      updateData.destinationAddress = dto.destinationAddress.trim();
 
     delete updateData.stops;
     if (dto.stops) {
@@ -393,7 +530,8 @@ export class TransportService {
   async remove(id: string, transporterId: string, reason?: string) {
     const transport = await this.prisma.transport.findUnique({ where: { id } });
     if (!transport) throw new NotFoundException('Transport not found');
-    if (transport.transporterId !== transporterId) throw new ForbiddenException();
+    if (transport.transporterId !== transporterId)
+      throw new ForbiddenException();
     return this.prisma.transport.update({
       where: { id },
       data: { deleteRequested: true, deleteReason: reason },
@@ -416,7 +554,9 @@ export class TransportService {
   }
 
   async deleteByVehicle(vehicleId: string, transporterId: string) {
-    const vehicle = await this.prisma.vehicle.findUnique({ where: { id: vehicleId } });
+    const vehicle = await this.prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+    });
     if (!vehicle) throw new NotFoundException('Vehicle not found');
     if (vehicle.transporterId !== transporterId) throw new ForbiddenException();
 

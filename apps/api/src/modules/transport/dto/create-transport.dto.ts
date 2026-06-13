@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsNumber, IsInt, IsOptional, IsString, Length, Min, IsArray } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+  Min,
+  IsArray,
+} from 'class-validator';
 
 export class CreateTransportDto {
   @IsString() @IsNotEmpty() departureCountry!: string;

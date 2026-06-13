@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../../common/services/storage.service';
 import { BookingStatus } from '@prisma/client';
@@ -10,7 +15,12 @@ export class ReviewService {
     private readonly storageService: StorageService,
   ) {}
 
-  async createReview(bookingId: string, travelerId: string, rating: number, feedback?: string) {
+  async createReview(
+    bookingId: string,
+    travelerId: string,
+    rating: number,
+    feedback?: string,
+  ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
       include: { transport: true },
@@ -19,7 +29,9 @@ export class ReviewService {
     if (!booking) throw new NotFoundException('Booking not found');
     if (booking.travelerId !== travelerId) throw new ForbiddenException();
 
-    const user = await this.prisma.user.findUnique({ where: { id: travelerId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: travelerId },
+    });
     if (!user || user.accountType !== 'TRAVELER') {
       throw new ForbiddenException('Only travelers can give feedback');
     }
@@ -28,8 +40,11 @@ export class ReviewService {
       throw new BadRequestException('Booking must be completed before rating');
     }
 
-    const existingReview = await this.prisma.review.findUnique({ where: { bookingId } });
-    if (existingReview) throw new BadRequestException('Review already exists for this booking');
+    const existingReview = await this.prisma.review.findUnique({
+      where: { bookingId },
+    });
+    if (existingReview)
+      throw new BadRequestException('Review already exists for this booking');
 
     return this.prisma.review.create({
       data: {
@@ -54,9 +69,14 @@ export class ReviewService {
       },
     });
 
-    const avgRating = reviews.length > 0
-      ? Math.round((reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length) * 10) / 10
-      : 0;
+    const avgRating =
+      reviews.length > 0
+        ? Math.round(
+            (reviews.reduce((sum: number, r: any) => sum + r.rating, 0) /
+              reviews.length) *
+              10,
+          ) / 10
+        : 0;
 
     return {
       averageRating: avgRating,
@@ -65,7 +85,11 @@ export class ReviewService {
     };
   }
 
-  async getTransporterReviews(transporterId: string, page: number = 1, limit: number = 5) {
+  async getTransporterReviews(
+    transporterId: string,
+    page: number = 1,
+    limit: number = 5,
+  ) {
     const skip = (page - 1) * limit;
 
     const reviews = await this.prisma.review.findMany({
@@ -124,9 +148,12 @@ export class ReviewService {
     );
     const withAvatars = await Promise.all(
       filtered.map(async (r) => {
-        const rawAvatar = r.traveler.profileImageUrl || r.traveler.avatarUrl || null;
+        const rawAvatar =
+          r.traveler.profileImageUrl || r.traveler.avatarUrl || null;
         const avatarUrl = rawAvatar
-          ? await this.storageService.resolveImageUrl(rawAvatar).catch(() => null)
+          ? await this.storageService
+              .resolveImageUrl(rawAvatar)
+              .catch(() => null)
           : null;
         return {
           id: r.id,
@@ -156,15 +183,18 @@ export class ReviewService {
     if (!user) throw new NotFoundException('Transporter not found');
 
     const stats = await this.getTransporterStats(transporterId);
-    const reviews = requestingUser?.role === 'ADMIN'
-      ? (await this.getTransporterReviews(transporterId, 1, 5)).reviews
-      : [];
+    const reviews =
+      requestingUser?.role === 'ADMIN'
+        ? (await this.getTransporterReviews(transporterId, 1, 5)).reviews
+        : [];
 
     const vehicleCount = await this.prisma.vehicle.count({
       where: { transporterId, deleted: false },
     });
 
-    const profileImageUrl = await this.storageService.resolveImageUrl(user.profileImageUrl || user.avatarUrl);
+    const profileImageUrl = await this.storageService.resolveImageUrl(
+      user.profileImageUrl || user.avatarUrl,
+    );
 
     return {
       ...user,
@@ -179,8 +209,16 @@ export class ReviewService {
   async getAllReviewsAdmin() {
     const reviews = await this.prisma.review.findMany({
       include: {
-        traveler: { select: { id: true, name: true, email: true, avatarUrl: true } },
-        transporter: { select: { id: true, name: true, profile: { select: { companyName: true } } } },
+        traveler: {
+          select: { id: true, name: true, email: true, avatarUrl: true },
+        },
+        transporter: {
+          select: {
+            id: true,
+            name: true,
+            profile: { select: { companyName: true } },
+          },
+        },
         booking: {
           include: {
             transport: {
@@ -210,7 +248,9 @@ export class ReviewService {
           ? {
               ...r.traveler,
               avatarUrl: r.traveler.avatarUrl
-                ? await this.storageService.resolveImageUrl(r.traveler.avatarUrl)
+                ? await this.storageService.resolveImageUrl(
+                    r.traveler.avatarUrl,
+                  )
                 : null,
             }
           : null,

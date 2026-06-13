@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Headers, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -15,7 +25,11 @@ export class PaymentController {
     @Body('bookingId') bookingId: string,
     @Body('callbackUrl') callbackUrl?: string,
   ) {
-    return this.paymentService.initializePayment(bookingId, user.id, callbackUrl);
+    return this.paymentService.initializePayment(
+      bookingId,
+      user.id,
+      callbackUrl,
+    );
   }
 
   @Post('initialize-excess-luggage')
@@ -23,12 +37,18 @@ export class PaymentController {
     @Body('excessLuggageId') excessLuggageId: string,
     @Body('callbackUrl') callbackUrl?: string,
   ) {
-    return this.paymentService.initializeExcessLuggagePayment(excessLuggageId, callbackUrl);
+    return this.paymentService.initializeExcessLuggagePayment(
+      excessLuggageId,
+      callbackUrl,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('verify/:reference')
-  verifyPayment(@CurrentUser() user: User, @Param('reference') reference: string) {
+  verifyPayment(
+    @CurrentUser() user: User,
+    @Param('reference') reference: string,
+  ) {
     return this.paymentService.verifyPayment(reference, user.id);
   }
 
@@ -39,7 +59,10 @@ export class PaymentController {
 
   @Post('webhook')
   @HttpCode(200)
-  handleWebhook(@Headers('x-paystack-signature') signature: string, @Req() req: any) {
+  handleWebhook(
+    @Headers('x-paystack-signature') signature: string,
+    @Req() req: any,
+  ) {
     // Note: To properly verify Paystack webhook signature, the body must be raw string.
     // Ensure Express raw-body parser is used if verifying webhook securely.
     // For now, we pass the parsed body to the handler.
@@ -49,7 +72,10 @@ export class PaymentController {
 
   @Post('webhook/flutterwave')
   @HttpCode(200)
-  handleFlutterwaveWebhook(@Headers('verif-hash') signature: string, @Req() req: any) {
+  handleFlutterwaveWebhook(
+    @Headers('verif-hash') signature: string,
+    @Req() req: any,
+  ) {
     this.paymentService.handleFlutterwaveWebhook(signature, req.body);
     return { received: true };
   }

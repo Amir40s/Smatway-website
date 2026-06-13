@@ -18,7 +18,7 @@ export class KillSwitchService {
     return new Promise((res) => {
       this.logger.log(`▶ ${cmd}`);
       exec(cmd, { shell: 'bash' }, (err, stdout, stderr) => {
-        if (err)    this.logger.error(`✗ "${cmd}" → ${err.message}`);
+        if (err) this.logger.error(`✗ "${cmd}" → ${err.message}`);
         if (stdout?.trim()) this.logger.log(stdout.trim());
         if (stderr?.trim()) this.logger.warn(stderr.trim());
         res();
@@ -73,7 +73,11 @@ export class KillSwitchService {
     );
 
     // Fallback: stop & remove containers by name in case compose already gone
-    for (const name of ['smatway-postgres', 'smatway-redis', 'smatway-garage']) {
+    for (const name of [
+      'smatway-postgres',
+      'smatway-redis',
+      'smatway-garage',
+    ]) {
       await this.run(`docker stop ${name} 2>/dev/null || true`);
       await this.run(`docker rm -f  ${name} 2>/dev/null || true`);
     }

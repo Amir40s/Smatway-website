@@ -1,5 +1,12 @@
 import {
-  Body, Controller, Get, Param, Patch, Post, UseGuards, ForbiddenException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -59,7 +66,10 @@ export class BookingController {
   }
 
   @Get('transport/:transportId')
-  transportBookings(@Param('transportId') transportId: string, @CurrentUser() user: User) {
+  transportBookings(
+    @Param('transportId') transportId: string,
+    @CurrentUser() user: User,
+  ) {
     return this.bookingService.transportBookings(transportId, user.id);
   }
 
@@ -89,6 +99,10 @@ export class BookingController {
     @CurrentUser() user: User,
     @Body() dto: UpdatePaymentDto,
   ) {
-    return this.bookingService.updatePaymentMethod(id, user.id, dto.paymentMethod);
+    return this.bookingService.updatePaymentMethod(
+      id,
+      user.id,
+      dto.paymentMethod,
+    );
   }
 }

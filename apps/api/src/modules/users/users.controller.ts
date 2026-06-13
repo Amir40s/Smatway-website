@@ -23,7 +23,10 @@ import { UsersService } from './users.service';
 import { StorageService } from '../../common/services/storage.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
-import { CreateEmergencyContactDto, UpdateEmergencyContactDto } from './dto/emergency-contact.dto';
+import {
+  CreateEmergencyContactDto,
+  UpdateEmergencyContactDto,
+} from './dto/emergency-contact.dto';
 import { UpdateNotificationPreferencesDto } from './dto/notification-preferences.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
@@ -38,7 +41,9 @@ export class UsersController {
   @Get('transporters')
   async getTransporters(@CurrentUser() user: User) {
     if (user.role !== 'ADMIN') {
-      throw new ForbiddenException('Only admin can access transporters details');
+      throw new ForbiddenException(
+        'Only admin can access transporters details',
+      );
     }
     return this.usersService.getAllTransporters();
   }
@@ -88,7 +93,9 @@ export class UsersController {
   @Get('admin/stats')
   async getAdminStats(@CurrentUser() user: User) {
     if (user.role !== 'ADMIN') {
-      throw new ForbiddenException('Only admin can access SmatWay dashboard stats');
+      throw new ForbiddenException(
+        'Only admin can access SmatWay dashboard stats',
+      );
     }
     return this.usersService.getAdminStats();
   }
@@ -115,11 +122,10 @@ export class UsersController {
   }
 
   @Post('profile/upload-avatar')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
-  async uploadAvatar(
-    @CurrentUser() user: User,
-    @UploadedFile() file: any,
-  ) {
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
+  async uploadAvatar(@CurrentUser() user: User, @UploadedFile() file: any) {
     if (!file) throw new BadRequestException('No file uploaded');
 
     const validTypes = ['image/jpeg', 'image/png'];
@@ -131,7 +137,10 @@ export class UsersController {
       throw new BadRequestException('File size must be less than 10MB');
     }
 
-    const { filePath, presignedUrl } = await this.storageService.uploadFile(file, `avatars/${user.id}`);
+    const { filePath, presignedUrl } = await this.storageService.uploadFile(
+      file,
+      `avatars/${user.id}`,
+    );
 
     // Store file path in database, return presigned URL
     await this.usersService.updateProfileAvatarPath(user.id, filePath);
