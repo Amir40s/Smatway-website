@@ -24,7 +24,7 @@ import { resolveApiLocale, translateApiText } from '../../common/i18n';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('register')
   async register(@Body() dto: RegisterDto, @Req() req: Request) {

@@ -104,8 +104,10 @@ export class BookingService {
         'SmatWay Transporter';
       await this.mailService
         .sendBookingTicketEmail(traveler.email, {
+          bookingId: booking.id,
+          passengerName: traveler.name,
           bookingNumber: booking.bookingNumber,
-          route: `${transport.departureCity} → ${transport.destinationCity}`,
+          route: `${transport.departureCity} -> ${transport.destinationCity}`,
           dateTime: transport.departureDateTime.toISOString(),
           seats: dto.seatsBooked,
           price: `${transport.currency} ${totalPrice.toFixed(2)}`,
@@ -411,15 +413,17 @@ export class BookingService {
 
     const traveler = await this.prisma.user.findUnique({
       where: { id: booking.travelerId },
-      select: { email: true },
+      select: { email: true, name: true },
     });
     if (traveler?.email) {
       const transporterName =
         booking.transport.transporter.name || 'SmatWay Transporter';
       await this.mailService
         .sendBookingTicketEmail(traveler.email, {
+          bookingId: booking.id,
+          passengerName: traveler.name,
           bookingNumber: booking.bookingNumber,
-          route: `${booking.transport.departureCity} → ${booking.transport.destinationCity}`,
+          route: `${booking.transport.departureCity} -> ${booking.transport.destinationCity}`,
           dateTime: booking.transport.departureDateTime.toISOString(),
           seats: booking.seatsBooked,
           price: `${booking.transport.currency} ${booking.totalPrice}`,

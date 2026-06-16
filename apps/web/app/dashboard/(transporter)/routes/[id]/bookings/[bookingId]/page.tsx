@@ -94,7 +94,7 @@ export default function TransporterBookingDetailPage() {
     <div className="max-w-2xl space-y-5">
       <div className="mb-2 flex items-center gap-2">
         <Link href={`/dashboard/(transporter)/routes/${id}/bookings`} className="text-sm text-slate-400 hover:text-zinc-900">← Bookings</Link>
-        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Booking #{bookingId.slice(0, 8).toUpperCase()}</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Booking #{booking?.bookingNumber || bookingId.slice(0, 8).toUpperCase()}</h1>
       </div>
 
       {/* Booking Summary */}

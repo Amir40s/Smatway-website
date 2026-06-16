@@ -199,7 +199,7 @@ export default function BookingDetailPage() {
 
   const dep = new Date(booking.transport.departureDateTime);
   const isCancelled = booking.status === "CANCELLED";
-  const bookingCode = `${countryCodeFromName(booking.transport.departureCountry) || "XX"}-${id.slice(0, 4).toUpperCase()}`;
+  const bookingCode = booking.bookingNumber || `${countryCodeFromName(booking.transport.departureCountry) || "XX"}-${id.slice(0, 4).toUpperCase()}`;
 
   return (
     <div className="max-w-2xl space-y-5">

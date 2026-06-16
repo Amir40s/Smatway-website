@@ -288,9 +288,18 @@ export class MailService {
       return;
     }
 
+    const qrJsonPayload = JSON.stringify({
+      ticketCode: bookingDetails.bookingNumber,
+      bookingId: bookingDetails.bookingId,
+      passengerName: bookingDetails.passengerName,
+      route: bookingDetails.route,
+      date: bookingDetails.dateTime,
+      seats: bookingDetails.seats,
+    });
+
     let qrBuffer: Buffer | undefined;
     try {
-      qrBuffer = await QRCode.toBuffer(bookingDetails.bookingNumber, {
+      qrBuffer = await QRCode.toBuffer(qrJsonPayload, {
         margin: 2,
         width: 220,
       });
@@ -301,7 +310,7 @@ export class MailService {
       );
     }
 
-    const qrData = encodeURIComponent(bookingDetails.bookingNumber);
+    const qrData = encodeURIComponent(qrJsonPayload);
     const qrFallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${qrData}`;
     const qrSrc = qrBuffer ? 'cid:qrcode' : qrFallbackUrl;
 

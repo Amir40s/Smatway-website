@@ -228,7 +228,7 @@ function BookingCard({
                 {booking.paymentStatus === "PAID" ? "Paid" : booking.paymentStatus === "FAILED" ? "Payment failed" : "Unpaid"}
               </StatusPill>
               <span className="text-[10px] text-slate-400 font-mono">
-                #{countryCodeFromName(booking.transport.departureCountry) || "XX"}-{booking.id.slice(0, 6).toUpperCase()}
+                #{booking.bookingNumber || `${countryCodeFromName(booking.transport.departureCountry) || "XX"}-${booking.id.slice(0, 6).toUpperCase()}`}
               </span>
             </div>
 
