@@ -105,8 +105,8 @@ export default function TransportersPage() {
   
   // Interactive views
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Forms State
@@ -284,85 +284,7 @@ export default function TransportersPage() {
     }
   };
 
-  const handleEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingId) return;
-    setActionLoading("edit");
-    try {
-      await adminRequest(`/users/admin/users/${editingId}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phoneNumber: form.phoneNumber,
-          country: form.country,
-          emergencyContactName: form.emergencyContactName,
-          emergencyContactPhone: form.emergencyContactPhone,
-        }),
-      });
-      
-      setTransporters((curr) =>
-        curr.map((t) =>
-          t.id === editingId
-            ? {
-                ...t,
-                name: form.name,
-                email: form.email,
-                phoneNumber: form.phoneNumber,
-                country: form.country,
-                profile: {
-                  ...t.profile,
-                  companyName: form.companyName,
-                  licenseNumber: form.licenseNumber,
-                  licenseExpiry: form.licenseExpiry,
-                  vehicleType: form.vehicleType,
-                  emergencyContactName: form.emergencyContactName,
-                  emergencyContactPhone: form.emergencyContactPhone,
-                  bankName: form.bankName,
-                  bankAccountNumber: form.bankAccountNumber,
-                  bankAccountHolderName: form.bankAccountHolderName,
-                  businessCertificateUrl: form.businessCertificateUrl,
-                } as TransporterProfile,
-              }
-            : t
-        )
-      );
-      setEditingId(null);
-      resetForm();
-    } catch (err) {
-      // Local fallback in case edit needs mock updates
-      setTransporters((curr) =>
-        curr.map((t) =>
-          t.id === editingId
-            ? {
-                ...t,
-                name: form.name,
-                email: form.email,
-                phoneNumber: form.phoneNumber,
-                country: form.country,
-                profile: {
-                  ...t.profile,
-                  companyName: form.companyName,
-                  licenseNumber: form.licenseNumber,
-                  licenseExpiry: form.licenseExpiry,
-                  vehicleType: form.vehicleType,
-                  emergencyContactName: form.emergencyContactName,
-                  emergencyContactPhone: form.emergencyContactPhone,
-                  bankName: form.bankName,
-                  bankAccountNumber: form.bankAccountNumber,
-                  bankAccountHolderName: form.bankAccountHolderName,
-                  businessCertificateUrl: form.businessCertificateUrl,
-                } as TransporterProfile,
-              }
-            : t
-        )
-      );
-      setEditingId(null);
-      resetForm();
-    } finally {
-      setActionLoading(null);
-    }
-  };
+
 
   const handleStatusChange = async (id: string, newStatus: Transporter["status"]) => {
     try {
@@ -414,25 +336,7 @@ export default function TransportersPage() {
     });
   };
 
-  const openEdit = (t: Transporter) => {
-    setEditingId(t.id);
-    setForm({
-      name: t.name || "",
-      email: t.email || "",
-      phoneNumber: t.phoneNumber || "",
-      country: t.country || "",
-      emergencyContactName: t.profile?.emergencyContactName || "",
-      emergencyContactPhone: t.profile?.emergencyContactPhone || "",
-      companyName: t.profile?.companyName || "",
-      licenseNumber: t.profile?.licenseNumber || "",
-      licenseExpiry: t.profile?.licenseExpiry?.split("T")[0] || "",
-      vehicleType: t.profile?.vehicleType || "VAN",
-      bankName: t.profile?.bankName || "",
-      bankAccountNumber: t.profile?.bankAccountNumber || "",
-      bankAccountHolderName: t.profile?.bankAccountHolderName || "",
-      businessCertificateUrl: t.profile?.businessCertificateUrl || "",
-    });
-  };
+
 
   const filteredTransporters = transporters.filter((t) => {
     const q = searchQuery.toLowerCase();
@@ -904,21 +808,21 @@ export default function TransportersPage() {
             <div className="flex items-start justify-between gap-4 mb-5 border-b border-slate-100 pb-4">
               <div>
                 <h3 className="text-lg font-semibold text-zinc-950">
-                  {editingId ? "Edit Transporter Profile" : "Add New Transporter Profile"}
+                  Add New Transporter Profile
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
                   Fill in standard company license and bank payout settlements credentials.
                 </p>
               </div>
               <button
-                onClick={() => { setIsAddOpen(false); setEditingId(null); }}
+                onClick={() => { setIsAddOpen(false); }}
                 className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-zinc-950 transition-colors"
               >
                 Close Form
               </button>
             </div>
 
-            <form onSubmit={editingId ? handleEdit : handleCreate} className="space-y-6">
+            <form onSubmit={handleCreate} className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <h4 className="col-span-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Account Credentials</h4>
                 
@@ -1069,7 +973,7 @@ export default function TransportersPage() {
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => { setIsAddOpen(false); setEditingId(null); }}
+                  onClick={() => { setIsAddOpen(false); }}
                   className="rounded-full border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:text-zinc-950 transition-colors"
                 >
                   Cancel

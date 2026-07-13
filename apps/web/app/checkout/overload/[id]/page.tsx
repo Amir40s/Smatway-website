@@ -117,11 +117,7 @@ export default function OverloadCheckoutPage() {
 
     try {
       const callbackUrl = window.location.origin + `/checkout/overload/${id}`;
-      // In a real implementation, you would pass `selectedMethod` to `initializeExcessLuggagePayment` 
-      // if the backend supports choosing the gateway for excess luggage. 
-      // For now, our backend logic defaults to Paystack if currency is supported, else converts to NGN for Paystack.
-      // We will just call the endpoint.
-      const response = await initializeExcessLuggagePayment(id, callbackUrl);
+      const response = await initializeExcessLuggagePayment(id, callbackUrl, selectedMethod);
       if (response.authorization_url) {
         window.location.href = response.authorization_url;
       } else {

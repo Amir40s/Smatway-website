@@ -36,10 +36,12 @@ export class PaymentController {
   initializeExcessLuggagePayment(
     @Body('excessLuggageId') excessLuggageId: string,
     @Body('callbackUrl') callbackUrl?: string,
+    @Body('gateway') gateway?: string,
   ) {
     return this.paymentService.initializeExcessLuggagePayment(
       excessLuggageId,
       callbackUrl,
+      gateway,
     );
   }
 

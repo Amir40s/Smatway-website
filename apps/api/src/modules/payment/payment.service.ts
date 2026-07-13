@@ -545,6 +545,7 @@ export class PaymentService {
   async initializeExcessLuggagePayment(
     excessLuggageId: string,
     callbackUrl?: string,
+    gateway?: string,
   ) {
     const luggage = await this.prisma.excessLuggage.findUnique({
       where: { id: excessLuggageId },
@@ -557,6 +558,87 @@ export class PaymentService {
 
     if (luggage.status === PaymentStatus.PAID) {
       throw new BadRequestException('Excess luggage is already paid');
+    }
+
+    const fallbackCallbackUrl = `${process.env.WEB_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/excess-luggage`;
+    const finalCallbackUrl = callbackUrl || fallbackCallbackUrl;
+
+    if (gateway === 'PAYPAL') {
+      if (!this.paypalClientId || !this.paypalClientSecret) {
+        throw new InternalServerErrorException('PayPal credentials are not configured');
+      }
+      const txRef = `el_ppal_${normalizeCountryCode(luggage.booking.transport.departureCountry)}_${luggage.id}_${Date.now()}`;
+      const redirectUrl = finalCallbackUrl.includes('?') ? `${finalCallbackUrl}&reference=${txRef}` : `${finalCallbackUrl}?reference=${txRef}`;
+      
+      let paymentCurrency = luggage.currency || 'USD';
+      let paymentAmount = Number(luggage.amount);
+      const PAYPAL_SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
+      if (!PAYPAL_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
+        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
+        paymentAmount = paymentAmount * rateToUSD;
+        paymentCurrency = 'USD';
+      }
+
+      try {
+        const paypalApiUrl = this.paypalEnvironment === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
+        const authString = Buffer.from(`${this.paypalClientId}:${this.paypalClientSecret}`).toString('base64');
+        const tokenResponse = await firstValueFrom(
+          this.httpService.post(`${paypalApiUrl}/v1/oauth2/token`, 'grant_type=client_credentials', {
+            headers: { Authorization: `Basic ${authString}`, 'Content-Type': 'application/x-www-form-urlencoded' }
+          })
+        );
+        const orderPayload = {
+          intent: 'CAPTURE',
+          purchase_units: [{ reference_id: txRef, amount: { currency_code: paymentCurrency, value: paymentAmount.toFixed(2) } }],
+          application_context: { return_url: redirectUrl, cancel_url: redirectUrl }
+        };
+        const orderResponse = await firstValueFrom(
+          this.httpService.post(`${paypalApiUrl}/v2/checkout/orders`, orderPayload, {
+            headers: { Authorization: `Bearer ${tokenResponse.data.access_token}`, 'Content-Type': 'application/json' }
+          })
+        );
+        const approvalUrl = orderResponse.data.links.find((link: any) => link.rel === 'approve')?.href;
+        return { authorization_url: approvalUrl, reference: txRef };
+      } catch (error: any) {
+        throw new InternalServerErrorException('PayPal payment initialization failed');
+      }
+    }
+
+    if (gateway === 'REVOLUT') {
+      if (!this.revolutSecretKey) {
+        throw new InternalServerErrorException('Revolut secret key is not configured');
+      }
+      const txRef = `el_rev_${normalizeCountryCode(luggage.booking.transport.departureCountry)}_${luggage.id}_${Date.now()}`;
+      const redirectUrl = finalCallbackUrl.includes('?') ? `${finalCallbackUrl}&reference=${txRef}` : `${finalCallbackUrl}?reference=${txRef}`;
+      
+      let paymentCurrency = luggage.currency || 'USD';
+      let paymentAmount = Number(luggage.amount);
+      const REVOLUT_SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'CHF', 'JPY', 'NZD', 'PLN', 'SEK', 'ZAR'];
+      if (!REVOLUT_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
+        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
+        paymentAmount = paymentAmount * rateToUSD;
+        paymentCurrency = 'USD';
+      }
+
+      try {
+        const revolutApiUrl = this.revolutEnvironment === 'sandbox' ? 'https://sandbox-merchant.revolut.com' : 'https://merchant.revolut.com';
+        const orderPayload = {
+          amount: Math.round(paymentAmount * 100),
+          currency: paymentCurrency,
+          merchant_order_ext_ref: txRef,
+          customer_email: luggage.booking.traveler.email,
+          description: `SmatWay Excess Luggage #${luggage.id.slice(0, 8)}`,
+          redirect_url: redirectUrl
+        };
+        const orderResponse = await firstValueFrom(
+          this.httpService.post(`${revolutApiUrl}/api/1.0/orders`, orderPayload, {
+            headers: { Authorization: `Bearer ${this.revolutSecretKey}`, 'Content-Type': 'application/json' }
+          })
+        );
+        return { authorization_url: orderResponse.data.checkout_url, reference: txRef };
+      } catch (error: any) {
+        throw new InternalServerErrorException('Revolut payment initialization failed');
+      }
     }
 
     // Default to Paystack for simplicity
@@ -577,7 +659,6 @@ export class PaymentService {
     }
 
     const amountInMinorUnits = Math.round(paymentAmount * 100);
-    const fallbackCallbackUrl = `${process.env.WEB_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/excess-luggage`;
 
     const payload = {
       amount: amountInMinorUnits,
@@ -613,6 +694,20 @@ export class PaymentService {
   }
 
   async verifyExcessLuggagePayment(reference: string) {
+    if (reference.startsWith('el_ppal_')) {
+      const luggageId = reference.split('_')[3];
+      const luggage = await this.prisma.excessLuggage.findUnique({ where: { id: luggageId } });
+      if (!luggage) throw new NotFoundException('Excess luggage charge not found');
+      return { success: luggage.status === PaymentStatus.PAID, status: luggage.status, excessLuggageId: luggageId };
+    }
+
+    if (reference.startsWith('el_rev_')) {
+      const luggageId = reference.split('_')[3];
+      const luggage = await this.prisma.excessLuggage.findUnique({ where: { id: luggageId } });
+      if (!luggage) throw new NotFoundException('Excess luggage charge not found');
+      return { success: luggage.status === PaymentStatus.PAID, status: luggage.status, excessLuggageId: luggageId };
+    }
+
     if (!this.paystackSecretKey) {
       throw new InternalServerErrorException(
         'Paystack secret key is not configured',
@@ -765,6 +860,15 @@ export class PaymentService {
           });
           this.logger.log(`Booking ${bookingId} marked as PAID via PayPal webhook`);
         }
+      } else if (txRef && txRef.startsWith('el_ppal_')) {
+        const luggageId = txRef.split('_')[3];
+        const luggage = await this.prisma.excessLuggage.findUnique({ where: { id: luggageId } });
+        if (luggage && luggage.status !== PaymentStatus.PAID) {
+          await this.prisma.excessLuggage.update({
+            where: { id: luggageId },
+            data: { status: PaymentStatus.PAID, paymentMethod: 'PAYPAL' },
+          });
+        }
       }
     }
   }
@@ -773,15 +877,26 @@ export class PaymentService {
     const event = payload.event;
     const orderExtRef = payload.merchant_order_ext_ref;
 
-    if (event === 'ORDER_COMPLETED' && orderExtRef && orderExtRef.startsWith('rev_')) {
-      const bookingId = orderExtRef.split('_')[2];
-      const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
-      if (booking && booking.paymentStatus !== PaymentStatus.PAID) {
-        await this.prisma.booking.update({
-          where: { id: bookingId },
-          data: { paymentStatus: PaymentStatus.PAID, paymentMethod: 'REVOLUT' },
-        });
-        this.logger.log(`Booking ${bookingId} marked as PAID via Revolut webhook`);
+    if (event === 'ORDER_COMPLETED') {
+      if (orderExtRef && orderExtRef.startsWith('rev_')) {
+        const bookingId = orderExtRef.split('_')[2];
+        const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
+        if (booking && booking.paymentStatus !== PaymentStatus.PAID) {
+          await this.prisma.booking.update({
+            where: { id: bookingId },
+            data: { paymentStatus: PaymentStatus.PAID, paymentMethod: 'REVOLUT' },
+          });
+          this.logger.log(`Booking ${bookingId} marked as PAID via Revolut webhook`);
+        }
+      } else if (orderExtRef && orderExtRef.startsWith('el_rev_')) {
+        const luggageId = orderExtRef.split('_')[3];
+        const luggage = await this.prisma.excessLuggage.findUnique({ where: { id: luggageId } });
+        if (luggage && luggage.status !== PaymentStatus.PAID) {
+          await this.prisma.excessLuggage.update({
+            where: { id: luggageId },
+            data: { status: PaymentStatus.PAID, paymentMethod: 'REVOLUT' },
+          });
+        }
       }
     }
   }
