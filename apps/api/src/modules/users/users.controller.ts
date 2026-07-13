@@ -148,6 +148,30 @@ export class UsersController {
     return { avatarUrl: presignedUrl };
   }
 
+  @Post('profile/upload-certificate')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
+  async uploadCertificate(@CurrentUser() user: User, @UploadedFile() file: any) {
+    if (!file) throw new BadRequestException('No file uploaded');
+
+    const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!validTypes.includes(file.mimetype)) {
+      throw new BadRequestException('Only JPEG, PNG, and PDF files are allowed');
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      throw new BadRequestException('File size must be less than 10MB');
+    }
+
+    const { presignedUrl } = await this.storageService.uploadFile(
+      file,
+      `certificates/${user.id}`,
+    );
+
+    return { certificateUrl: presignedUrl };
+  }
+
   @Post('emergency-contacts')
   async createEmergencyContact(
     @CurrentUser() user: User,

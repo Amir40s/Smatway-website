@@ -22,6 +22,21 @@ export class PaymentService {
   private readonly flutterwaveWebhookHash =
     process.env.FLUTTERWAVE_WEBHOOK_HASH;
 
+  private readonly paypalClientId = process.env.PAYPAL_CLIENT_ID;
+  private readonly paypalClientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  private readonly paypalEnvironment = process.env.PAYPAL_ENVIRONMENT || 'sandbox';
+
+  private readonly revolutSecretKey = process.env.REVOLUT_SECRET_KEY;
+  private readonly revolutEnvironment = process.env.REVOLUT_ENVIRONMENT || 'sandbox';
+
+  // Common exchange rates used for PayPal and Revolut when native currency isn't supported
+  private readonly EXCHANGE_RATES_TO_USD: Record<string, number> = {
+    PKR: 0.0036, INR: 0.012, EUR: 1.08, GBP: 1.26, AED: 0.27, SAR: 0.27, EGP: 0.021, 
+    ETB: 0.017, ZMW: 0.038, MWK: 0.00057, MZN: 0.016, SLE: 0.000044, XOF: 0.0017, 
+    XAF: 0.0017, MAD: 0.1, DZD: 0.0074, TND: 0.32, KES: 0.0076, ZAR: 0.054, RWF: 0.00077, 
+    UGX: 0.00026, GHS: 0.071, NGN: 0.00067,
+  };
+
   constructor(
     private readonly httpService: HttpService,
     private readonly prisma: PrismaService,
@@ -160,6 +175,122 @@ export class PaymentService {
         throw new InternalServerErrorException(
           flwError?.message || 'Flutterwave payment initialization failed',
         );
+      }
+    }
+
+    // 2. PayPal payment initialization
+    if (booking.paymentMethod === 'PAYPAL') {
+      if (!this.paypalClientId || !this.paypalClientSecret) {
+        throw new InternalServerErrorException('PayPal credentials are not configured');
+      }
+
+      const txRef = `ppal_${normalizeCountryCode(booking.transport.departureCountry)}_${booking.id}_${Date.now()}`;
+      const fallbackCallbackUrl = `${process.env.WEB_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/traveler/booking/${booking.id}`;
+      const finalCallbackUrl = callbackUrl || fallbackCallbackUrl;
+      const redirectUrl = finalCallbackUrl.includes('?') ? `${finalCallbackUrl}&reference=${txRef}` : `${finalCallbackUrl}?reference=${txRef}`;
+
+      let paymentCurrency = booking.transport.currency || 'USD';
+      let paymentAmount = Number(booking.totalPrice);
+      
+      // Convert to USD if not supported
+      const PAYPAL_SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY']; // subset
+      if (!PAYPAL_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
+        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
+        paymentAmount = paymentAmount * rateToUSD;
+        paymentCurrency = 'USD';
+      }
+
+      try {
+        const paypalApiUrl = this.paypalEnvironment === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
+        const authString = Buffer.from(`${this.paypalClientId}:${this.paypalClientSecret}`).toString('base64');
+        
+        const tokenResponse = await firstValueFrom(
+          this.httpService.post(`${paypalApiUrl}/v1/oauth2/token`, 'grant_type=client_credentials', {
+            headers: {
+              Authorization: `Basic ${authString}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          })
+        );
+        const accessToken = tokenResponse.data.access_token;
+
+        const orderPayload = {
+          intent: 'CAPTURE',
+          purchase_units: [{
+            reference_id: txRef,
+            amount: { currency_code: paymentCurrency, value: paymentAmount.toFixed(2) }
+          }],
+          application_context: {
+            return_url: redirectUrl,
+            cancel_url: redirectUrl
+          }
+        };
+
+        const orderResponse = await firstValueFrom(
+          this.httpService.post(`${paypalApiUrl}/v2/checkout/orders`, orderPayload, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          })
+        );
+
+        const approvalUrl = orderResponse.data.links.find((link: any) => link.rel === 'approve')?.href;
+        if (!approvalUrl) throw new Error('No approval URL in PayPal response');
+
+        return { authorization_url: approvalUrl, reference: txRef };
+      } catch (error: any) {
+        this.logger.error(`PayPal initialization failed: ${error.message}`);
+        throw new InternalServerErrorException('PayPal payment initialization failed');
+      }
+    }
+
+    // 3. Revolut payment initialization
+    if (booking.paymentMethod === 'REVOLUT') {
+      if (!this.revolutSecretKey) {
+        throw new InternalServerErrorException('Revolut secret key is not configured');
+      }
+
+      const txRef = `rev_${normalizeCountryCode(booking.transport.departureCountry)}_${booking.id}_${Date.now()}`;
+      const fallbackCallbackUrl = `${process.env.WEB_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/traveler/booking/${booking.id}`;
+      const finalCallbackUrl = callbackUrl || fallbackCallbackUrl;
+      const redirectUrl = finalCallbackUrl.includes('?') ? `${finalCallbackUrl}&reference=${txRef}` : `${finalCallbackUrl}?reference=${txRef}`;
+
+      let paymentCurrency = booking.transport.currency || 'USD';
+      let paymentAmount = Number(booking.totalPrice);
+      
+      const REVOLUT_SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'CHF', 'JPY', 'NZD', 'PLN', 'SEK', 'ZAR'];
+      if (!REVOLUT_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
+        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
+        paymentAmount = paymentAmount * rateToUSD;
+        paymentCurrency = 'USD';
+      }
+
+      try {
+        const revolutApiUrl = this.revolutEnvironment === 'sandbox' ? 'https://sandbox-merchant.revolut.com' : 'https://merchant.revolut.com';
+        
+        const orderPayload = {
+          amount: Math.round(paymentAmount * 100),
+          currency: paymentCurrency,
+          merchant_order_ext_ref: txRef,
+          customer_email: booking.traveler.email,
+          description: `SmatWay Booking #${booking.id.slice(0, 8)}`,
+          redirect_url: redirectUrl
+        };
+
+        const orderResponse = await firstValueFrom(
+          this.httpService.post(`${revolutApiUrl}/api/1.0/orders`, orderPayload, {
+            headers: {
+              Authorization: `Bearer ${this.revolutSecretKey}`,
+              'Content-Type': 'application/json'
+            }
+          })
+        );
+
+        return { authorization_url: orderResponse.data.checkout_url, reference: txRef };
+      } catch (error: any) {
+        this.logger.error(`Revolut initialization failed: ${error.message}`);
+        throw new InternalServerErrorException('Revolut payment initialization failed');
       }
     }
 
@@ -320,7 +451,38 @@ export class PaymentService {
       }
     }
 
-    // 2. Paystack payment verification (default)
+    // 2. PayPal payment verification
+    if (reference.startsWith('ppal_')) {
+      const bookingId = reference.split('_')[2];
+      const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
+      if (!booking) throw new NotFoundException('Booking not found');
+      if (booking.travelerId !== userId) throw new BadRequestException('Not authorized');
+
+      // Note: PayPal REST API v2/checkout/orders/ doesn't support searching by reference easily without the order ID.
+      // Rely on the webhook to mark it as PAID. We just return the current status.
+      return { 
+        success: booking.paymentStatus === PaymentStatus.PAID, 
+        status: booking.paymentStatus, 
+        bookingId 
+      };
+    }
+
+    // 3. Revolut payment verification
+    if (reference.startsWith('rev_')) {
+      const bookingId = reference.split('_')[2];
+      const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
+      if (!booking) throw new NotFoundException('Booking not found');
+      if (booking.travelerId !== userId) throw new BadRequestException('Not authorized');
+
+      // Rely on the webhook to mark it as PAID.
+      return { 
+        success: booking.paymentStatus === PaymentStatus.PAID, 
+        status: booking.paymentStatus, 
+        bookingId 
+      };
+    }
+
+    // 4. Paystack payment verification (default fallback)
     if (!this.paystackSecretKey) {
       throw new InternalServerErrorException(
         'Paystack secret key is not configured',
@@ -575,6 +737,51 @@ export class PaymentService {
             `Booking ${bookingId} marked as PAID via Flutterwave webhook`,
           );
         }
+      }
+    }
+  }
+
+  async handlePaypalWebhook(payload: any) {
+    // Minimal handler. In production, verify signature.
+    const eventType = payload.event_type;
+    const resource = payload.resource;
+    
+    // Sometimes PayPal includes the reference id in custom_id or invoice_id. We'll check custom_id.
+    // If it's a CHECKOUT.ORDER.APPROVED event we can also capture it. For now, assuming direct capture.
+    if (eventType === 'PAYMENT.CAPTURE.COMPLETED' || eventType === 'CHECKOUT.ORDER.APPROVED') {
+      let txRef = resource.custom_id;
+      // In checkout v2, it could be under purchase_units[0].reference_id
+      if (!txRef && resource.purchase_units && resource.purchase_units[0]) {
+        txRef = resource.purchase_units[0].reference_id;
+      }
+
+      if (txRef && txRef.startsWith('ppal_')) {
+        const bookingId = txRef.split('_')[2];
+        const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
+        if (booking && booking.paymentStatus !== PaymentStatus.PAID) {
+          await this.prisma.booking.update({
+            where: { id: bookingId },
+            data: { paymentStatus: PaymentStatus.PAID, paymentMethod: 'PAYPAL' },
+          });
+          this.logger.log(`Booking ${bookingId} marked as PAID via PayPal webhook`);
+        }
+      }
+    }
+  }
+
+  async handleRevolutWebhook(payload: any) {
+    const event = payload.event;
+    const orderExtRef = payload.merchant_order_ext_ref;
+
+    if (event === 'ORDER_COMPLETED' && orderExtRef && orderExtRef.startsWith('rev_')) {
+      const bookingId = orderExtRef.split('_')[2];
+      const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
+      if (booking && booking.paymentStatus !== PaymentStatus.PAID) {
+        await this.prisma.booking.update({
+          where: { id: bookingId },
+          data: { paymentStatus: PaymentStatus.PAID, paymentMethod: 'REVOLUT' },
+        });
+        this.logger.log(`Booking ${bookingId} marked as PAID via Revolut webhook`);
       }
     }
   }

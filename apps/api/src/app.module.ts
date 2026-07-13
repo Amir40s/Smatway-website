@@ -20,6 +20,7 @@ import { AnnouncementModule } from './modules/announcement/announcement.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { ExcessLuggageModule } from './modules/excess-luggage/excess-luggage.module';
 import { KillSwitchModule } from './modules/kill-switch/kill-switch.module';
+import { CharterModule } from './modules/charter/charter.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { KillSwitchModule } from './modules/kill-switch/kill-switch.module';
     PaymentModule,
     ExcessLuggageModule,
     KillSwitchModule,
+    CharterModule,
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
   ],
   controllers: [AppController],

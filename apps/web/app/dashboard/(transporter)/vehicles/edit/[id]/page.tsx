@@ -29,6 +29,7 @@ export default function EditVehiclePage() {
     model: "",
     plateNumber: "",
     transportType: "CAR",
+    numberOfSeats: "4",
   });
   const [features, setFeatures] = useState<string[]>([]);
   const [customFeature, setCustomFeature] = useState("");
@@ -66,6 +67,7 @@ export default function EditVehiclePage() {
           model: vehicle.model,
           plateNumber: vehicle.plateNumber,
           transportType: vehicle.transportType,
+          numberOfSeats: vehicle.numberOfSeats?.toString() || "4",
         });
         if (vehicle.features && Array.isArray(vehicle.features)) {
           setFeatures(vehicle.features);
@@ -145,6 +147,7 @@ export default function EditVehiclePage() {
       formData.append("model", form.model);
       formData.append("plateNumber", form.plateNumber);
       formData.append("transportType", form.transportType);
+      formData.append("numberOfSeats", form.numberOfSeats);
       
       if (features && features.length > 0) {
         formData.append("features", JSON.stringify(features));
@@ -278,6 +281,10 @@ export default function EditVehiclePage() {
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>
                 </span>
               </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Number of Seats (Capacity)</label>
+              <input required type="number" min="1" placeholder="e.g. 4" value={form.numberOfSeats} onChange={e => set("numberOfSeats", e.target.value)} className={inputClass} />
             </div>
           </div>
         </div>

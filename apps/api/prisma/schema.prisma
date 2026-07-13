@@ -49,6 +49,8 @@ enum PaymentMethod {
   PAYSTACK
   FLUTTERWAVE
   MPAISA
+  PAYPAL
+  REVOLUT
 }
 
 model User {
@@ -86,6 +88,7 @@ model User {
   messages       Message[]
   siteFeedback   SiteFeedback[]
   announcements  Announcement[]
+  charterService CharterService?
 }
 
 model AuthProvider {
@@ -147,6 +150,7 @@ model UserProfile {
   licenseNumber           String?
   licenseExpiry           DateTime?
   vehicleType             String?
+  businessCertificateUrl  String?
 
   bankName                String?
   bankAccountNumber       String?
@@ -182,6 +186,7 @@ model Vehicle {
   model         String
   plateNumber   String
   transportType TransportType
+  numberOfSeats Int      @default(4)
   imageUrl      String?
   features      String[] @default([])
   deleted       Boolean  @default(false)
@@ -399,3 +404,23 @@ model ExcessLuggage {
   @@index([bookingId])
 }
 
+model CharterService {
+  id                         String   @id @default(uuid())
+  transporterId              String   @unique
+  transporter                User     @relation(fields: [transporterId], references: [id], onDelete: Cascade)
+  vehicleTypes               String[] // (Car, Van, minibus, Bus, Ferry, Train, etc)
+  capacity                   String
+  amenities                  String[] // (Airconditioned, etc)
+  vehiclePhotos              String[] // URLs of photos
+  operatingLocations         String[] // (Local, State, Countrywide, International)
+  serviceTimes               String   // (Hour, Day, Month, Year, Anytime)
+  charges                    String   // (Hourly, Daily until Passenger disembark...)
+  includesFuelAndMaintenance Boolean
+  currency                   String
+  paymentTerms               String   // (Hour or full day)
+  maxKilometerCover          String
+  otherConditions            String?
+
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+}

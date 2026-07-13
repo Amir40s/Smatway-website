@@ -408,22 +408,7 @@ export default function UsersPage() {
                         <td className="py-3.5 px-4 font-semibold text-zinc-800">{user.totalBookings ?? 0}</td>
                         <td className="py-3.5 px-4 text-right">
                           <div className="inline-flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => openEditUserModal(user)}
-                              disabled={isActionLoading(user.id, "edit") || !!actionLoading}
-                              className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2 text-slate-600 hover:border-zinc-950 hover:text-zinc-950 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-                              aria-label={`Edit user ${user.name || user.email}`}
-                            >
-                              {isActionLoading(user.id, "edit") ? (
-                                <ActionSpinner />
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.65-1.65a1.875 1.875 0 112.652 2.652L7.681 19.133a4.5 4.5 0 01-1.897 1.13l-2.507.715.715-2.507a4.5 4.5 0 011.13-1.897l11.84-11.837z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 7.125 16.875 4.5" />
-                                </svg>
-                              )}
-                            </button>
+                            {/* Edit functionality removed to prevent admins from modifying user entered details */}
                             <button
                               type="button"
                               onClick={() => setSelectedUserId(user.id)}
@@ -536,6 +521,22 @@ export default function UsersPage() {
                       <p className="font-semibold text-zinc-950 mt-1">—</p>
                     )}
                   </div>
+                  {selectedUser.profile?.businessCertificateUrl && (
+                    <div className="rounded-xl bg-slate-50 p-3 col-span-2">
+                      <p className="text-slate-400">Business Certificate</p>
+                      <a 
+                        href={selectedUser.profile.businessCertificateUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="inline-flex items-center gap-1 font-semibold text-emerald-600 hover:text-emerald-700 mt-1"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        View Legal Document
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">

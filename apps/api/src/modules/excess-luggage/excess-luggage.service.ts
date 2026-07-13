@@ -39,4 +39,23 @@ export class ExcessLuggageService {
 
     return booking.excessLuggages;
   }
+
+  async getChargeById(id: string) {
+    const charge = await this.prisma.excessLuggage.findUnique({
+      where: { id },
+      include: {
+        booking: {
+          include: {
+            transport: true,
+          },
+        },
+      },
+    });
+
+    if (!charge) {
+      throw new NotFoundException('Excess luggage charge not found');
+    }
+
+    return charge;
+  }
 }

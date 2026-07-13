@@ -116,6 +116,7 @@ export class UsersService {
             bankName: true,
             bankAccountNumber: true,
             bankAccountHolderName: true,
+            businessCertificateUrl: true,
           },
         },
         vehicles: {
@@ -236,6 +237,7 @@ export class UsersService {
             bankName: true,
             bankAccountNumber: true,
             bankAccountHolderName: true,
+            businessCertificateUrl: true,
           },
         },
         bookings: {
@@ -396,6 +398,7 @@ export class UsersService {
         bankName: dto.bankName,
         bankAccountNumber: dto.bankAccountNumber,
         bankAccountHolderName: dto.bankAccountHolderName,
+        businessCertificateUrl: dto.businessCertificateUrl,
       },
       create: {
         userId,
@@ -413,6 +416,7 @@ export class UsersService {
         bankName: dto.bankName,
         bankAccountNumber: dto.bankAccountNumber,
         bankAccountHolderName: dto.bankAccountHolderName,
+        businessCertificateUrl: dto.businessCertificateUrl,
       },
     });
 

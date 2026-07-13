@@ -233,6 +233,30 @@ export async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
   return response.json();
 }
 
+export async function uploadBusinessCertificate(file: File): Promise<{ certificateUrl: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const url = new URL('/users/profile/upload-certificate', API_BASE_URL).toString();
+  const token = getAuthToken();
+
+  const response = await fetch(url, {
+    method: 'POST',
+    body: formData,
+    credentials: 'include',
+    headers: {
+      'Accept-Language': getStoredLocale(),
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new ApiError(error.message || 'Failed to upload business certificate', response.status, error);
+  }
+  return response.json();
+}
+
 // Emergency contacts
 export async function addEmergencyContact(data: {
   name: string;
@@ -594,6 +618,19 @@ export async function getMessages(chatId: string): Promise<any[]> {
 
 export async function sendMessage(chatId: string, content: string): Promise<any> {
   return apiPost<any>(`/chat/${chatId}/messages`, { content });
+}
+
+// Excess Luggage
+export async function initializeExcessLuggagePayment(excessLuggageId: string, callbackUrl?: string): Promise<{ authorization_url: string; reference: string }> {
+  return apiPost<{ authorization_url: string; reference: string }>('/payment/initialize-excess-luggage', { excessLuggageId, callbackUrl });
+}
+
+export async function verifyExcessLuggagePayment(reference: string): Promise<{ success: boolean; status: string }> {
+  return apiGet<{ success: boolean; status: string }>(`/payment/verify-excess-luggage/${reference}`);
+}
+
+export async function getExcessLuggageCharge(id: string): Promise<any> {
+  return apiGet<any>(`/excess-luggage/charge/${id}`);
 }
 
 // Announcements API functions

@@ -23,6 +23,7 @@ const travelerNav = [
   { key: "/dashboard/announcements", label: "Announcements", icon: MegaphoneIcon },
   { key: "/dashboard/feedback", label: "Feedback", icon: StarIcon },
   { key: "/dashboard/rate-journey", label: "Rate Journey", icon: StarIcon },
+  { key: "/dashboard/request-charter", label: "Charter Service", icon: CarIcon },
   { key: "/dashboard/profile", label: "Profile", icon: UserIcon },
   { key: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
 ];
@@ -34,6 +35,7 @@ const transporterNav = [
   { key: "/dashboard/bookings", label: "Bookings", icon: BookOpenIcon },
   { key: "/dashboard/t-announcements", label: "Announcements", icon: MegaphoneIcon },
   { key: "/dashboard/payments", label: "Payments", icon: CreditCardIcon },
+  { key: "/dashboard/charter", label: "Charter Service", icon: CarIcon },
   { key: "/dashboard/profile", label: "Profile", icon: UserIcon },
   { key: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
 ];
@@ -46,6 +48,7 @@ const travelerTitles: Record<string, string> = {
   "/dashboard/rate-journey": "Rate Journey",
   "/dashboard/profile": "Profile",
   "/dashboard/settings": "Settings",
+  "/dashboard/request-charter": "Charter Service",
 };
 
 const transporterTitles: Record<string, string> = {
@@ -55,6 +58,7 @@ const transporterTitles: Record<string, string> = {
   "/dashboard/bookings": "Bookings",
   "/dashboard/t-announcements": "Announcements",
   "/dashboard/payments": "Payments",
+  "/dashboard/charter": "Charter Service",
   "/dashboard/profile": "Profile",
   "/dashboard/settings": "Settings",
 };
@@ -66,6 +70,7 @@ const transporterOnlyPaths = new Set([
   "/dashboard/bookings",
   "/dashboard/t-announcements",
   "/dashboard/payments",
+  "/dashboard/charter",
 ]);
 
 const travelerOnlyPaths = new Set([
