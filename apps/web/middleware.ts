@@ -15,6 +15,7 @@ const PUBLIC_EXACT: Set<string> = new Set([
     '/imprint',
     '/transporter-code-of-conduct',
     '/traveller-code-of-conduct',
+    '/vacancies',
 ]);
 
 

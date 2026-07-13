@@ -62,6 +62,8 @@ export default function ApplyModal({ isOpen, onClose, defaultSubject }: ApplyMod
     onClose();
   };
 
+  const isCompanyRequest = defaultSubject === "Transport Company Requesting Drivers";
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={isSubmitting ? () => {} : resetAndClose}>
@@ -106,7 +108,9 @@ export default function ApplyModal({ isOpen, onClose, defaultSubject }: ApplyMod
                       Application Sent!
                     </Dialog.Title>
                     <p className="text-sm text-slate-500 mb-8">
-                      Thank you for submitting your CV. We have received your application and will be in touch if your profile matches our requirements.
+                      {isCompanyRequest 
+                        ? "Thank you for submitting your requirements. We have received your request and will be in touch shortly to connect you with suitable drivers."
+                        : "Thank you for submitting your CV. We have received your application and will be in touch if your profile matches our requirements."}
                     </p>
                     <button
                       type="button"
@@ -122,7 +126,9 @@ export default function ApplyModal({ isOpen, onClose, defaultSubject }: ApplyMod
                       {defaultSubject}
                     </Dialog.Title>
                     <p className="text-sm text-slate-500 mb-6">
-                      Please fill out the form below and attach your CV.
+                      {isCompanyRequest
+                        ? "Please fill out the form below with your requirements."
+                        : "Please fill out the form below and attach your CV."}
                     </p>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -134,7 +140,9 @@ export default function ApplyModal({ isOpen, onClose, defaultSubject }: ApplyMod
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="space-y-1.5">
-                          <label htmlFor="name" className="text-sm font-medium text-slate-700">Full Name <span className="text-red-500">*</span></label>
+                          <label htmlFor="name" className="text-sm font-medium text-slate-700">
+                            {isCompanyRequest ? "Company / Contact Name" : "Full Name"} <span className="text-red-500">*</span>
+                          </label>
                           <input
                             type="text"
                             name="name"
@@ -158,41 +166,45 @@ export default function ApplyModal({ isOpen, onClose, defaultSubject }: ApplyMod
                       </div>
 
                       <div className="space-y-1.5">
-                        <label htmlFor="message" className="text-sm font-medium text-slate-700">Message / Cover Letter <span className="text-red-500">*</span></label>
+                        <label htmlFor="message" className="text-sm font-medium text-slate-700">
+                          {isCompanyRequest ? "Requirements / Details" : "Message / Cover Letter"} <span className="text-red-500">*</span>
+                        </label>
                         <textarea
                           name="message"
                           id="message"
                           required
                           rows={4}
-                          placeholder="Tell us a bit about yourself..."
+                          placeholder={isCompanyRequest ? "Tell us about the drivers you need..." : "Tell us a bit about yourself..."}
                           className="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-emerald-500 focus:bg-white focus:ring-emerald-500 outline-none transition-all border resize-none"
                         ></textarea>
                       </div>
 
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-slate-700">Upload CV <span className="text-slate-400 font-normal">(Optional)</span></label>
-                        <div className="relative">
-                          <input
-                            type="file"
-                            name="cv"
-                            id="cv"
-                            accept=".pdf,.doc,.docx"
-                            onChange={handleFileChange}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                          />
-                          <div className={`w-full rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors ${fileName ? "border-emerald-500 bg-emerald-50/50" : "border-slate-200 bg-slate-50 hover:bg-slate-100"}`}>
-                            <UploadCloud className={`mx-auto h-8 w-8 mb-2 ${fileName ? "text-emerald-500" : "text-slate-400"}`} />
-                            <div className="text-sm text-slate-600">
-                              {fileName ? (
-                                <span className="font-semibold text-emerald-700">{fileName}</span>
-                              ) : (
-                                <span><span className="font-semibold text-emerald-600">Click to upload</span> or drag and drop</span>
-                              )}
+                      {!isCompanyRequest && (
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium text-slate-700">Upload CV <span className="text-slate-400 font-normal">(Optional)</span></label>
+                          <div className="relative">
+                            <input
+                              type="file"
+                              name="cv"
+                              id="cv"
+                              accept=".pdf,.doc,.docx"
+                              onChange={handleFileChange}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            <div className={`w-full rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors ${fileName ? "border-emerald-500 bg-emerald-50/50" : "border-slate-200 bg-slate-50 hover:bg-slate-100"}`}>
+                              <UploadCloud className={`mx-auto h-8 w-8 mb-2 ${fileName ? "text-emerald-500" : "text-slate-400"}`} />
+                              <div className="text-sm text-slate-600">
+                                {fileName ? (
+                                  <span className="font-semibold text-emerald-700">{fileName}</span>
+                                ) : (
+                                  <span><span className="font-semibold text-emerald-600">Click to upload</span> or drag and drop</span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-500 mt-1">PDF, DOC, DOCX up to 5MB</p>
                             </div>
-                            <p className="text-xs text-slate-500 mt-1">PDF, DOC, DOCX up to 5MB</p>
                           </div>
                         </div>
-                      </div>
+                      )}
 
                       <div className="pt-2">
                         <button
@@ -203,10 +215,10 @@ export default function ApplyModal({ isOpen, onClose, defaultSubject }: ApplyMod
                           {isSubmitting ? (
                             <>
                               <Loader2 className="w-4 h-4 animate-spin" />
-                              Sending Application...
+                              {isCompanyRequest ? "Sending Requirements..." : "Sending Application..."}
                             </>
                           ) : (
-                            "Send Application"
+                            isCompanyRequest ? "Send Requirements" : "Send Application"
                           )}
                         </button>
                       </div>
