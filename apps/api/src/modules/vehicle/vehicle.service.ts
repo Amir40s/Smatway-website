@@ -76,6 +76,9 @@ export class VehicleService {
       }
     }
 
+    const parsedSeats = parseInt(String(dto.numberOfSeats), 10);
+    const numberOfSeats = isNaN(parsedSeats) ? 4 : parsedSeats;
+
     const vehicle = await this.prisma.vehicle.create({
       data: {
         transporterId,
@@ -83,6 +86,7 @@ export class VehicleService {
         model: dto.model,
         plateNumber: dto.plateNumber,
         transportType: dto.transportType,
+        numberOfSeats,
         imageUrl,
         features: parsedFeatures,
       },
@@ -198,6 +202,9 @@ export class VehicleService {
       }
     }
 
+    const parsedSeats = parseInt(String(dto.numberOfSeats), 10);
+    const numberOfSeats = isNaN(parsedSeats) ? 4 : parsedSeats;
+
     const updated = await this.prisma.vehicle.update({
       where: { id },
       data: {
@@ -205,6 +212,7 @@ export class VehicleService {
         model: dto.model,
         plateNumber: dto.plateNumber,
         transportType: dto.transportType,
+        numberOfSeats,
         imageUrl,
         ...(parsedFeatures !== undefined && { features: parsedFeatures }),
       },

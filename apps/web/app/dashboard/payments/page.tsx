@@ -15,7 +15,7 @@ export default function PaymentsPage() {
       try {
         const bookings = await getTransportBookings();
         // Filter only paid bookings for the payments history
-        const paidBookings = bookings.filter((b: any) => b.paymentStatus === "PAID" || b.paymentMethod === "PAYSTACK" || b.paymentMethod === "FLUTTERWAVE");
+        const paidBookings = bookings.filter((b: any) => b.paymentStatus === "PAID" || ["PAYSTACK", "FLUTTERWAVE", "PAYPAL", "REVOLUT"].includes(b.paymentMethod));
         // Sort by most recent
         paidBookings.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setPayments(paidBookings);

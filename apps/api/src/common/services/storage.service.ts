@@ -37,7 +37,8 @@ export class StorageService {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: folder,
-          resource_type: 'auto',
+          resource_type: file.mimetype?.includes('pdf') ? 'image' : 'auto',
+          format: file.originalname ? file.originalname.split('.').pop() : undefined,
         },
         (error, result) => {
           if (error) {

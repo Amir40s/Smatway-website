@@ -125,6 +125,7 @@ export class BookingService {
     const bookings = await this.prisma.booking.findMany({
       where: { travelerId },
       include: {
+        excessLuggages: true,
         transport: {
           include: {
             vehicle: true,
@@ -175,6 +176,7 @@ export class BookingService {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: {
+        excessLuggages: true,
         traveler: {
           select: {
             id: true,
@@ -243,6 +245,7 @@ export class BookingService {
         transport: { transporterId },
       },
       include: {
+        excessLuggages: true,
         transport: {
           include: { vehicle: true, stops: { orderBy: { stopOrder: 'asc' } } },
         },

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { getBooking, cancelBooking, updatePaymentMethod, createReview, initChat, getChatByBooking, getMessages, sendMessage, getTransporterProfile, initializePayment, verifyPayment } from "@/lib/api";
+import { getBooking, cancelBooking, updatePaymentMethod, createReview, initChat, getChatByBooking, getMessages, sendMessage, getTransporterProfile, initializePayment, verifyPayment, initializeExcessLuggagePayment } from "@/lib/api";
 import { formatPrice } from "@/lib/currencies";
 import { countryName, countryCodeFromName } from "@/lib/countries";
 import { RouteTimeline } from "@/app/dashboard/_Components/ui";
@@ -19,6 +19,18 @@ const paymentMethods = [
     id: "FLUTTERWAVE",
     name: "Flutterwave",
     description: "Pay with Card, Bank Transfer, or M-Pesa / Mobile Money",
+    available: true,
+  },
+  {
+    id: "PAYPAL",
+    name: "PayPal",
+    description: "Pay securely with PayPal",
+    available: true,
+  },
+  {
+    id: "REVOLUT",
+    name: "Revolut",
+    description: "Pay securely with Revolut",
     available: true,
   },
 ];
@@ -57,6 +69,24 @@ export default function BookingDetailPage() {
   const [portalReady, setPortalReady] = useState(false);
   const [initializingPayment, setInitializingPayment] = useState(false);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [payingLuggageId, setPayingLuggageId] = useState<string | null>(null);
+
+  async function handlePayExcessLuggage(luggageId: string) {
+    setPayingLuggageId(luggageId);
+    setError("");
+    try {
+      const response = await initializeExcessLuggagePayment(luggageId);
+      if (response.authorization_url) {
+        window.open(response.authorization_url, "_blank");
+      } else {
+        throw new Error("Failed to get checkout URL");
+      }
+    } catch (e: any) {
+      setError(e?.message || "Failed to initialize excess luggage payment");
+    } finally {
+      setPayingLuggageId(null);
+    }
+  }
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -69,20 +99,38 @@ export default function BookingDetailPage() {
 
   useEffect(() => {
     const reference = searchParams.get("reference");
-    if (reference && booking && booking.paymentStatus !== "PAID" && !verifyingPayment) {
-      setVerifyingPayment(true);
-      verifyPayment(reference)
-        .then((res) => {
-          if (res.success) {
-            const methodUsed = reference.startsWith("flw_") ? "FLUTTERWAVE" : "PAYSTACK";
-            setBooking((b: any) => ({ ...b, paymentStatus: "PAID", paymentMethod: methodUsed }));
-             router.replace(`/dashboard/traveler/booking/${id}`);
-          } else {
-            setError(`Payment verification failed: ${res.status}`);
-          }
-        })
-        .catch((e) => setError(e?.message || "Payment verification failed"))
-        .finally(() => setVerifyingPayment(false));
+    if (reference && booking && !verifyingPayment) {
+      if (reference.startsWith("el_")) {
+        // Handle excess luggage payment verification
+        setVerifyingPayment(true);
+        import("@/lib/api").then(({ verifyExcessLuggagePayment }) => {
+          verifyExcessLuggagePayment(reference)
+            .then((res) => {
+              getBooking(id).then(setBooking);
+              router.replace(`/dashboard/traveler/booking/${id}`);
+            })
+            .catch((e) => setError(e?.message || "Excess luggage verification failed"))
+            .finally(() => setVerifyingPayment(false));
+        });
+      } else if (booking.paymentStatus !== "PAID") {
+        // Main booking payment verification
+        setVerifyingPayment(true);
+        verifyPayment(reference)
+          .then((res) => {
+            if (res.success) {
+              let methodUsed = "PAYSTACK";
+              if (reference.startsWith("flw_")) methodUsed = "FLUTTERWAVE";
+              if (reference.startsWith("ppal_")) methodUsed = "PAYPAL";
+              if (reference.startsWith("rev_")) methodUsed = "REVOLUT";
+              setBooking((b: any) => ({ ...b, paymentStatus: "PAID", paymentMethod: methodUsed }));
+              router.replace(`/dashboard/traveler/booking/${id}`);
+            } else {
+              setError(`Payment verification failed: ${res.status}`);
+            }
+          })
+          .catch((e) => setError(e?.message || "Payment verification failed"))
+          .finally(() => setVerifyingPayment(false));
+      }
     }
   }, [searchParams, booking, id, router]);
 
@@ -125,8 +173,8 @@ export default function BookingDetailPage() {
 
   async function handleProceedToPayment() {
     const method = selectedMethod || booking?.paymentMethod;
-    if (method !== 'PAYSTACK' && method !== 'FLUTTERWAVE') {
-      setError("Only Paystack and Flutterwave are currently supported");
+    if (!['PAYSTACK', 'FLUTTERWAVE', 'PAYPAL', 'REVOLUT'].includes(method)) {
+      setError("Payment method not supported currently");
       return;
     }
 
@@ -470,7 +518,7 @@ export default function BookingDetailPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-zinc-900">{method.name}</span>
-                      {!['PAYSTACK', 'FLUTTERWAVE'].includes(method.id) && <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Coming Soon</span>}
+                      {!['PAYSTACK', 'FLUTTERWAVE', 'PAYPAL', 'REVOLUT'].includes(method.id) && <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Coming Soon</span>}
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">{method.description}</p>
                   </div>
@@ -486,11 +534,43 @@ export default function BookingDetailPage() {
 
           <button
             onClick={handleProceedToPayment}
-            disabled={initializingPayment || verifyingPayment || !['PAYSTACK', 'FLUTTERWAVE'].includes(selectedMethod || booking.paymentMethod)}
+            disabled={initializingPayment || verifyingPayment || !['PAYSTACK', 'FLUTTERWAVE', 'PAYPAL', 'REVOLUT'].includes(selectedMethod || booking.paymentMethod)}
             className="mt-4 w-full bg-zinc-900 text-white text-sm font-semibold py-3 rounded-xl hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {initializingPayment || verifyingPayment ? "Processing..." : "Proceed to Payment"}
           </button>
+        </div>
+      )}
+
+      {/* Excess Luggage */}
+      {booking.excessLuggages && booking.excessLuggages.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <h3 className="text-sm font-semibold text-zinc-900">Excess Luggage Charges</h3>
+          {booking.excessLuggages.map((luggage: any) => (
+            <div key={luggage.id} className="border border-slate-100 bg-slate-50 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-semibold text-zinc-900">{formatPrice(Number(luggage.amount), luggage.currency)}</span>
+                  <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md ${
+                    luggage.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {luggage.status}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">{luggage.description || 'Extra luggage fee'}</p>
+              </div>
+              
+              {luggage.status !== 'PAID' && (
+                <button
+                  onClick={() => handlePayExcessLuggage(luggage.id)}
+                  disabled={payingLuggageId === luggage.id}
+                  className="bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-all disabled:opacity-50 whitespace-nowrap"
+                >
+                  {payingLuggageId === luggage.id ? "Processing..." : "Pay Now"}
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       )}
 

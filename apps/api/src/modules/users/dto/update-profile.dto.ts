@@ -88,4 +88,8 @@ export class UpdateProfileDto {
   @IsString()
   @MaxLength(100)
   bankAccountHolderName?: string;
+
+  @IsOptional()
+  @IsUrl()
+  businessCertificateUrl?: string;
 }

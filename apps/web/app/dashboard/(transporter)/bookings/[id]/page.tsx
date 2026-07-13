@@ -221,14 +221,33 @@ export default function BookingDetailPage() {
               <MiniStat label="Total" value={formatPrice(booking.totalPrice, booking.transport?.currency)} accent />
             </div>
 
-            {/* Excess Luggage Button for Transporter */}
-            <div className="p-4 border-t border-slate-100 flex justify-end bg-slate-50">
-              <button
-                onClick={() => setIsLuggageModalOpen(true)}
-                className="bg-zinc-900 hover:bg-zinc-800 text-white text-[13px] font-semibold py-2 px-4 rounded-xl transition-all"
-              >
-                + Charge Excess Luggage
-              </button>
+            {/* Excess Luggage Info & Button for Transporter */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50">
+              {booking.excessLuggages && booking.excessLuggages.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold text-zinc-900">Excess Luggage Charge</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${
+                      booking.excessLuggages[0].status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {booking.excessLuggages[0].status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs text-slate-500">
+                    <span>{booking.excessLuggages[0].description || "Extra luggage fee"}</span>
+                    <span className="font-medium text-zinc-900">{formatPrice(Number(booking.excessLuggages[0].amount), booking.excessLuggages[0].currency)}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setIsLuggageModalOpen(true)}
+                    className="bg-zinc-900 hover:bg-zinc-800 text-white text-[13px] font-semibold py-2 px-4 rounded-xl transition-all"
+                  >
+                    + Charge Excess Luggage
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

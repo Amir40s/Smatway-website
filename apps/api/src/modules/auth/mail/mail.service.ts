@@ -450,4 +450,50 @@ export class MailService {
       throw error;
     }
   }
+
+  async sendCharterRequestEmail(
+    userEmail: string,
+    details: {
+      vehicleType: string;
+      location: string;
+      dateTime: string;
+      requirements: string;
+    },
+  ): Promise<void> {
+    const targetEmail = 'charter@smatway.com';
+    const { transporter, from } = this.getTransporterAndFrom(targetEmail);
+
+    if (transporter === this.transporter && !this.smtpConfigured) {
+      this.logger.warn(
+        `Skipping Charter Request email from ${userEmail} — SMTP not configured.`,
+      );
+      return;
+    }
+
+    try {
+      await transporter.sendMail({
+        from: from,
+        to: targetEmail,
+        subject: `New Charter Request from ${userEmail}`,
+        html: `
+          <h2>Charter Service Request</h2>
+          <p><strong>Submitted by:</strong> ${userEmail}</p>
+          <p><strong>Vehicle Type:</strong> ${details.vehicleType}</p>
+          <p><strong>Location/Route:</strong> ${details.location}</p>
+          <p><strong>Date & Time:</strong> ${details.dateTime}</p>
+          <p><strong>Additional Requirements:</strong></p>
+          <blockquote style="background:#f9f9f9;padding:10px;border-left:5px solid #ccc;">
+            ${details.requirements || 'None provided'}
+          </blockquote>
+        `,
+      });
+      this.logger.log(`Charter Request email sent from ${userEmail}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to send charter request email from ${userEmail}`,
+        error,
+      );
+      throw error;
+    }
+  }
 }

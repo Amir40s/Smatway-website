@@ -79,4 +79,18 @@ export class PaymentController {
     this.paymentService.handleFlutterwaveWebhook(signature, req.body);
     return { received: true };
   }
+
+  @Post('webhook/paypal')
+  @HttpCode(200)
+  handlePaypalWebhook(@Req() req: any) {
+    this.paymentService.handlePaypalWebhook(req.body);
+    return { received: true };
+  }
+
+  @Post('webhook/revolut')
+  @HttpCode(200)
+  handleRevolutWebhook(@Req() req: any) {
+    this.paymentService.handleRevolutWebhook(req.body);
+    return { received: true };
+  }
 }

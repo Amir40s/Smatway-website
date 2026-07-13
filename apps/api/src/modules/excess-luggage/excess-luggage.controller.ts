@@ -18,6 +18,11 @@ export class ExcessLuggageController {
     );
   }
 
+  @Get('charge/:id')
+  async getChargeById(@Param('id') id: string) {
+    return this.excessLuggageService.getChargeById(id);
+  }
+
   @Get(':bookingId')
   async getCharges(@Param('bookingId') bookingId: string) {
     return this.excessLuggageService.getChargesByBookingId(bookingId);

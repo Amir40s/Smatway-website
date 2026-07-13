@@ -13,4 +13,5 @@ export class CreateVehicleDto {
   @IsString() @IsNotEmpty() plateNumber!: string;
   @IsEnum(TransportType) transportType!: TransportType;
   @IsOptional() features?: string | string[];
+  @IsOptional() numberOfSeats?: number | string;
 }

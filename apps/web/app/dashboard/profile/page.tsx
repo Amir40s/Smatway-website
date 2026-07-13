@@ -6,7 +6,7 @@ import {
   UserIcon, PhoneIcon, MailIcon, CameraIcon, PlusIcon, TrashIcon,
 } from "@/app/dashboard/_Components/Icons";
 import {
-  getProfile, updateProfile, uploadAvatar,
+  getProfile, updateProfile, uploadAvatar, uploadBusinessCertificate,
   addEmergencyContact, deleteEmergencyContact,
 } from "@/lib/api";
 import type { ProfileResponse } from "@/types/profile.types";
@@ -32,6 +32,7 @@ export default function ProfilePage() {
   const [businessName, setBusinessName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [businessCertificateUrl, setBusinessCertificateUrl] = useState<string | null>(null);
 
   // NEW Transporter Bank Details
   const [bankName, setBankName] = useState("");
@@ -39,6 +40,7 @@ export default function ProfilePage() {
   const [bankAccountHolderName, setBankAccountHolderName] = useState("");
 
   const [addingContact, setAddingContact] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", relation: "family", phone: "" });
 
   // Mirrors the scoped .input style below, but as plain Tailwind so it can be
@@ -61,6 +63,7 @@ export default function ProfilePage() {
       setBusinessName(data.profile?.companyName || "");
       setBio(data.profile?.bio || "");
       setAvatarUrl(data.user.avatarUrl || null);
+      setBusinessCertificateUrl((data.profile as any)?.businessCertificateUrl || null);
       setBankName(data.profile?.bankName || "");
       setBankAccountNumber(data.profile?.bankAccountNumber || "");
       setBankAccountHolderName(data.profile?.bankAccountHolderName || "");
@@ -84,6 +87,23 @@ export default function ProfilePage() {
       setTimeout(() => setSuccess(null), 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload avatar");
+    }
+  }
+
+  async function handleCertificateUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.currentTarget.files?.[0];
+    if (!file) return;
+    try {
+      setIsUploading(true);
+      setError(null);
+      const { certificateUrl: url } = await uploadBusinessCertificate(file);
+      setBusinessCertificateUrl(url);
+      setSuccess("Business certificate uploaded");
+      setTimeout(() => setSuccess(null), 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload certificate");
+    } finally {
+      setIsUploading(false);
     }
   }
 
@@ -116,17 +136,22 @@ export default function ProfilePage() {
     try {
       setSaving(true);
       setError(null);
-      await updateProfile({
-        name: fullName,
-        phoneNumber: phone,
-        country,
+      const updateData: any = {
+        name: fullName.trim(),
+        phoneNumber: phone.trim() || undefined,
+        country: country || undefined,
         preferredCurrency: preferredCurrency || undefined,
-        bio,
-        companyName: isTransporter ? businessName : undefined,
-        bankName: isTransporter ? bankName : undefined,
-        bankAccountNumber: isTransporter ? bankAccountNumber : undefined,
-        bankAccountHolderName: isTransporter ? bankAccountHolderName : undefined,
-      });
+        bio: bio.trim() || undefined,
+      };
+
+      if (isTransporter) {
+        updateData.companyName = businessName.trim() || undefined;
+        updateData.bankName = bankName.trim() || undefined;
+        updateData.bankAccountNumber = bankAccountNumber.trim() || undefined;
+        updateData.bankAccountHolderName = bankAccountHolderName.trim() || undefined;
+        updateData.businessCertificateUrl = businessCertificateUrl || undefined;
+      }
+      await updateProfile(updateData);
       setSuccess("Profile updated");
       setTimeout(() => window.location.reload(), 900);
     } catch (err) {
@@ -312,6 +337,28 @@ export default function ProfilePage() {
                       className="input"
                     />
                   </Field>
+
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-4 mb-4">
+                    <p className="text-[11px] font-bold text-zinc-900 uppercase tracking-wider">Business Certificate / Permission</p>
+                    <div className="flex items-center gap-4">
+                      {businessCertificateUrl ? (
+                        <a href={businessCertificateUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-600 hover:text-emerald-700 underline font-medium truncate max-w-xs">
+                          View Uploaded Document
+                        </a>
+                      ) : (
+                        <span className="text-sm text-slate-500">No document uploaded yet.</span>
+                      )}
+                      <div>
+                        <label
+                          htmlFor="certificate-upload"
+                          className={`inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors shadow-sm ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                          {isUploading ? "Uploading..." : businessCertificateUrl ? "Replace Document" : "Upload Document"}
+                        </label>
+                        <input id="certificate-upload" type="file" accept="image/jpeg,image/png,application/pdf" onChange={handleCertificateUpload} disabled={isUploading} className="hidden" />
+                      </div>
+                    </div>
+                  </div>
 
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-4 mb-4">
                     <p className="text-[11px] font-bold text-zinc-900 uppercase tracking-wider">Bank Details (for offline payouts)</p>
