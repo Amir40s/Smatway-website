@@ -33,9 +33,10 @@ function ChevronDownIcon({ className = "w-3.5 h-3.5" }: { className?: string }) 
 }
 
 // nav links — labels translated at render time via t()
-const navLinks: { href: string; key: string }[] = [
+const navLinks: { href: string; key?: string; label?: string }[] = [
   { href: "/", key: "nav.home" },
   { href: "/how-it-works", key: "nav.howItWorks" },
+  { href: "/vacancies", label: "Vacancies" },
 ];
 
 function Navbar() {
@@ -84,7 +85,7 @@ function Navbar() {
                       : "text-slate-500 hover:text-zinc-900"
                     }`}
                 >
-                  {t(link.key)}
+                  {link.key ? t(link.key) : link.label}
                   {active && (
                     <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-emerald-600 rounded-full" />
                   )}
@@ -161,7 +162,7 @@ function Navbar() {
                   : "text-zinc-800 hover:bg-zinc-50"
                   }`}
               >
-                <span>{t(link.key)}</span>
+                <span>{link.key ? t(link.key) : link.label}</span>
                 {active && (
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 )}
@@ -226,6 +227,11 @@ function Footer() {
               <li>
                 <Link href="/how-it-works" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
                   {t("nav.howItWorks")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/vacancies" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
+                  Vacancies
                 </Link>
               </li>
             </ul>
