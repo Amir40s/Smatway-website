@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { searchTransports, createBooking, getTransporterProfile } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatPrice } from "@/lib/currencies";
 import { countryName } from "@/lib/countries";
 import { formatTransportType } from "@/lib/utils";
@@ -21,14 +22,14 @@ import {
 } from "@/app/dashboard/_Components/ui";
 
 const transportTypes = [
-  { label: "All types", value: "All" },
-  { label: "Car", value: "CAR" },
-  { label: "Van", value: "VAN" },
-  { label: "Minibus", value: "MINIBUS" },
-  { label: "Bus", value: "BUS" },
-  { label: "Ferry", value: "FERRY" },
-  { label: "Train", value: "TRAIN" },
-  { label: "Charter", value: "CHARTER" },
+  { label: "All types", value: "All", image: null },
+  { label: "Car", value: "CAR", image: "/vehicle img/car.png" },
+  { label: "Van", value: "VAN", image: "/vehicle img/van.png" },
+  { label: "Minibus", value: "MINIBUS", image: "/vehicle img/minibus.jpg" },
+  { label: "Bus", value: "BUS", image: "/vehicle img/bus.jpeg" },
+  { label: "Ferry", value: "FERRY", image: "/vehicle img/ship.png" },
+  { label: "Train", value: "TRAIN", image: "/vehicle img/train.png" },
+  { label: "Charter", value: "CHARTER", image: "/vehicle img/plan.jpeg" },
 ] as const;
 
 export default function SearchRidesPage() {
@@ -176,18 +177,23 @@ export default function SearchRidesPage() {
 
                 <Field label="Type" icon={<CarIcon className="w-4 h-4" />}>
                   <div className="relative mt-1">
-                    <select
-                      value={transportType}
-                      onChange={(e) => setTransportType(e.target.value as any)}
-                      className="w-full bg-transparent text-sm text-zinc-900 focus:outline-none font-medium appearance-none cursor-pointer pr-6"
-                    >
-                      {transportTypes.map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDownIcon className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                    <Select value={transportType} onValueChange={(val) => setTransportType(val as any)}>
+                      <SelectTrigger className="w-full border-0 bg-transparent p-0 h-auto font-medium text-sm text-zinc-900 shadow-none hover:bg-transparent focus-visible:ring-0">
+                        <SelectValue placeholder="All types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {transportTypes.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>
+                            <div className="flex items-center gap-3 py-0.5">
+                              {t.image && (
+                                <img src={t.image} alt={t.label} className="w-16 h-12 object-contain rounded-sm" />
+                              )}
+                              <span className="font-medium text-sm">{t.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </Field>
               </div>

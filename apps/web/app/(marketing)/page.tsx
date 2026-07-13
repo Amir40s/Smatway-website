@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } from "motion/react";
 import { useT } from "@/lib/i18n/LocaleProvider";
+import { Car, Truck, BusFront, Bus, Ship, Train } from "lucide-react";
 
 // ─── useReducedFx — return true on small viewports OR prefers-reduced-motion ─
 // Initial value is `true` (cheap render) so SSR/first paint ships the lightweight
@@ -2671,12 +2672,54 @@ function CTA() {
   );
 }
 
+// ─── Transport Modes ──────────────────────────────────────────────────────────
+
+function TransportModes() {
+  const t = useT();
+  const modes = [
+    { id: "car", icon: <Car className="w-8 h-8" />, label: "Car" },
+    { id: "van", icon: <Truck className="w-8 h-8" />, label: "Van" },
+    { id: "minibus", icon: <BusFront className="w-8 h-8" />, label: "Minibus" },
+    { id: "bus", icon: <Bus className="w-8 h-8" />, label: "Bus" },
+    { id: "ferry", icon: <Ship className="w-8 h-8" />, label: "Ferry" },
+    { id: "train", icon: <Train className="w-8 h-8" />, label: "Train" },
+  ];
+
+  return (
+    <section className="bg-white border-y border-zinc-100 py-16 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-600 mb-10">
+          All Modes of Transport Supported
+        </p>
+        <div className="flex flex-wrap justify-center gap-6 sm:gap-12 md:gap-16">
+          {modes.map((m, i) => (
+            <motion.div
+              key={m.id}
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="group flex flex-col items-center gap-4 text-zinc-400 hover:text-emerald-600 transition-colors"
+            >
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.25rem] bg-zinc-50 border border-zinc-100 flex items-center justify-center text-current shadow-sm group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:shadow-[0_8px_24px_-8px_rgba(16,185,129,0.25)] group-hover:-translate-y-1 transition-all duration-300">
+                {m.icon}
+              </div>
+              <span className="font-semibold text-[13px] sm:text-sm text-zinc-700 tracking-wide">{m.label}</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
   return (
     <>
       <Hero />
+      <TransportModes />
       <Features />
       <AppPreview />
       {/* <HowItWorks /> */}
