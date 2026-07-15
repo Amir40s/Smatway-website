@@ -9,7 +9,9 @@ import { HttpService } from '@nestjs/axios';
 import { PrismaService } from '../database/prisma.service';
 import { firstValueFrom } from 'rxjs';
 import * as crypto from 'crypto';
-import { BookingStatus, PaymentStatus } from '@prisma/client';
+import { BookingStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
+import { MailService } from '../auth/mail/mail.service';
+import { ChatGateway } from '../chat/chat.gateway';
 
 import { normalizeCountryCode } from '../../common/utils/country.util';
 
@@ -40,6 +42,8 @@ export class PaymentService {
   constructor(
     private readonly httpService: HttpService,
     private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+    private readonly chatGateway: ChatGateway,
   ) {}
 
   async initializePayment(
@@ -520,13 +524,7 @@ export class PaymentService {
         }
 
         if (booking.paymentStatus !== PaymentStatus.PAID) {
-          await this.prisma.booking.update({
-            where: { id: bookingId },
-            data: {
-              paymentStatus: PaymentStatus.PAID,
-              paymentMethod: 'PAYSTACK',
-            },
-          });
+          await this.confirmBookingOnPayment(bookingId, 'PAYSTACK');
         }
 
         return { success: true, status: data.status, bookingId };
@@ -787,13 +785,7 @@ export class PaymentService {
           where: { id: bookingId },
         });
         if (booking && booking.paymentStatus !== PaymentStatus.PAID) {
-          await this.prisma.booking.update({
-            where: { id: bookingId },
-            data: {
-              paymentStatus: PaymentStatus.PAID,
-              paymentMethod: 'PAYSTACK',
-            },
-          });
+          await this.confirmBookingOnPayment(bookingId, 'PAYSTACK');
           this.logger.log(`Booking ${bookingId} marked as PAID via webhook`);
         }
       }
@@ -821,13 +813,7 @@ export class PaymentService {
           where: { id: bookingId },
         });
         if (booking && booking.paymentStatus !== PaymentStatus.PAID) {
-          await this.prisma.booking.update({
-            where: { id: bookingId },
-            data: {
-              paymentStatus: PaymentStatus.PAID,
-              paymentMethod: 'FLUTTERWAVE',
-            },
-          });
+          await this.confirmBookingOnPayment(bookingId, 'FLUTTERWAVE');
           this.logger.log(
             `Booking ${bookingId} marked as PAID via Flutterwave webhook`,
           );
@@ -854,10 +840,7 @@ export class PaymentService {
         const bookingId = txRef.split('_')[2];
         const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
         if (booking && booking.paymentStatus !== PaymentStatus.PAID) {
-          await this.prisma.booking.update({
-            where: { id: bookingId },
-            data: { paymentStatus: PaymentStatus.PAID, paymentMethod: 'PAYPAL' },
-          });
+          await this.confirmBookingOnPayment(bookingId, 'PAYPAL');
           this.logger.log(`Booking ${bookingId} marked as PAID via PayPal webhook`);
         }
       } else if (txRef && txRef.startsWith('el_ppal_')) {
@@ -882,10 +865,7 @@ export class PaymentService {
         const bookingId = orderExtRef.split('_')[2];
         const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
         if (booking && booking.paymentStatus !== PaymentStatus.PAID) {
-          await this.prisma.booking.update({
-            where: { id: bookingId },
-            data: { paymentStatus: PaymentStatus.PAID, paymentMethod: 'REVOLUT' },
-          });
+          await this.confirmBookingOnPayment(bookingId, 'REVOLUT');
           this.logger.log(`Booking ${bookingId} marked as PAID via Revolut webhook`);
         }
       } else if (orderExtRef && orderExtRef.startsWith('el_rev_')) {
@@ -899,5 +879,62 @@ export class PaymentService {
         }
       }
     }
+  }
+
+  async confirmBookingOnPayment(bookingId: string, paymentMethod: PaymentMethod) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        transport: {
+          include: { transporter: { select: { id: true, name: true } } },
+        },
+      },
+    });
+    if (!booking) return;
+
+    if (booking.paymentStatus === PaymentStatus.PAID && booking.status === BookingStatus.CONFIRMED) {
+      return;
+    }
+
+    const updated = await this.prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        paymentStatus: PaymentStatus.PAID,
+        status: BookingStatus.CONFIRMED,
+        paymentMethod,
+      },
+    });
+
+    this.chatGateway.notifyUser(booking.travelerId, {
+      type: 'booking_confirmed',
+      bookingId: booking.id,
+      transporter: booking.transport.transporter,
+      route: `${booking.transport.departureCity} → ${booking.transport.destinationCity}`,
+    });
+
+    const traveler = await this.prisma.user.findUnique({
+      where: { id: booking.travelerId },
+      select: { email: true, name: true },
+    });
+    if (traveler?.email) {
+      const transporterName =
+        booking.transport.transporter.name || 'SmatWay Transporter';
+      await this.mailService
+        .sendBookingTicketEmail(traveler.email, {
+          bookingId: booking.id,
+          passengerName: traveler.name,
+          bookingNumber: booking.bookingNumber,
+          route: `${booking.transport.departureCity} -> ${booking.transport.destinationCity}`,
+          dateTime: booking.transport.departureDateTime.toISOString(),
+          seats: booking.seatsBooked,
+          price: `${booking.transport.currency} ${booking.totalPrice}`,
+          transporterName,
+        })
+        .catch((err: any) =>
+          this.logger.error('Failed to send booking ticket email', err),
+        );
+    }
+
+    return updated;
   }
 }

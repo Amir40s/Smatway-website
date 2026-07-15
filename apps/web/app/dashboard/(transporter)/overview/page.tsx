@@ -22,13 +22,25 @@ export default function TransporterDashboardPage() {
   const [bookings, setBookings] = useState<any[]>([]);
 
   useEffect(() => {
-    Promise.all([getMyVehicles(), getMyRoutes(), getTransportBookings()])
+    Promise.all([
+      getMyVehicles().catch((err) => {
+        console.error("Failed to load vehicles", err);
+        return [];
+      }),
+      getMyRoutes().catch((err) => {
+        console.error("Failed to load routes", err);
+        return [];
+      }),
+      getTransportBookings().catch((err) => {
+        console.error("Failed to load bookings", err);
+        return [];
+      }),
+    ])
       .then(([v, r, b]) => {
         setVehicles(v || []);
         setRoutes(r || []);
         setBookings(b || []);
       })
-      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 

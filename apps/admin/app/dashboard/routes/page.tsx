@@ -549,9 +549,16 @@ export default function RoutesPage() {
                       </td>
                       <td className="py-4 px-4">
                         {r.deleteRequested ? (
-                          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-bold tracking-[0.14em] bg-red-50 text-red-700 ring-1 ring-red-200 animate-pulse">
-                            DELETE PENDING
-                          </span>
+                          <div className="space-y-1">
+                            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-bold tracking-[0.14em] bg-red-50 text-red-700 ring-1 ring-red-200 animate-pulse">
+                              DELETE PENDING
+                            </span>
+                            {r.deleteReason && (
+                              <p className="text-[10px] text-rose-600 font-medium max-w-[150px] truncate" title={r.deleteReason}>
+                                Reason: {r.deleteReason}
+                              </p>
+                            )}
+                          </div>
                         ) : (
                           <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-bold tracking-[0.14em] ${
                             r.status === "ACTIVE"
