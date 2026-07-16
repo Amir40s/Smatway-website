@@ -1,4 +1,5 @@
 import React from "react";
+import { Trans } from "@/components/Trans";
 
 export const metadata = {
   title: "Privacy Policy - SmatWay",
@@ -9,12 +10,12 @@ export default function PrivacyPage() {
   return (
     <main className="max-w-3xl mx-auto pt-28 pb-16 px-4 sm:px-6 lg:px-8 text-slate-800">
       <h1 className="text-3xl font-bold tracking-tight text-zinc-900 mb-8">
-        Privacy Policy
+        <Trans tKey="legal.privacy.policy" />
       </h1>
 
       <div className="space-y-8 text-sm md:text-base leading-relaxed">
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">1. Introduction</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.1.introduction" /></h2>
           <p className="mb-4">Welcome to SmatWay Booking Platform, "we".</p>
           <p className="mb-4">
             Smatwayt Booking is an online transportation booking marketplace that enables users to search, compare, and book transportation services, including cars, taxis, buses, ferries, trains, and other transport services offered by independent transportation providers.
@@ -28,7 +29,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">2. Data Controller</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.2.data.controller" /></h2>
           <p className="mb-2">The controller responsible for processing your personal data is:</p>
           <address className="not-italic">
             <strong>SmatWay Booking Ltd</strong><br/>
@@ -41,9 +42,9 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">3. Personal Data We Collect</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.3.personal.data.we.collect" /></h2>
           
-          <h3 className="font-semibold text-zinc-900 mb-2">3.1 Account Information</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.3.1.account.information" /></h3>
           <p className="mb-2">When you register an account, we may collect:</p>
           <ul className="list-disc pl-5 space-y-1 mb-4">
             <li>Full name</li>
@@ -55,7 +56,7 @@ export default function PrivacyPage() {
             <li>Preferred language</li>
           </ul>
 
-          <h3 className="font-semibold text-zinc-900 mb-2">3.2 Booking Information</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.3.2.booking.information" /></h3>
           <p className="mb-2">When making a reservation, we may collect:</p>
           <ul className="list-disc pl-5 space-y-1 mb-4">
             <li>Departure and destination locations</li>
@@ -70,7 +71,7 @@ export default function PrivacyPage() {
             <li>Seat preferences</li>
           </ul>
 
-          <h3 className="font-semibold text-zinc-900 mb-2">3.3 Payment Information</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.3.3.payment.information" /></h3>
           <p className="mb-2">For booking payments, we may collect:</p>
           <ul className="list-disc pl-5 space-y-1 mb-4">
             <li>Billing address</li>
@@ -80,7 +81,7 @@ export default function PrivacyPage() {
           </ul>
           <p className="mb-4 text-sm text-slate-500">Payment card details are generally processed directly by certified payment service providers and are not stored on our servers.</p>
 
-          <h3 className="font-semibold text-zinc-900 mb-2">3.4 Transport Provider Information</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.3.4.transport.provider.information" /></h3>
           <p className="mb-2">For transport operators and partners, we may collect:</p>
           <ul className="list-disc pl-5 space-y-1 mb-4">
             <li>Company information</li>
@@ -91,7 +92,7 @@ export default function PrivacyPage() {
             <li>Bank account information for payouts</li>
           </ul>
 
-          <h3 className="font-semibold text-zinc-900 mb-2">3.5 Communications</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.3.5.communications" /></h3>
           <p className="mb-2">We may collect information contained in:</p>
           <ul className="list-disc pl-5 space-y-1 mb-4">
             <li>Customer support requests</li>
@@ -101,7 +102,7 @@ export default function PrivacyPage() {
             <li>Feedback submissions</li>
           </ul>
 
-          <h3 className="font-semibold text-zinc-900 mb-2">3.6 Technical Information</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.3.6.technical.information" /></h3>
           <p className="mb-2">We automatically collect:</p>
           <ul className="list-disc pl-5 space-y-1 mb-4">
             <li>IP address</li>
@@ -113,7 +114,7 @@ export default function PrivacyPage() {
             <li>Cookies and similar technologies</li>
           </ul>
 
-          <h3 className="font-semibold text-zinc-900 mb-2">3.7 Location Information</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.3.7.location.information" /></h3>
           <p className="mb-2">Where enabled by users, we may collect location information to:</p>
           <ul className="list-disc pl-5 space-y-1 mb-4">
             <li>Display nearby transportation options</li>
@@ -124,7 +125,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">4. Purposes of Processing</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.4.purposes.of.processing" /></h2>
           <p className="mb-2">We process personal data to:</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Create and manage user accounts</li>
@@ -144,27 +145,27 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">5. Legal Basis for Processing</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.5.legal.basis.for.processing" /></h2>
           <p className="mb-4">We process personal data under the following legal bases:</p>
           
-          <h3 className="font-semibold text-zinc-900 mb-1">Performance of a Contract</h3>
+          <h3 className="font-semibold text-zinc-900 mb-1"><Trans tKey="legal.performance.of.a.contract" /></h3>
           <p className="mb-4">To provide booking and reservation services requested by users.</p>
           
-          <h3 className="font-semibold text-zinc-900 mb-1">Legal Obligations</h3>
+          <h3 className="font-semibold text-zinc-900 mb-1"><Trans tKey="legal.legal.obligations" /></h3>
           <p className="mb-4">To comply with transportation, accounting, tax, consumer protection, and regulatory requirements.</p>
 
-          <h3 className="font-semibold text-zinc-900 mb-1">Legitimate Interests</h3>
+          <h3 className="font-semibold text-zinc-900 mb-1"><Trans tKey="legal.legitimate.interests" /></h3>
           <p className="mb-4">For fraud prevention, platform security, service improvement, analytics, and business operations.</p>
 
-          <h3 className="font-semibold text-zinc-900 mb-1">Consent</h3>
+          <h3 className="font-semibold text-zinc-900 mb-1"><Trans tKey="legal.consent" /></h3>
           <p>For marketing communications, optional location tracking, and non-essential cookies.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">6. Sharing Personal Data</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.6.sharing.personal.data" /></h2>
           <p className="mb-4">We may share personal data with:</p>
 
-          <h3 className="font-semibold text-zinc-900 mb-2">Transport Providers</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.transport.providers" /></h3>
           <p className="mb-2">To fulfill bookings, we may share necessary passenger information with Car and taxi operators, Bus companies, Ferry operators, Railway operators, and Other transportation partners.</p>
           <p className="mb-2">Shared information may include:</p>
           <ul className="list-disc pl-5 space-y-1 mb-4">
@@ -174,22 +175,22 @@ export default function PrivacyPage() {
             <li>Travel itinerary information</li>
           </ul>
 
-          <h3 className="font-semibold text-zinc-900 mb-2">Payment Providers</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.payment.providers" /></h3>
           <p className="mb-4">We share payment-related information with payment processors and financial institutions for secure transaction processing.</p>
 
-          <h3 className="font-semibold text-zinc-900 mb-2">Technology Providers</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.technology.providers" /></h3>
           <p className="mb-2">We may share information with trusted service providers that assist with Cloud hosting, Customer support, Analytics, Communication services, and Security monitoring.</p>
 
-          <h3 className="font-semibold text-zinc-900 mb-2">Government and Regulatory Authorities</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.government.and.regulatory.authorities" /></h3>
           <p className="mb-2">Where legally required, we may disclose personal data to Courts, Law enforcement agencies, Transportation authorities, Tax authorities, and Regulatory bodies.</p>
 
-          <h3 className="font-semibold text-zinc-900 mb-2">Business Transfers</h3>
+          <h3 className="font-semibold text-zinc-900 mb-2"><Trans tKey="legal.business.transfers" /></h3>
           <p className="mb-2">Personal data may be transferred in connection with a merger, acquisition, restructuring, or sale of business assets.</p>
           <p className="font-semibold">We do not sell personal data to third parties.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">7. International Transfers</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.7.international.transfers" /></h2>
           <p className="mb-2">Transportation bookings may involve operators located in different countries. Where personal data is transferred, we implement appropriate safeguards, including:</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Standard Contractual Clauses</li>
@@ -199,7 +200,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">8. Data Retention</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.8.data.retention" /></h2>
           <p className="mb-2">We retain personal data only for as long as necessary to:</p>
           <ul className="list-disc pl-5 space-y-1 mb-2">
             <li>Fulfill bookings</li>
@@ -212,7 +213,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">9. User Rights</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.9.user.rights" /></h2>
           <p className="mb-2">Under GDPR, users have the right to:</p>
           <ul className="list-disc pl-5 space-y-1 mb-4">
             <li>Access personal data</li>
@@ -228,7 +229,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">10. Security</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.10.security" /></h2>
           <p className="mb-2">We implement appropriate technical and organizational measures, including:</p>
           <ul className="list-disc pl-5 space-y-1 mb-4">
             <li>Encryption of sensitive data</li>
@@ -242,7 +243,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">11. Cookies</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.11.cookies" /></h2>
           <p className="mb-2">We use cookies and similar technologies to:</p>
           <ul className="list-disc pl-5 space-y-1 mb-4">
             <li>Maintain user sessions</li>
@@ -255,31 +256,31 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">12. Marketing Communications</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.12.marketing.communications" /></h2>
           <p className="mb-2">Users may receive service-related communications necessary for booking management. Marketing communications will only be sent where legally permitted or with user consent.</p>
           <p>Users may unsubscribe at any time through account settings or E-Mail links.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">13. Reviews and Ratings</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.13.reviews.and.ratings" /></h2>
           <p className="mb-2">Users may submit reviews and ratings regarding transportation services. Submitted reviews may be publicly displayed on the Platform.</p>
           <p>Users should avoid including sensitive personal information in publicly visible reviews.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">14. Children's Privacy</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.14.children.s.privacy" /></h2>
           <p className="mb-2">Our services are intended for persons aged 18 years or older unless local laws permit otherwise.</p>
           <p>We do not knowingly collect personal data from children without appropriate legal basis.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">15. Changes to this Privacy Policy</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.15.changes.to.this.privacy.policy" /></h2>
           <p className="mb-2">We may update this Privacy Policy periodically. Updated versions will be published on the Platform with a revised effective date.</p>
           <p>Material changes may be communicated through E-Mail or platform notifications.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">16. Contact Us</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.16.contact.us" /></h2>
           <p className="mb-2">For privacy-related inquiries, requests, or complaints, please contact:</p>
           <address className="not-italic">
             <strong>Smatway Booking Ltd</strong><br/>

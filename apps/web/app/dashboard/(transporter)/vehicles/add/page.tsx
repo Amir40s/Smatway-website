@@ -219,7 +219,7 @@ export default function AddVehiclePage() {
             </div>
             <div>
               <label className="text-sm font-medium text-zinc-900 mb-1.5 block">Transport Type</label>
-              <Select value={form.transportType} onValueChange={value => set("transportType", value)}>
+              <Select value={form.transportType} onValueChange={value => set("transportType", value || "")}>
                 <SelectTrigger className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-zinc-900 h-[46px] focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500 transition-all duration-150">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>

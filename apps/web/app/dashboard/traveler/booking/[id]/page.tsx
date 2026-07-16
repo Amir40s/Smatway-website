@@ -69,7 +69,6 @@ export default function BookingDetailPage() {
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
   const [initializingPayment, setInitializingPayment] = useState(false);
-  const [initializingPayment, setInitializingPayment] = useState(false);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
   const [payingLuggageId, setPayingLuggageId] = useState<string | null>(null);
   const t = useT();
