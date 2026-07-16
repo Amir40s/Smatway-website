@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { clearAuthData, setAuthToken } from "@/lib/auth";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 function ArrowLeftIcon() {
   return (
@@ -62,6 +63,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const t = useT();
 
   type LoginResponse = {
     accessToken?: string;
@@ -144,7 +146,7 @@ export default function SignInPage() {
     <div className="w-full animate-fade-in-up" suppressHydrationWarning>
       <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 mb-8 transition-colors group">
         <ArrowLeftIcon />
-        <span className="transition-transform group-hover:-translate-x-0.5">Back to home</span>
+        <span className="transition-transform group-hover:-translate-x-0.5">{t("Back to home")}</span>
       </Link>
 
       {/* Mobile brand lockup (hidden on desktop since it's in the left panel) */}
@@ -161,13 +163,13 @@ export default function SignInPage() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-80" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
           </span>
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Sign in</span>
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">{t("Sign in")}</span>
         </div>
-        <h1 className="mt-4 font-[var(--font-display)] text-4xl font-semibold leading-[1.05] tracking-tight text-zinc-950">
-          Welcome <span className="italic text-emerald-700">back.</span>
-        </h1>
-        <p className="mt-2 text-[14px] text-zinc-500">Sign in to pick up where you left off.</p>
-      </div>
+      <h1 className="mt-4 font-[var(--font-display)] text-4xl font-semibold leading-[1.05] tracking-tight text-zinc-950">
+        {t("Welcome")} <span className="italic text-emerald-700">{t("back.")}</span>
+      </h1>
+      <p className="mt-2 text-[14px] text-zinc-500">{t("Sign in to pick up where you left off.")}</p>
+    </div>
 
       {/* Form card */}
       <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_32px_-12px_rgba(15,23,42,0.08)]">
@@ -182,11 +184,11 @@ export default function SignInPage() {
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Email</label>
+            <label htmlFor="email" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Email")}</label>
             <div className="relative flex items-center">
               <span className="absolute left-3.5 pointer-events-none"><MailIcon /></span>
               <input
-                id="email" type="email" placeholder="you@example.com" required
+                id="email" type="email" placeholder={t("you@example.com")} required
                 value={email} onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 pl-10 text-[14px] text-zinc-900 placeholder:text-zinc-400 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-[box-shadow,border-color] duration-200"
               />
@@ -195,13 +197,13 @@ export default function SignInPage() {
 
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <label htmlFor="password" className="text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Password</label>
-              <Link href="/forgot-password" className="text-[12px] font-medium text-zinc-500 hover:text-emerald-700 transition-colors">Forgot?</Link>
+              <label htmlFor="password" className="text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Password")}</label>
+              <Link href="/forgot-password" className="text-[12px] font-medium text-zinc-500 hover:text-emerald-700 transition-colors">{t("Forgot?")}</Link>
             </div>
             <div className="relative flex items-center">
               <span className="absolute left-3.5 pointer-events-none"><LockIcon /></span>
               <input
-                id="password" type={showPassword ? "text" : "password"} placeholder="Enter your password" required
+                id="password" type={showPassword ? "text" : "password"} placeholder={t("Enter your password")} required
                 value={password} onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 pl-10 pr-11 text-[14px] text-zinc-900 placeholder:text-zinc-400 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-[box-shadow,border-color] duration-200"
               />
@@ -221,11 +223,11 @@ export default function SignInPage() {
                 {loading ? (
                   <>
                     <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.25" /><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
-                    <span>Signing in…</span>
+                    <span>{t("Signing in…")}</span>
                   </>
                 ) : (
                   <>
-                    <span>Sign in</span>
+                    <span>{t("Sign in")}</span>
                     <ArrowRightIcon />
                   </>
                 )}
@@ -238,9 +240,9 @@ export default function SignInPage() {
       {/* Divider + footer */}
       <div className="mt-7 text-center">
         <p className="text-[13px] text-zinc-500">
-          Don&apos;t have an account?{" "}
+          {t("Don't have an account?")}{" "}
           <Link href="/signup" className="font-semibold text-emerald-700 hover:text-emerald-800 underline underline-offset-2 decoration-emerald-300 hover:decoration-emerald-500 transition-colors">
-            Create one
+            {t("Create one")}
           </Link>
         </p>
       </div>

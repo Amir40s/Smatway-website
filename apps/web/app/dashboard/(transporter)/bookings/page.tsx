@@ -21,6 +21,7 @@ import {
   Page, Reveal, PageHeader, EmptyState, SkeletonList, StatusPill,
   TabFilter, SurfaceCard, spring,
 } from "@/app/dashboard/_Components/ui";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 type Filter = "ALL" | "PENDING" | "CONFIRMED" | "CANCELLED";
 const FILTERS: readonly Filter[] = ["ALL", "PENDING", "CONFIRMED", "CANCELLED"] as const;
@@ -32,6 +33,7 @@ export default function TransporterBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("ALL");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const t = useT();
 
   const [chatBookingId, setChatBookingId] = useState<string | null>(null);
   const [chatId, setChatId] = useState<string | null>(null);
@@ -131,7 +133,7 @@ export default function TransporterBookingsPage() {
   }
 
   async function handleReject(id: string) {
-    if (!confirm("Reject this booking?")) return;
+    if (!confirm(t("Reject this booking?"))) return;
     setActionLoading(id);
     try {
       const updated = await rejectBooking(id);
@@ -153,9 +155,9 @@ export default function TransporterBookingsPage() {
   return (
     <Page>
       <PageHeader
-        kicker={`${bookings.length} total`}
-        title="Bookings"
-        subtitle="Approve, reject, or chat with travelers booking your routes."
+        kicker={t("{count} total").replace("{count}", bookings.length.toString())}
+        title={t("Bookings")}
+        subtitle={t("Approve, reject, or chat with travelers booking your routes.")}
       />
 
       {/* Tab filter + stats */}
@@ -165,11 +167,11 @@ export default function TransporterBookingsPage() {
           <div className="flex items-center gap-5 text-[11px] text-slate-500">
             <span className="inline-flex items-center gap-1.5">
               <ClockIcon className="w-3.5 h-3.5 text-amber-500" />
-              <span className="font-semibold text-zinc-900">{counts.PENDING}</span> pending
+              <span className="font-semibold text-zinc-900">{counts.PENDING}</span> {t("pending")}
             </span>
             <span className="inline-flex items-center gap-1.5">
               <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="font-semibold text-zinc-900">{counts.CONFIRMED}</span> confirmed
+              <span className="font-semibold text-zinc-900">{counts.CONFIRMED}</span> {t("confirmed")}
             </span>
           </div>
         </Reveal>
@@ -179,14 +181,14 @@ export default function TransporterBookingsPage() {
         <SkeletonList count={3} />
       ) : bookings.length === 0 ? (
         <EmptyState
-          title="No bookings yet"
-          description="When travelers book your routes, they'll show up here for you to approve or chat with."
+          title={t("No bookings yet")}
+          description={t("When travelers book your routes, they'll show up here for you to approve or chat with.")}
           icon={<BookOpenIcon className="w-6 h-6" />}
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title={`No ${filter.toLowerCase()} bookings`}
-          description="Try a different filter above."
+          title={t("No {filter} bookings").replace("{filter}", filter.toLowerCase())}
+          description={t("Try a different filter above.")}
         />
       ) : (
         <motion.div
@@ -229,6 +231,7 @@ function BookingRow({
   onReject: () => void;
   onChat: () => void;
 }) {
+  const t = useT();
   const dep = new Date(booking.transport.departureDateTime);
   const traveler = booking.user;
   const vehicle = booking.transport.vehicle;
@@ -260,14 +263,14 @@ function BookingRow({
                   }
                   dot={booking.status === "PENDING" || booking.status === "CONFIRMED"}
                 >
-                  {booking.status}
+                  {t(booking.status)}
                 </StatusPill>
                 <span className="text-[10px] text-slate-400 font-mono">
                   #{countryCodeFromName(booking.transport.departureCountry) || "XX"}-{booking.id.slice(0, 6).toUpperCase()}
                 </span>
               </div>
               <p className="text-[14px] font-semibold text-zinc-950 truncate">
-                {traveler?.name || "Unknown traveler"}
+                {traveler?.name || t("Unknown traveler")}
               </p>
 
             </div>
@@ -287,7 +290,7 @@ function BookingRow({
               </span>
               <span className="inline-flex items-center gap-1">
                 <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
-                {booking.seatsBooked} {booking.seatsBooked === 1 ? "seat" : "seats"}
+                {booking.seatsBooked} {booking.seatsBooked === 1 ? t("seat") : t("seats")}
               </span>
             </div>
             {vehicle && (
@@ -310,14 +313,14 @@ function BookingRow({
                   disabled={actionLoading}
                   className="text-[11px] font-semibold border border-red-200 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
-                  Reject
+                  {t("Reject")}
                 </button>
                 <button
                   onClick={onConfirm}
                   disabled={actionLoading}
                   className="text-[11px] font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
-                  {actionLoading ? "..." : "Confirm"}
+                  {actionLoading ? "..." : t("Confirm")}
                 </button>
               </div>
             ) : (
@@ -327,7 +330,7 @@ function BookingRow({
                   href={`/dashboard/bookings/${booking.id}`}
                   className="text-[11px] font-semibold border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all active:scale-[0.98]"
                 >
-                  Details
+                  {t("Details")}
                 </Link>
               </div>
             )}
@@ -353,6 +356,7 @@ function ChatModal({
   onClose: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }) {
+  const t = useT();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -371,8 +375,8 @@ function ChatModal({
       >
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h3 className="text-[14px] font-semibold text-zinc-950">Message traveler</h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">Coordinate pickup and trip details</p>
+            <h3 className="text-[14px] font-semibold text-zinc-950">{t("Message traveler")}</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">{t("Coordinate pickup and trip details")}</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-zinc-900 p-1 -m-1">
             <XIcon className="w-4 h-4" />
@@ -380,13 +384,13 @@ function ChatModal({
         </div>
 
         {loading ? (
-          <div className="p-10 text-center text-sm text-slate-400">Loading...</div>
+          <div className="p-10 text-center text-sm text-slate-400">{t("Loading...")}</div>
         ) : (
           <>
             <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50/60">
               {messages.length === 0 ? (
                 <div className="text-center text-[13px] text-slate-400 mt-16">
-                  No messages yet. Say hello.
+                  {t("No messages yet. Say hello.")}
                 </div>
               ) : (
                 messages.map((msg: any, i: number) => {
@@ -417,7 +421,7 @@ function ChatModal({
                 value={messageText}
                 onChange={(e) => onChangeText(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && onSend()}
-                placeholder="Type a message..."
+                placeholder={t("Type a message...")}
                 className="flex-1 border border-slate-200 rounded-xl px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
               <button

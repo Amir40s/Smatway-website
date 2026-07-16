@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Page, Reveal, PageHeader, PrimaryButton, spring } from "@/app/dashboard/_Components/ui";
 import { StarIcon } from "@/app/dashboard/_Components/Icons";
 import { createSiteFeedback, getMySiteFeedback, getMyBookings, type SiteFeedbackEntry } from "@/lib/api";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 const RATING_LABELS: Record<number, string> = {
   1: "Frustrating",
@@ -28,6 +29,15 @@ export default function FeedbackPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [selectedBookingId, setSelectedBookingId] = useState("");
   const [loadingBookings, setLoadingBookings] = useState(false);
+  const t = useT();
+
+  const ratingLabels: Record<number, string> = {
+    1: t("Frustrating"),
+    2: t("Below par"),
+    3: t("It's okay"),
+    4: t("Pretty good"),
+    5: t("Loved it"),
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -57,15 +67,15 @@ export default function FeedbackPage() {
     setError(null);
     setSuccess(null);
     if (!selectedBookingId) {
-      setError("Please select a booking reference to submit feedback for.");
+      setError(t("Please select a booking reference to submit feedback for."));
       return;
     }
     if (rating < 1) {
-      setError("Pick a star rating before submitting.");
+      setError(t("Pick a star rating before submitting."));
       return;
     }
     if (comment.trim().length < 4) {
-      setError("Tell us a bit more — at least 4 characters.");
+      setError(t("Tell us a bit more — at least 4 characters."));
       return;
     }
     try {
@@ -89,24 +99,24 @@ export default function FeedbackPage() {
       setRating(0);
       setHover(0);
       setComment("");
-      setSuccess("Thanks — your feedback has been received and mapped to your booking.");
+      setSuccess(t("Thanks — your feedback has been received and mapped to your booking."));
       setTimeout(() => setSuccess(null), 4000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not submit feedback.");
+      setError(err instanceof Error ? err.message : t("Could not submit feedback."));
     } finally {
       setSubmitting(false);
     }
   }
 
   const showRating = hover > 0 ? hover : rating;
-  const ratingLabel = showRating > 0 ? RATING_LABELS[showRating] : "Tap a star";
+  const ratingLabel = showRating > 0 ? ratingLabels[showRating] : t("Tap a star");
 
   return (
     <Page className="space-y-8">
       <PageHeader
-        kicker="Feedback"
-        title="How is SmatWay treating you?"
-        subtitle="Tell us what's working and what isn't. Your feedback can show up on our homepage so other travelers see real voices."
+        kicker={t("Feedback")}
+        title={t("How is SmatWay treating you?")}
+        subtitle={t("Tell us what's working and what isn't. Your feedback can show up on our homepage so other travelers see real voices.")}
       />
 
       <Reveal>
@@ -117,12 +127,12 @@ export default function FeedbackPage() {
           {/* Booking selector dropdown widget */}
           <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 mb-6 space-y-2">
             <label className="block text-[11px] font-bold text-zinc-700 uppercase tracking-wider">
-              Select Booking Reference for Feedback
+              {t("Select Booking Reference for Feedback")}
             </label>
             {loadingBookings ? (
-              <p className="text-xs text-slate-400">Loading your recent journeys...</p>
+              <p className="text-xs text-slate-400">{t("Loading your recent journeys...")}</p>
             ) : bookings.length === 0 ? (
-              <p className="text-xs text-slate-400">No journeys found to provide feedback on.</p>
+              <p className="text-xs text-slate-400">{t("No journeys found to provide feedback on.")}</p>
             ) : (
               <div className="relative">
                 <select
@@ -130,7 +140,7 @@ export default function FeedbackPage() {
                   onChange={(e) => setSelectedBookingId(e.target.value)}
                   className="w-full bg-white rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-zinc-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer appearance-none font-semibold pr-10"
                 >
-                  <option value="" disabled>-- Select a completed journey --</option>
+                  <option value="" disabled>-- {t("Select a completed journey")} --</option>
                   {bookings.map((b: any) => (
                     <option key={b.id} value={b.id}>
                       #{b.id.slice(0, 8).toUpperCase()} ({b.transport.departureCity} → {b.transport.destinationCity}) — {b.status}
@@ -149,7 +159,7 @@ export default function FeedbackPage() {
           {/* Rating */}
           <div className="mb-7">
             <div className="flex items-center justify-between gap-3 mb-3">
-              <label className="text-sm font-semibold text-zinc-900">Your rating</label>
+              <label className="text-sm font-semibold text-zinc-900">{t("Your rating")}</label>
               <span className="text-xs font-medium text-slate-500">{ratingLabel}</span>
             </div>
             <div
@@ -179,17 +189,17 @@ export default function FeedbackPage() {
 
           {/* Comment */}
           <div className="mb-2">
-            <label className="text-sm font-semibold text-zinc-900 block mb-2">Your feedback</label>
+            <label className="text-sm font-semibold text-zinc-900 block mb-2">{t("Your feedback")}</label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               maxLength={1000}
               rows={5}
-              placeholder="What worked, what didn't, what should we build next?"
+              placeholder={t("What worked, what didn't, what should we build next?")}
               className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3 text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-colors resize-none"
             />
             <div className="mt-1.5 flex items-center justify-between">
-              <span className="text-[11px] text-slate-400">Public — visible alongside your first name on the homepage.</span>
+              <span className="text-[11px] text-slate-400">{t("Public — visible alongside your first name on the homepage.")}</span>
               <span className="text-[11px] tabular-nums text-slate-400">{comment.length}/1000</span>
             </div>
           </div>
@@ -219,7 +229,7 @@ export default function FeedbackPage() {
 
           <div className="mt-6 flex items-center justify-end">
             <PrimaryButton type="submit" disabled={submitting}>
-              {submitting ? "Sending…" : "Send feedback"}
+              {submitting ? t("Sending…") : t("Send feedback")}
             </PrimaryButton>
           </div>
         </form>
@@ -229,7 +239,7 @@ export default function FeedbackPage() {
       <Reveal delay={0.05}>
         <div className="rounded-2xl border border-slate-200/70 bg-white p-6 sm:p-8 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-zinc-900">Your previous feedback</h2>
+            <h2 className="text-base font-semibold text-zinc-900">{t("Your previous feedback")}</h2>
             <span className="text-xs text-slate-400 tabular-nums">{history.length}</span>
           </div>
           {loadingHistory ? (
@@ -239,7 +249,7 @@ export default function FeedbackPage() {
               ))}
             </div>
           ) : history.length === 0 ? (
-            <p className="text-sm text-slate-500">Nothing yet. Send your first one above.</p>
+            <p className="text-sm text-slate-500">{t("Nothing yet. Send your first one above.")}</p>
           ) : (
             <ul className="divide-y divide-slate-100">
               {history.map((f) => (

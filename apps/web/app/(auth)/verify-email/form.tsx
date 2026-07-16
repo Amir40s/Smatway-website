@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { setAuthToken } from "@/lib/auth";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -56,6 +57,7 @@ export default function VerifyEmailForm() {
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
   const [resending, setResending] = useState(false);
   const [resentAt, setResentAt] = useState<number | null>(null);
+  const t = useT();
 
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -242,7 +244,7 @@ export default function VerifyEmailForm() {
     <div className="w-full animate-fade-in-up">
       <Link href="/signup" className="group mb-8 inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 transition-colors hover:text-zinc-900">
         <ArrowLeftIcon />
-        <span className="transition-transform group-hover:-translate-x-0.5">Back to sign up</span>
+        <span className="transition-transform group-hover:-translate-x-0.5">{t("Back to sign up")}</span>
       </Link>
 
       {/* Mobile brand */}
@@ -262,19 +264,19 @@ export default function VerifyEmailForm() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-80" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
           </span>
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Verification</span>
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">{t("Verification")}</span>
         </div>
         <h1 className="mt-4 font-[var(--font-display)] text-4xl font-semibold leading-[1.05] tracking-tight text-zinc-950">
-          Check your <span className="italic text-emerald-700">inbox.</span>
+          {t("Check your")} <span className="italic text-emerald-700">{t("inbox.")}</span>
         </h1>
         <p className="mt-2 text-[14px] leading-relaxed text-zinc-500">
-          We sent a 6-digit code to{" "}
+          {t("We sent a 6-digit code to")}{" "}
           {emailParam ? (
             <span className="font-semibold text-zinc-800">{maskedEmail}</span>
           ) : (
-            <span className="italic text-zinc-400">your email</span>
+            <span className="italic text-zinc-400">{t("your email")}</span>
           )}
-          . Enter it below to verify your account.
+          {t(". Enter it below to verify your account.")}
         </p>
       </div>
 
@@ -294,13 +296,13 @@ export default function VerifyEmailForm() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 shadow-[0_10px_24px_-8px_rgba(16,185,129,0.3)]">
               <CheckMarkIcon />
             </div>
-            <div className="font-[var(--font-display)] text-xl font-semibold text-zinc-950">Email verified</div>
-            <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">Taking you to your dashboard…</p>
+            <div className="font-[var(--font-display)] text-xl font-semibold text-zinc-950">{t("Email verified")}</div>
+            <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">{t("Taking you to your dashboard…")}</p>
           </div>
         ) : (
           <form className="space-y-5" onSubmit={handleManualSubmit}>
             <div>
-              <label className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Verification code</label>
+              <label className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Verification code")}</label>
               <div className="flex items-center justify-between gap-2 sm:gap-3" onPaste={handlePaste}>
                 {digits.map((d, i) => (
                   <input
@@ -322,7 +324,7 @@ export default function VerifyEmailForm() {
                   />
                 ))}
               </div>
-              <p className="mt-2 text-[11px] text-zinc-500">Expires in 10 minutes · You can paste the full code</p>
+              <p className="mt-2 text-[11px] text-zinc-500">{t("Expires in 10 minutes · You can paste the full code")}</p>
             </div>
 
             <div className="pt-1">
@@ -339,11 +341,11 @@ export default function VerifyEmailForm() {
                         <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.25" />
                         <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
                       </svg>
-                      <span>Verifying…</span>
+                      <span>{t("Verifying…")}</span>
                     </>
                   ) : (
                     <>
-                      <span>Verify & continue</span>
+                      <span>{t("Verify & continue")}</span>
                       <ArrowRightIcon />
                     </>
                   )}
@@ -355,8 +357,8 @@ export default function VerifyEmailForm() {
             <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50/60 px-3.5 py-3 text-[12.5px]">
               <span className="text-zinc-500">
                 {resentAt && cooldown > 0
-                  ? "New code sent. Check your inbox."
-                  : "Didn’t get the code?"}
+                  ? t("New code sent. Check your inbox.")
+                  : t("Didn’t get the code?")}
               </span>
               <button
                 type="button"
@@ -364,7 +366,7 @@ export default function VerifyEmailForm() {
                 disabled={cooldown > 0 || resending || !emailParam}
                 className="font-semibold text-emerald-700 transition-colors hover:text-emerald-800 disabled:cursor-not-allowed disabled:text-zinc-400 disabled:hover:text-zinc-400"
               >
-                {resending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
+                {resending ? t("Sending…") : cooldown > 0 ? `${t("Resend in")} ${cooldown}s` : t("Resend code")}
               </button>
             </div>
           </form>
@@ -373,9 +375,9 @@ export default function VerifyEmailForm() {
 
       <div className="mt-7 text-center">
         <p className="text-[13px] text-zinc-500">
-          Wrong email?{" "}
+          {t("Wrong email?")}{" "}
           <Link href="/signup" className="font-semibold text-emerald-700 underline underline-offset-2 decoration-emerald-300 transition-colors hover:text-emerald-800 hover:decoration-emerald-500">
-            Start over
+            {t("Start over")}
           </Link>
         </p>
       </div>

@@ -10,6 +10,7 @@ import type { NotificationPreferences } from "@/types/profile.types";
 import {
   Page, Reveal, PageHeader, Skeleton, PrimaryButton, spring,
 } from "@/app/dashboard/_Components/ui";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
   return (
@@ -43,13 +44,14 @@ export default function SettingsPage() {
   });
   const [savingPassword, setSavingPassword] = useState(false);
   const [notifications, setNotifications] = useState<NotificationPreferences | null>(null);
+  const t = useT();
 
   const notificationTypes = [
-    { key: "bookingUpdates" as const, title: "Booking updates", description: "Confirmations, changes, and cancellations" },
-    { key: "paymentUpdates" as const, title: "Payment updates", description: "Receipts, failed payments, and refunds" },
-    { key: "routeUpdates" as const, title: "Route updates", description: "Schedule changes and new routes you may like" },
-    { key: "vehicleUpdates" as const, title: "Vehicle updates", description: "Alerts on vehicles you've interacted with" },
-    { key: "systemAnnouncements" as const, title: "System announcements", description: "Important updates from SmatWay" },
+    { key: "bookingUpdates" as const, title: t("Booking updates"), description: t("Confirmations, changes, and cancellations") },
+    { key: "paymentUpdates" as const, title: t("Payment updates"), description: t("Receipts, failed payments, and refunds") },
+    { key: "routeUpdates" as const, title: t("Route updates"), description: t("Schedule changes and new routes you may like") },
+    { key: "vehicleUpdates" as const, title: t("Vehicle updates"), description: t("Alerts on vehicles you've interacted with") },
+    { key: "systemAnnouncements" as const, title: t("System announcements"), description: t("Important updates from SmatWay") },
   ];
 
   useEffect(() => {
@@ -71,13 +73,13 @@ export default function SettingsPage() {
       setError(null);
       setSavingPassword(true);
       await changePassword(passwordData);
-      setSuccess("Password updated successfully");
+      setSuccess(t("Password updated successfully"));
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setShowNew(false);
       setShowConfirm(false);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to change password");
+      setError(err instanceof Error ? err.message : t("Failed to change password"));
     } finally {
       setSavingPassword(false);
     }
@@ -90,10 +92,10 @@ export default function SettingsPage() {
     try {
       setError(null);
       await updateNotificationPreferences({ [key]: updated[key] });
-      setSuccess("Preferences updated");
+      setSuccess(t("Preferences updated"));
       setTimeout(() => setSuccess(null), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update");
+      setError(err instanceof Error ? err.message : t("Failed to update"));
       setNotifications(notifications);
     }
   }
@@ -101,9 +103,9 @@ export default function SettingsPage() {
   return (
     <Page>
       <PageHeader
-        kicker="Account"
-        title="Settings"
-        subtitle="Manage your password and notification preferences."
+        kicker={t("Account")}
+        title={t("Settings")}
+        subtitle={t("Manage your password and notification preferences.")}
       />
 
       {/* Toasts */}
@@ -139,38 +141,38 @@ export default function SettingsPage() {
                 <LockIcon className="w-4 h-4 text-slate-600" />
               </div>
               <div>
-                <h2 className="text-[13px] font-semibold text-zinc-950">Password</h2>
-                <p className="text-[11px] text-slate-500 mt-0.5">Use 8+ characters with a mix of numbers</p>
+                <h2 className="text-[13px] font-semibold text-zinc-950">{t("Password")}</h2>
+                <p className="text-[11px] text-slate-500 mt-0.5">{t("Use 8+ characters with a mix of numbers")}</p>
               </div>
             </div>
 
             <form onSubmit={handlePasswordSubmit} className="p-5 space-y-4">
               <PasswordField
-                label="Current password"
+                label={t("Current password")}
                 value={passwordData.currentPassword}
                 onChange={(v) => setPasswordData({ ...passwordData, currentPassword: v })}
                 visible={false}
                 placeholder="••••••••"
               />
               <PasswordField
-                label="New password"
+                label={t("New password")}
                 value={passwordData.newPassword}
                 onChange={(v) => setPasswordData({ ...passwordData, newPassword: v })}
                 visible={showNew}
                 onToggleVisibility={() => setShowNew(!showNew)}
-                placeholder="Minimum 8 characters"
+                placeholder={t("Minimum 8 characters")}
               />
               <PasswordField
-                label="Confirm new password"
+                label={t("Confirm new password")}
                 value={passwordData.confirmPassword}
                 onChange={(v) => setPasswordData({ ...passwordData, confirmPassword: v })}
                 visible={showConfirm}
                 onToggleVisibility={() => setShowConfirm(!showConfirm)}
-                placeholder="Retype new password"
+                placeholder={t("Retype new password")}
               />
 
               <PrimaryButton type="submit" disabled={savingPassword} className="w-full">
-                {savingPassword ? "Updating..." : "Update password"}
+                {savingPassword ? t("Updating...") : t("Update password")}
               </PrimaryButton>
             </form>
           </div>
@@ -184,8 +186,8 @@ export default function SettingsPage() {
                 <BellIcon className="w-4 h-4 text-emerald-700" />
               </div>
               <div>
-                <h2 className="text-[13px] font-semibold text-zinc-950">Notifications</h2>
-                <p className="text-[11px] text-slate-500 mt-0.5">Control what you hear from SmatWay</p>
+                <h2 className="text-[13px] font-semibold text-zinc-950">{t("Notifications")}</h2>
+                <p className="text-[11px] text-slate-500 mt-0.5">{t("Control what you hear from SmatWay")}</p>
               </div>
             </div>
 
@@ -206,8 +208,8 @@ export default function SettingsPage() {
                 {/* Master switch */}
                 <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-br from-emerald-50/60 to-white">
                   <div>
-                    <p className="text-[13px] font-semibold text-zinc-950">Push notifications</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Master switch for all channels</p>
+                    <p className="text-[13px] font-semibold text-zinc-950">{t("Push notifications")}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{t("Master switch for all channels")}</p>
                   </div>
                   <Toggle
                     enabled={notifications.pushEnabled}

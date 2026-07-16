@@ -36,7 +36,7 @@ function ChevronDownIcon({ className = "w-3.5 h-3.5" }: { className?: string }) 
 const navLinks: { href: string; key?: string; label?: string }[] = [
   { href: "/", key: "nav.home" },
   { href: "/how-it-works", key: "nav.howItWorks" },
-  { href: "/vacancies", label: "Vacancies" },
+  { href: "/vacancies", key: "Vacancies" },
 ];
 
 function Navbar() {
@@ -231,7 +231,7 @@ function Footer() {
               </li>
               <li>
                 <Link href="/vacancies" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
-                  Vacancies
+                  {t("Vacancies")}
                 </Link>
               </li>
             </ul>
@@ -245,27 +245,27 @@ function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link href="/terms" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
-                  Terms of Use and Conditions
+                  {t("Terms of Use and Conditions")}
                 </Link>
               </li>
               <li>
                 <Link href="/privacy" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
-                  Privacy Policy
+                  {t("Privacy Policy")}
                 </Link>
               </li>
               <li>
                 <Link href="/imprint" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
-                  Imprint
+                  {t("Imprint")}
                 </Link>
               </li>
               <li>
                 <Link href="/transporter-code-of-conduct" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
-                  Transporter Code of Conduct
+                  {t("Transporter Code of Conduct")}
                 </Link>
               </li>
               <li>
                 <Link href="/traveller-code-of-conduct" className="text-slate-400 hover:text-white transition-colors duration-200 text-sm">
-                  Traveller Code of Conduct
+                  {t("Traveller Code of Conduct")}
                 </Link>
               </li>
             </ul>

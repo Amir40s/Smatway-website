@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCurrentUser, logout, isTokenExpired, clearAuthData } from "@/lib/auth";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useLiveAvatar } from "@/app/dashboard/_Components/events";
-import { LanguageSwitcher, useLocale } from "@/lib/i18n/LocaleProvider";
+import { LanguageSwitcher, useLocale, useT } from "@/lib/i18n/LocaleProvider";
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
 const travelerNav = [
@@ -96,6 +96,7 @@ function isActivePath(pathname: string, key: string) {
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 function Sidebar({ pathname, role, isRtl }: { pathname: string; role: "traveler" | "transporter"; isRtl: boolean }) {
   const navItems = role === "transporter" ? transporterNav : travelerNav;
+  const t = useT();
 
   return (
     <aside
@@ -114,7 +115,7 @@ function Sidebar({ pathname, role, isRtl }: { pathname: string; role: "traveler"
           </div>
           <div>
             <span className="text-[15px] font-semibold text-zinc-950 tracking-tight">SmatWay</span>
-            <p className="text-[10px] text-slate-400 font-medium tracking-wide capitalize -mt-0.5">{role} Hub</p>
+            <p className="text-[10px] text-slate-400 font-medium tracking-wide capitalize -mt-0.5">{t(role)} {t("Hub")}</p>
           </div>
         </Link>
       </div>
@@ -125,7 +126,7 @@ function Sidebar({ pathname, role, isRtl }: { pathname: string; role: "traveler"
 
       {/* Section label */}
       <p className="px-6 pt-5 pb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-        Menu
+        {t("Menu")}
       </p>
 
       {/* Nav */}
@@ -150,7 +151,7 @@ function Sidebar({ pathname, role, isRtl }: { pathname: string; role: "traveler"
                   }`}
                 >
                   <Icon className={`w-[18px] h-[18px] ${active ? "text-white" : "text-slate-400 group-hover:text-slate-600"}`} />
-                  {item.label}
+                  {t(item.label)}
                   {active && (
                     <motion.span
                       initial={{ scale: 0 }}
@@ -175,7 +176,7 @@ function Sidebar({ pathname, role, isRtl }: { pathname: string; role: "traveler"
           className="flex items-center gap-3 w-full px-3 py-2.5 text-[13px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50/60 rounded-xl transition-colors cursor-pointer"
         >
           <LogOutIcon className="w-[18px] h-[18px]" />
-          Sign out
+          {t("Sign out")}
         </button>
       </div>
     </aside>
@@ -188,7 +189,8 @@ function Sidebar({ pathname, role, isRtl }: { pathname: string; role: "traveler"
 // state and is the only thing that updates this area on notification events.
 const UserNav = memo(
   function UserNav({ role, userName, avatarUrl, userId }: { role: "traveler" | "transporter"; userName?: string; avatarUrl?: string; userId?: string }) {
-    const name = userName || "User";
+    const t = useT();
+    const name = userName || t("User");
     const initial = name.charAt(0).toUpperCase();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     // Subscribes to `smatway:avatar-changed` events — updates instantly when
@@ -243,7 +245,7 @@ const UserNav = memo(
             </Avatar>
             <div className="hidden md:block text-left">
               <p className="text-[13px] font-semibold text-zinc-950 leading-none mb-0.5">{name}</p>
-              <p className="text-[11px] text-slate-400 capitalize">{role}</p>
+              <p className="text-[11px] text-slate-400 capitalize">{t(role)}</p>
             </div>
             <ChevronDownIcon className={`w-3.5 h-3.5 text-slate-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
           </button>
@@ -259,15 +261,15 @@ const UserNav = memo(
               >
                 <div className="px-4 py-3 border-b border-slate-100">
                   <p className="text-[13px] font-semibold text-zinc-950 truncate">{name}</p>
-                  <p className="text-[11px] text-slate-400 capitalize">{role} account</p>
+                  <p className="text-[11px] text-slate-400 capitalize">{t(role)} {t("account")}</p>
                 </div>
                 <Link href="/dashboard/profile" className="flex items-center gap-2.5 px-4 py-2 text-[13px] text-slate-700 hover:bg-slate-50">
                   <UserIcon className="w-4 h-4 text-slate-400" />
-                  Profile
+                  {t("Profile")}
                 </Link>
                 <Link href="/dashboard/settings" className="flex items-center gap-2.5 px-4 py-2 text-[13px] text-slate-700 hover:bg-slate-50">
                   <SettingsIcon className="w-4 h-4 text-slate-400" />
-                  Settings
+                  {t("Settings")}
                 </Link>
                 <div className="h-px bg-slate-100 my-1" />
                 <button
@@ -278,7 +280,7 @@ const UserNav = memo(
                   className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] text-red-600 hover:bg-red-50"
                 >
                   <LogOutIcon className="w-4 h-4" />
-                  Sign out
+                  {t("Sign out")}
                 </button>
               </motion.div>
             )}
@@ -297,6 +299,7 @@ const UserNav = memo(
 
 // ─── Topbar (title swaps on nav; UserNav stays mounted & stable) ──────────────
 function Topbar({ title, role, userName, avatarUrl, userId, onOpenDrawer }: { title: string; role: "traveler" | "transporter"; userName?: string; avatarUrl?: string; userId?: string; onOpenDrawer: () => void }) {
+  const t = useT();
   return (
     <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/70 px-3 sm:px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40 h-16">
       <div className="flex items-center gap-2 min-w-0">
@@ -316,7 +319,7 @@ function Topbar({ title, role, userName, avatarUrl, userId, onOpenDrawer }: { ti
           transition={{ duration: 0.2 }}
           className="text-[15px] font-semibold text-zinc-950 tracking-tight truncate"
         >
-          {title}
+          {t(title)}
         </motion.h2>
       </div>
 
@@ -336,6 +339,7 @@ function MobileDrawer({
   isRtl: boolean;
 }) {
   const navItems = role === "transporter" ? transporterNav : travelerNav;
+  const t = useT();
 
   // Lock body scroll while open
   useEffect(() => {
@@ -378,7 +382,7 @@ function MobileDrawer({
                 </div>
                 <div>
                   <span className="text-[15px] font-semibold text-zinc-950 tracking-tight">SmatWay</span>
-                  <p className="text-[10px] text-slate-400 font-medium tracking-wide capitalize -mt-0.5">{role} Hub</p>
+                  <p className="text-[10px] text-slate-400 font-medium tracking-wide capitalize -mt-0.5">{t(role)} {t("Hub")}</p>
                 </div>
               </Link>
               <button
@@ -391,7 +395,7 @@ function MobileDrawer({
               </button>
             </div>
 
-            <p className="px-6 pt-5 pb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Menu</p>
+            <p className="px-6 pt-5 pb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">{t("Menu")}</p>
 
             <nav className="flex-1 overflow-y-auto px-3 pb-4">
               <ul className="space-y-0.5">
@@ -408,7 +412,7 @@ function MobileDrawer({
                         }`}
                       >
                         <Icon className={`w-[18px] h-[18px] ${active ? "text-white" : "text-slate-400"}`} />
-                        {item.label}
+                        {t(item.label)}
                         {active && (
                           <span className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.2)]" />
                         )}
@@ -429,7 +433,7 @@ function MobileDrawer({
                 className="flex items-center gap-3 w-full px-3 py-2.5 text-[13px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50/60 rounded-xl transition-colors cursor-pointer"
               >
                 <LogOutIcon className="w-[18px] h-[18px]" />
-                Sign out
+                {t("Sign out")}
               </button>
             </div>
           </motion.aside>
@@ -442,6 +446,7 @@ function MobileDrawer({
 // ─── Mobile Nav ───────────────────────────────────────────────────────────────
 function MobileNav({ pathname, role }: { pathname: string; role: "traveler" | "transporter" }) {
   const navItems = role === "transporter" ? transporterNav : travelerNav;
+  const t = useT();
 
   return (
     <div className="lg:hidden sticky top-16 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
@@ -464,7 +469,7 @@ function MobileNav({ pathname, role }: { pathname: string; role: "traveler" | "t
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
-              {item.label}
+              {t(item.label)}
             </Link>
           );
         })}
@@ -478,6 +483,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
   const { locale } = useLocale();
+  const t = useT();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -536,7 +542,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             className="w-4 h-4 border-2 border-slate-300 border-t-emerald-600 rounded-full"
           />
-          <span className="text-sm">Loading your dashboard...</span>
+          <span className="text-sm">{t("Loading your dashboard...")}</span>
         </div>
       </div>
     );
