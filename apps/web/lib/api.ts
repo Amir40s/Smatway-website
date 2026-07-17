@@ -621,8 +621,8 @@ export async function sendMessage(chatId: string, content: string): Promise<any>
 }
 
 // Excess Luggage
-export async function initializeExcessLuggagePayment(excessLuggageId: string, callbackUrl?: string): Promise<{ authorization_url: string; reference: string }> {
-  return apiPost<{ authorization_url: string; reference: string }>('/payment/initialize-excess-luggage', { excessLuggageId, callbackUrl });
+export async function initializeExcessLuggagePayment(excessLuggageId: string, callbackUrl?: string, gateway?: string): Promise<{ authorization_url: string; reference: string }> {
+  return apiPost<{ authorization_url: string; reference: string }>('/payment/initialize-excess-luggage', { excessLuggageId, callbackUrl, gateway });
 }
 
 export async function verifyExcessLuggagePayment(reference: string): Promise<{ success: boolean; status: string }> {

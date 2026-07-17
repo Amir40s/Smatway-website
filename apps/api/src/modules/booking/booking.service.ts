@@ -147,27 +147,29 @@ export class BookingService {
     return Promise.all(
       bookings.map(async (booking: any) => ({
         ...booking,
-        transport: {
-          ...booking.transport,
-          vehicle: booking.transport.vehicle
-            ? {
-                ...booking.transport.vehicle,
-                imageUrl: booking.transport.vehicle.imageUrl
-                  ? await this.storageService.resolveImageUrl(
-                      booking.transport.vehicle.imageUrl,
-                    )
-                  : null,
-              }
-            : null,
-          transporter: booking.transport.transporter
-            ? {
-                ...booking.transport.transporter,
-                name:
-                  booking.transport.transporter.profile?.companyName ||
-                  booking.transport.transporter.name,
-              }
-            : null,
-        },
+        transport: booking.transport
+          ? {
+              ...booking.transport,
+              vehicle: booking.transport.vehicle
+                ? {
+                    ...booking.transport.vehicle,
+                    imageUrl: booking.transport.vehicle.imageUrl
+                      ? await this.storageService.resolveImageUrl(
+                          booking.transport.vehicle.imageUrl,
+                        )
+                      : null,
+                  }
+                : null,
+              transporter: booking.transport.transporter
+                ? {
+                    ...booking.transport.transporter,
+                    name:
+                      booking.transport.transporter.profile?.companyName ||
+                      booking.transport.transporter.name,
+                  }
+                : null,
+            }
+          : null,
       })),
     );
   }
@@ -265,19 +267,21 @@ export class BookingService {
     return Promise.all(
       bookings.map(async (booking: any) => ({
         ...booking,
-        transport: {
-          ...booking.transport,
-          vehicle: booking.transport.vehicle
-            ? {
-                ...booking.transport.vehicle,
-                imageUrl: booking.transport.vehicle.imageUrl
-                  ? await this.storageService.resolveImageUrl(
-                      booking.transport.vehicle.imageUrl,
-                    )
-                  : null,
-              }
-            : null,
-        },
+        transport: booking.transport
+          ? {
+              ...booking.transport,
+              vehicle: booking.transport.vehicle
+                ? {
+                    ...booking.transport.vehicle,
+                    imageUrl: booking.transport.vehicle.imageUrl
+                      ? await this.storageService.resolveImageUrl(
+                          booking.transport.vehicle.imageUrl,
+                        )
+                      : null,
+                  }
+                : null,
+            }
+          : null,
         user: booking.traveler
           ? {
               ...booking.traveler,

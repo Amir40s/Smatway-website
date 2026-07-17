@@ -147,6 +147,13 @@ export class VehicleService {
       where: { id },
     });
     if (!vehicle) throw new NotFoundException('Vehicle not found');
+
+    // Deactivate all active routes associated with this vehicle
+    await this.prisma.transport.updateMany({
+      where: { vehicleId: id, status: TransportStatus.ACTIVE },
+      data: { status: TransportStatus.INACTIVE },
+    });
+
     return this.prisma.vehicle.update({
       where: { id },
       data: { deleted: true, deleteRequested: false },

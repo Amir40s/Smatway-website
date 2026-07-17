@@ -98,19 +98,10 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshIndex, setRefreshIndex] = useState(0);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<{
     userId: string;
-    action: "edit" | "suspend" | "delete" | "save";
+    action: "suspend" | "delete";
   } | null>(null);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    email: "",
-    phoneNumber: "",
-    country: "",
-    role: "USER" as "USER" | "ADMIN",
-    accountType: "TRAVELER" as "TRAVELER" | "TRANSPORTER",
-  });
 
   const [sortBy, setSortBy] = useState("name-asc");
 
@@ -154,7 +145,7 @@ export default function UsersPage() {
     return res.json();
   };
 
-  const isActionLoading = (userId: string, action: "edit" | "suspend" | "delete" | "save") => {
+  const isActionLoading = (userId: string, action: "suspend" | "delete") => {
     return actionLoading?.userId === userId && actionLoading.action === action;
   };
 
@@ -164,52 +155,6 @@ export default function UsersPage() {
     </svg>
   );
 
-  const openEditUserModal = (user: any) => {
-    setSelectedUserId(null);
-    setEditForm({
-      name: user.name ?? "",
-      email: user.email ?? "",
-      phoneNumber: user.phoneNumber ?? "",
-      country: user.country ?? "",
-      role: (user.role ?? "USER") as "USER" | "ADMIN",
-      accountType: (user.accountType ?? "TRAVELER") as "TRAVELER" | "TRANSPORTER",
-    });
-    setEditingUserId(user.id);
-  };
-
-  const handleEditUser = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!editingUserId) return;
-
-    try {
-      setActionLoading({ userId: editingUserId, action: "save" });
-      const updatedUser = await adminRequest(`/users/admin/users/${editingUserId}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          name: editForm.name,
-          email: editForm.email,
-          phoneNumber: editForm.phoneNumber,
-          country: editForm.country || undefined,
-          role: editForm.role,
-          accountType: editForm.accountType,
-        }),
-      });
-      setUsers((currentUsers) =>
-        currentUsers.map((user) => (user.id === editingUserId ? { ...user, ...updatedUser } : user)),
-      );
-      setEditingUserId(null);
-      setRefreshIndex((value) => value + 1);
-      setSelectedUserId(null);
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Unable to update user");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const closeEditUserModal = () => {
-    setEditingUserId(null);
-  };
 
   const handleToggleSuspend = async (user: any) => {
     const action = user.isSuspended ? "reactivate" : "suspend";
@@ -540,14 +485,7 @@ export default function UsersPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openEditUserModal(selectedUser)}
-                    disabled={!!actionLoading}
-                    className="rounded-full border border-slate-200 px-3 py-1.5 text-[10px] font-semibold text-slate-700 hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Edit User
-                  </button>
+
                   <button
                     type="button"
                     onClick={() => handleToggleSuspend(selectedUser)}
@@ -611,100 +549,7 @@ export default function UsersPage() {
         </div>
       ) : null}
 
-      {editingUserId ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8" onClick={closeEditUserModal}>
-          <div
-            className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.25)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <div>
-                <h3 className="text-lg font-semibold text-zinc-950">Edit User</h3>
-                <p className="text-xs text-slate-400 mt-1">Update user profile details and access type.</p>
-              </div>
-              <button
-                type="button"
-                onClick={closeEditUserModal}
-                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-zinc-950"
-              >
-                Close
-              </button>
-            </div>
 
-            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleEditUser}>
-              <label className="grid gap-2 text-xs font-medium text-slate-500">
-                Name
-                <input
-                  value={editForm.name}
-                  onChange={(event) => setEditForm((current) => ({ ...current, name: event.target.value }))}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-zinc-950 outline-none focus:border-zinc-950"
-                  placeholder="Full name"
-                />
-              </label>
-              <label className="grid gap-2 text-xs font-medium text-slate-500">
-                Email
-                <input
-                  type="email"
-                  value={editForm.email}
-                  onChange={(event) => setEditForm((current) => ({ ...current, email: event.target.value }))}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-zinc-950 outline-none focus:border-zinc-950"
-                  placeholder="Email address"
-                />
-              </label>
-              <label className="grid gap-2 text-xs font-medium text-slate-500">
-                Phone Number
-                <input
-                  value={editForm.phoneNumber}
-                  onChange={(event) => setEditForm((current) => ({ ...current, phoneNumber: event.target.value }))}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-zinc-950 outline-none focus:border-zinc-950"
-                  placeholder="Phone number"
-                />
-              </label>
-              <label className="grid gap-2 text-xs font-medium text-slate-500">
-                Role
-                <select
-                  value={editForm.role}
-                  onChange={(event) => setEditForm((current) => ({ ...current, role: event.target.value as "USER" | "ADMIN" }))}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-zinc-950 outline-none focus:border-zinc-950"
-                >
-                  <option value="USER">USER</option>
-                  <option value="ADMIN">ADMIN</option>
-                </select>
-              </label>
-              <label className="grid gap-2 text-xs font-medium text-slate-500">
-                Account Type
-                <select
-                  value={editForm.accountType}
-                  onChange={(event) => setEditForm((current) => ({ ...current, accountType: event.target.value as "TRAVELER" | "TRANSPORTER" }))}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-zinc-950 outline-none focus:border-zinc-950"
-                >
-                  <option value="TRAVELER">TRAVELER</option>
-                  <option value="TRANSPORTER">TRANSPORTER</option>
-                </select>
-              </label>
-
-              <div className="md:col-span-2 flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={closeEditUserModal}
-                  disabled={!!actionLoading}
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!!actionLoading}
-                  className="inline-flex items-center gap-2 rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isActionLoading(editingUserId ?? "", "save") ? <ActionSpinner /> : null}
-                  {isActionLoading(editingUserId ?? "", "save") ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

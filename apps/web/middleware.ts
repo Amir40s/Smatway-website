@@ -15,10 +15,11 @@ const PUBLIC_EXACT: Set<string> = new Set([
     '/imprint',
     '/transporter-code-of-conduct',
     '/traveller-code-of-conduct',
+    '/vacancies',
 ]);
 
 
-const PUBLIC_PREFIXES = ['/api', '/_next', '/favicon'];
+const PUBLIC_PREFIXES = ['/api', '/_next', '/favicon', '/vehicle-img'];
 
 function isPublicPath(pathname: string): boolean {
     if (PUBLIC_EXACT.has(pathname)) return true;

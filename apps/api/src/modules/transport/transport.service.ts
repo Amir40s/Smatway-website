@@ -155,6 +155,13 @@ export class TransportService {
       status: TransportStatus.ACTIVE,
       maxReachDateTime: { gte: now },
       deleteRequested: false,
+      vehicle: {
+        deleted: false,
+      },
+      transporter: {
+        isSuspended: false,
+        deletedAt: null,
+      },
     };
 
     if (dto.transportType) where.transportType = dto.transportType;

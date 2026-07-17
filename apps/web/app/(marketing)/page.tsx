@@ -713,6 +713,41 @@ function Hero() {
                 <span className="underline underline-offset-4 decoration-slate-300 hover:decoration-slate-500 transition-colors">{t("hero.cta.howItWorks")}</span>
               </Link>
             </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ duration: 0.7, delay: 0.6, ease: [0.16, 1, 0.3, 1] }} 
+              className="pt-6 border-t border-slate-100/80"
+            >
+              <p className="text-[11px] font-bold tracking-[0.12em] text-slate-400 uppercase mb-4">
+                All Modes of Transport Supported
+              </p>
+              <div className="flex flex-wrap items-center gap-3.5 sm:gap-5">
+                {[
+                  { name: "Car", src: "/vehicle-img/car.png" },
+                  { name: "Van", src: "/vehicle-img/van.png" },
+                  { name: "Minibus", src: "/vehicle-img/minibus.jpg" },
+                  { name: "Bus", src: "/vehicle-img/bus.jpeg" },
+                  { name: "Train", src: "/vehicle-img/train.png" },
+                  { name: "Ship", src: "/vehicle-img/ship.png" },
+                  { name: "Plane", src: "/vehicle-img/plan.jpeg" },
+                ].map((item) => (
+                  <div key={item.name} className="flex flex-col items-center gap-1.5 group">
+                    <div className="w-12 h-10 sm:w-14 sm:h-12 bg-slate-50/50 hover:bg-emerald-50/40 rounded-xl border border-slate-200/40 p-1.5 flex items-center justify-center transition-all duration-200 hover:scale-105 hover:border-emerald-200/50 hover:shadow-[0_4px_12px_rgba(16,185,129,0.05)]">
+                      <img 
+                        src={item.src} 
+                        alt={item.name} 
+                        className="w-full h-full object-contain filter group-hover:brightness-105"
+                      />
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400 group-hover:text-emerald-600 transition-colors">
+                      {item.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           </div>
 
           {/* Right — Car video hero */}
@@ -2673,54 +2708,12 @@ function CTA() {
   );
 }
 
-// ─── Transport Modes ──────────────────────────────────────────────────────────
-
-function TransportModes() {
-  const t = useT();
-  const modes = [
-    { id: "car", icon: <Car className="w-8 h-8" />, label: t("transport.car") },
-    { id: "van", icon: <Truck className="w-8 h-8" />, label: t("transport.van") },
-    { id: "minibus", icon: <BusFront className="w-8 h-8" />, label: t("transport.minibus") },
-    { id: "bus", icon: <Bus className="w-8 h-8" />, label: t("transport.bus") },
-    { id: "ferry", icon: <Ship className="w-8 h-8" />, label: t("transport.ferry") },
-    { id: "train", icon: <Train className="w-8 h-8" />, label: t("transport.train") },
-  ];
-
-  return (
-    <section className="bg-white border-y border-zinc-100 py-16 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-600 mb-10">
-          {t("transport.header")}
-        </p>
-        <div className="flex flex-wrap justify-center gap-6 sm:gap-12 md:gap-16">
-          {modes.map((m, i) => (
-            <motion.div
-              key={m.id}
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="group flex flex-col items-center gap-4 text-zinc-400 hover:text-emerald-600 transition-colors"
-            >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.25rem] bg-zinc-50 border border-zinc-100 flex items-center justify-center text-current shadow-sm group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:shadow-[0_8px_24px_-8px_rgba(16,185,129,0.25)] group-hover:-translate-y-1 transition-all duration-300">
-                {m.icon}
-              </div>
-              <span className="font-semibold text-[13px] sm:text-sm text-zinc-700 tracking-wide">{m.label}</span>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
   return (
     <>
       <Hero />
-      <TransportModes />
       <Features />
       <AppPreview />
       {/* <HowItWorks /> */}
