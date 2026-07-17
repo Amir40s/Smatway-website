@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { apiPost } from '@/lib/api';
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 function MailIcon() {
   return (
@@ -49,6 +50,7 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const t = useT();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,7 +71,7 @@ export default function ForgotPasswordPage() {
     <div className="w-full animate-fade-in-up">
       <Link href="/signin" className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 mb-8 transition-colors group">
         <ArrowLeftIcon />
-        <span className="transition-transform group-hover:-translate-x-0.5">Back to sign in</span>
+        <span className="transition-transform group-hover:-translate-x-0.5">{t("Back to sign in")}</span>
       </Link>
 
       {/* Mobile brand */}
@@ -85,12 +87,12 @@ export default function ForgotPasswordPage() {
           <KeyIcon />
         </div>
         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/60 bg-white/70 px-3 py-1 backdrop-blur">
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Recovery</span>
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">{t("Recovery")}</span>
         </div>
         <h1 className="mt-4 font-[var(--font-display)] text-4xl font-semibold leading-[1.05] tracking-tight text-zinc-950">
-          Reset your <span className="italic text-emerald-700">password.</span>
+          {t("Reset your")} <span className="italic text-emerald-700">{t("password.")}</span>
         </h1>
-        <p className="mt-2 text-[14px] text-zinc-500">Enter your email. We&apos;ll send you a secure reset link.</p>
+        <p className="mt-2 text-[14px] text-zinc-500">{t("Enter your email. We'll send you a secure reset link.")}</p>
       </div>
 
       {/* Form card */}
@@ -109,21 +111,21 @@ export default function ForgotPasswordPage() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 shadow-[0_10px_24px_-8px_rgba(16,185,129,0.3)]">
               <CheckMarkIcon />
             </div>
-            <div className="font-[var(--font-display)] text-xl font-semibold text-zinc-950">Check your inbox</div>
+            <div className="font-[var(--font-display)] text-xl font-semibold text-zinc-950">{t("Check your inbox")}</div>
             <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">
-              We sent a reset link to your email. It expires in 24 hours.
+              {t("We sent a reset link to your email. It expires in 24 hours.")}
             </p>
             <Link
               href="/signin"
               className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-emerald-700 hover:text-emerald-800 transition-colors underline underline-offset-2 decoration-emerald-300 hover:decoration-emerald-500"
             >
-              Back to sign in
+              {t("Back to sign in")}
             </Link>
           </div>
         ) : (
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Email address</label>
+              <label htmlFor="email" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Email address")}</label>
               <div className="relative flex items-center">
                 <span className="absolute left-3.5 pointer-events-none"><MailIcon /></span>
                 <input
@@ -131,7 +133,7 @@ export default function ForgotPasswordPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t("you@example.com")}
                   required
                   className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 pl-10 text-[14px] text-zinc-900 placeholder:text-zinc-400 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-[box-shadow,border-color] duration-200"
                 />
@@ -149,11 +151,11 @@ export default function ForgotPasswordPage() {
                   {loading ? (
                     <>
                       <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.25" /><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
-                      <span>Sending…</span>
+                      <span>{t("Sending…")}</span>
                     </>
                   ) : (
                     <>
-                      <span>Send reset link</span>
+                      <span>{t("Send reset link")}</span>
                       <ArrowRightIcon />
                     </>
                   )}
@@ -166,9 +168,9 @@ export default function ForgotPasswordPage() {
 
       <div className="mt-7 text-center">
         <p className="text-[13px] text-zinc-500">
-          Remembered it?{" "}
+          {t("Remembered it?")}{" "}
           <Link href="/signin" className="font-semibold text-emerald-700 hover:text-emerald-800 underline underline-offset-2 decoration-emerald-300 hover:decoration-emerald-500 transition-colors">
-            Sign in
+            {t("Sign in")}
           </Link>
         </p>
       </div>

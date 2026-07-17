@@ -1,4 +1,5 @@
 import React from "react";
+import { Trans } from "@/components/Trans";
 
 export const metadata = {
   title: "Terms of Use and Conditions - SmatWay",
@@ -9,12 +10,12 @@ export default function TermsPage() {
   return (
     <main className="max-w-3xl mx-auto pt-28 pb-16 px-4 sm:px-6 lg:px-8 text-slate-800">
       <h1 className="text-3xl font-bold tracking-tight text-zinc-900 mb-8">
-        Terms of Use and Conditions
+        <Trans tKey="legal.terms.title" />
       </h1>
 
       <div className="space-y-8 text-sm md:text-base leading-relaxed">
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">SmatWay Platform – Terms of Use & Conditions</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.terms.h2.platform" /></h2>
           <p className="mb-4">
             Welcome to <strong>SmatWay</strong>, a digital platform that connects registered <strong>Transporters</strong> and
             <strong> Travellers</strong> for transportation services. By accessing or using the SmatWay platform
@@ -26,7 +27,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">1. Definitions</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.terms.h2.definitions" /></h2>
           <ul className="list-disc pl-5 space-y-2">
             <li><strong>SmatWay</strong> – The company operating the digital transportation marketplace.</li>
             <li><strong>Transporter</strong> – Any registered individual or company offering transportation services through SmatWay.</li>
@@ -37,7 +38,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">2. Scope of the Platform</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.terms.h2.scope" /></h2>
           <p className="mb-4">SmatWay provides a marketplace that enables:</p>
           <ul className="list-disc pl-5 space-y-2 mb-4">
             <li>Transporters to list trips with departure times, destinations, fares, and availability.</li>
@@ -49,7 +50,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">3. Eligibility</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.terms.h2.eligibility" /></h2>
           <p className="mb-2">To use the Platform:</p>
           <ul className="list-disc pl-5 space-y-2">
             <li>Users must be old enough to undertake the journey in accordance with local laws of the place of transportation, or be accompanied by a parent or legal guardian.</li>
@@ -59,7 +60,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">4. Payment Terms</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.terms.h2.payment" /></h2>
           <ul className="list-disc pl-5 space-y-2">
             <li>All bookings must be paid <strong>online through the SmatWay platform.</strong></li>
             <li>Transporters <strong>must not</strong> collect any cash or charge additional fees outside the platform.</li>
@@ -69,7 +70,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">5. Transporter Obligation</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.terms.h2.obligation" /></h2>
           <p className="mb-4 italic">Our motto is: "Live and let live. Let's make the world a better place for all."</p>
           <p className="mb-4">
             All Transporters agree to strictly follow the rules below. Any violation may result in account suspension, financial penalties, or removal from the platform. For proprietors and transport owners, the platform is designed to make your business more efficient. As your business grows, you are expected to treat your drivers and workers fairly and responsibly.

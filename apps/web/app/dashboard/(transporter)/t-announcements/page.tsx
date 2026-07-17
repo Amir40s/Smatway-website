@@ -5,6 +5,7 @@ import { MegaphoneIcon, PlusIcon, InfoCircleIcon, TrashIcon, XIcon } from "@/app
 import { Page, Reveal, PageHeader, EmptyState, PrimaryButton, SurfaceCard, GhostButton, StatusPill, SkeletonList, AnimatePresence } from "@/app/dashboard/_Components/ui";
 import { getTransporterAnnouncements, createAnnouncement, deleteAnnouncement, getMyRoutes } from "@/lib/api";
 import { motion } from "motion/react";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 export default function TransporterAnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -18,6 +19,7 @@ export default function TransporterAnnouncementsPage() {
   const [content, setContent] = useState("");
   const [transportId, setTransportId] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
 
   useEffect(() => {
     async function loadData() {
@@ -61,7 +63,7 @@ export default function TransporterAnnouncementsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this announcement?")) return;
+    if (!confirm(t("Are you sure you want to delete this announcement?"))) return;
     try {
       await deleteAnnouncement(id);
       setAnnouncements((prev) => prev.filter((a) => a.id !== id));
@@ -89,12 +91,12 @@ export default function TransporterAnnouncementsPage() {
   return (
     <Page>
       <PageHeader
-        kicker="Broadcasts"
-        title="Announcements"
-        subtitle="Share updates, delays, or important info with travelers who booked your routes."
+        kicker={t("Broadcasts")}
+        title={t("Announcements")}
+        subtitle={t("Share updates, delays, or important info with travelers who booked your routes.")}
         action={
           <PrimaryButton icon={<PlusIcon className="w-4 h-4" />} onClick={() => setIsModalOpen(true)}>
-            New announcement
+            {t("New announcement")}
           </PrimaryButton>
         }
       />
@@ -105,9 +107,9 @@ export default function TransporterAnnouncementsPage() {
             <InfoCircleIcon className="w-4 h-4 text-emerald-700" />
           </div>
           <div>
-            <p className="text-[13px] font-semibold text-emerald-900">Reach travelers instantly</p>
+            <p className="text-[13px] font-semibold text-emerald-900">{t("Reach travelers instantly")}</p>
             <p className="text-[12px] text-emerald-800/80 mt-0.5">
-              Target all travelers or specific active routes. They&apos;ll see your message immediately in their announcements feed.
+              {t("Target all travelers or specific active routes. They'll see your message immediately in their announcements feed.")}
             </p>
           </div>
         </div>
@@ -117,8 +119,8 @@ export default function TransporterAnnouncementsPage() {
         <SkeletonList count={3} />
       ) : announcements.length === 0 ? (
         <EmptyState
-          title="No announcements yet"
-          description="Create your first broadcast to share updates with travelers across your routes."
+          title={t("No announcements yet")}
+          description={t("Create your first broadcast to share updates with travelers across your routes.")}
           icon={<MegaphoneIcon className="w-6 h-6" />}
         />
       ) : (
@@ -134,13 +136,13 @@ export default function TransporterAnnouncementsPage() {
                     </StatusPill>
                   ) : (
                     <StatusPill tone="emerald">
-                      All Routes
+                      {t("All Routes")}
                     </StatusPill>
                   )}
                 </div>
                 <p className="text-sm text-slate-600 leading-relaxed max-w-3xl whitespace-pre-wrap">{ann.content}</p>
                 <div className="text-[11px] text-slate-400 font-mono">
-                  Posted on {formatDate(ann.createdAt)}
+                  {t("Posted on")} {formatDate(ann.createdAt)}
                 </div>
               </div>
               <div className="shrink-0 flex items-center justify-end">
@@ -149,7 +151,7 @@ export default function TransporterAnnouncementsPage() {
                   icon={<TrashIcon className="w-3.5 h-3.5" />}
                   onClick={() => handleDelete(ann.id)}
                 >
-                  Delete
+                  {t("Delete")}
                 </GhostButton>
               </div>
             </SurfaceCard>
@@ -182,7 +184,7 @@ export default function TransporterAnnouncementsPage() {
                   <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
                     <MegaphoneIcon className="w-4 h-4" />
                   </div>
-                  <h2 className="text-lg font-bold text-zinc-950 tracking-tight">Create Announcement</h2>
+                  <h2 className="text-lg font-bold text-zinc-950 tracking-tight">{t("Create Announcement")}</h2>
                 </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -202,13 +204,13 @@ export default function TransporterAnnouncementsPage() {
               <form onSubmit={handleCreate} className="space-y-4">
                 <div>
                   <label htmlFor="modal-title" className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
-                    Announcement Title
+                    {t("Announcement Title")}
                   </label>
                   <input
                     id="modal-title"
                     type="text"
                     required
-                    placeholder="e.g., Trip Delay Notice, Route Update"
+                    placeholder={t("e.g., Trip Delay Notice, Route Update")}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-200"
@@ -217,7 +219,7 @@ export default function TransporterAnnouncementsPage() {
 
                 <div>
                   <label htmlFor="modal-target" className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
-                    Target Route
+                    {t("Target Route")}
                   </label>
                   <select
                     id="modal-target"
@@ -225,25 +227,25 @@ export default function TransporterAnnouncementsPage() {
                     onChange={(e) => setTransportId(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-zinc-900 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-200"
                   >
-                    <option value="">All Routes (Broadcast to everyone)</option>
+                    <option value="">{t("All Routes (Broadcast to everyone)")}</option>
                     {routes.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.departureCity} ➔ {r.destinationCity} {r.vehicle ? `(${r.vehicle.name})` : ""}
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1 text-[11px] text-slate-400">Select a specific active route to only notify passengers booked on that route.</p>
+                  <p className="mt-1 text-[11px] text-slate-400">{t("Select a specific active route to only notify passengers booked on that route.")}</p>
                 </div>
 
                 <div>
                   <label htmlFor="modal-content" className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
-                    Broadcast Message
+                    {t("Broadcast Message")}
                   </label>
                   <textarea
                     id="modal-content"
                     required
                     rows={4}
-                    placeholder="Write your announcement details here. Delays, plate changes, emergency details, etc..."
+                    placeholder={t("Write your announcement details here. Delays, plate changes, emergency details, etc...")}
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-200 resize-none"
@@ -252,13 +254,13 @@ export default function TransporterAnnouncementsPage() {
 
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <GhostButton onClick={() => setIsModalOpen(false)}>
-                    Cancel
+                    {t("Cancel")}
                   </GhostButton>
                   <PrimaryButton
                     type="submit"
                     disabled={isSubmitting || !title.trim() || !content.trim()}
                   >
-                    {isSubmitting ? "Broadcasting..." : "Broadcast Notice"}
+                    {isSubmitting ? t("Broadcasting...") : t("Broadcast Notice")}
                   </PrimaryButton>
                 </div>
               </form>

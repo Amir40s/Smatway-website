@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { MegaphoneIcon, InfoCircleIcon, ClockIcon } from "@/app/dashboard/_Components/Icons";
 import { Page, Reveal, PageHeader, EmptyState, SurfaceCard, StatusPill, SkeletonList } from "@/app/dashboard/_Components/ui";
 import { getTravelerAnnouncements } from "@/lib/api";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
 
   useEffect(() => {
     async function loadAnnouncements() {
@@ -17,7 +19,7 @@ export default function AnnouncementsPage() {
         setAnnouncements(data);
       } catch (err: any) {
         console.error("Failed to load traveler announcements", err);
-        setError("Unable to retrieve announcements. Please try again later.");
+        setError(t("Unable to retrieve announcements. Please try again later."));
       } finally {
         setIsLoading(false);
       }
@@ -54,9 +56,9 @@ export default function AnnouncementsPage() {
   return (
     <Page>
       <PageHeader
-        kicker="From your transporters"
-        title="Announcements"
-        subtitle="Important updates, route alerts, and notices from transporters you've booked with."
+        kicker={t("From your transporters")}
+        title={t("Announcements")}
+        subtitle={t("Important updates, route alerts, and notices from transporters you've booked with.")}
       />
 
       {isLoading ? (
@@ -68,15 +70,15 @@ export default function AnnouncementsPage() {
               <InfoCircleIcon className="w-4 h-4 text-red-700" />
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-red-900">Failed to load alerts</p>
+              <p className="text-[13px] font-semibold text-red-900">{t("Failed to load alerts")}</p>
               <p className="text-[12px] text-red-800/80 mt-0.5">{error}</p>
             </div>
           </div>
         </Reveal>
       ) : announcements.length === 0 ? (
         <EmptyState
-          title="All quiet for now"
-          description="When transporters you've booked with post announcements that affect your trips, they'll appear here."
+          title={t("All quiet for now")}
+          description={t("When transporters you've booked with post announcements that affect your trips, they'll appear here.")}
           icon={<MegaphoneIcon className="w-6 h-6" />}
         />
       ) : (
@@ -105,20 +107,20 @@ export default function AnnouncementsPage() {
                     )}
                     <div>
                       <h4 className="text-sm font-bold text-zinc-900 tracking-tight">
-                        {ann.transporter?.name || "Partner Transporter"}
+                        {ann.transporter?.name || t("Partner Transporter")}
                       </h4>
-                      <p className="text-[11px] text-slate-400 font-medium">Broadcasted update</p>
+                      <p className="text-[11px] text-slate-400 font-medium">{t("Broadcasted update")}</p>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
                     {ann.transport ? (
                       <StatusPill tone="blue">
-                        Route: {ann.transport.departureCity} ➔ {ann.transport.destinationCity}
+                        {t("Route:")} {ann.transport.departureCity} ➔ {ann.transport.destinationCity}
                       </StatusPill>
                     ) : (
                       <StatusPill tone="emerald">
-                        All Assigned Routes
+                        {t("All Assigned Routes")}
                       </StatusPill>
                     )}
                   </div>
@@ -135,7 +137,7 @@ export default function AnnouncementsPage() {
 
                 <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium pt-1">
                   <ClockIcon className="w-3.5 h-3.5" />
-                  <span>Posted on {formatDate(ann.createdAt)}</span>
+                  <span>{t("Posted on")} {formatDate(ann.createdAt)}</span>
                 </div>
               </SurfaceCard>
             </Reveal>

@@ -9,6 +9,7 @@ import { getMyBookings, cancelBooking, initChat, getMessages } from "@/lib/api";
 import { formatPrice } from "@/lib/currencies";
 import { getCurrentUser } from "@/lib/auth";
 import { countryCodeFromName } from "@/lib/countries";
+import { useT } from "@/lib/i18n/LocaleProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   BookOpenIcon, CarIcon, CalendarIcon, UsersIcon,
@@ -37,6 +38,7 @@ export default function MyBookingsPage() {
   const [messageText, setMessageText] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
+  const t = useT();
   const socketRef = useRef<any>(null);
   const autoOpenedRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -78,7 +80,7 @@ export default function MyBookingsPage() {
   }, [searchParams, loading]);
 
   async function handleCancel(id: string) {
-    if (!confirm("Cancel this booking?")) return;
+    if (!confirm(t("Cancel this booking?"))) return;
     setCancelling(id);
     try {
       const updated = await cancelBooking(id);
@@ -134,9 +136,9 @@ export default function MyBookingsPage() {
   return (
     <Page>
       <PageHeader
-        kicker={`${bookings.length} ${bookings.length === 1 ? "trip" : "trips"}`}
-        title="My bookings"
-        subtitle="Track your upcoming trips, chat with your transporter, or cancel a booking."
+        kicker={`${bookings.length} ${bookings.length === 1 ? t("trip") : t("trips")}`}
+        title={t("My bookings")}
+        subtitle={t("Track your upcoming trips, chat with your transporter, or cancel a booking.")}
       />
 
       {!loading && bookings.length > 0 && (
@@ -149,16 +151,16 @@ export default function MyBookingsPage() {
         <SkeletonList count={3} />
       ) : bookings.length === 0 ? (
         <EmptyState
-          title="No bookings yet"
-          description="Search for available routes and book your first ride with a verified transporter."
-          ctaLabel="Search routes"
+          title={t("No bookings yet")}
+          description={t("Search for available routes and book your first ride with a verified transporter.")}
+          ctaLabel={t("Search routes")}
           ctaHref="/dashboard"
           icon={<BookOpenIcon className="w-6 h-6" />}
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title={`No ${filter.toLowerCase()} bookings`}
-          description="Try a different filter to see other bookings."
+          title={t("No {{filter}} bookings").replace("{{filter}}", t(filter).toLowerCase())}
+          description={t("Try a different filter to see other bookings.")}
         />
       ) : (
         <motion.div
@@ -204,6 +206,7 @@ function BookingCard({
   const paymentTone: "emerald" | "slate" | "red" =
     booking.paymentStatus === "PAID" ? "emerald" :
     booking.paymentStatus === "FAILED" ? "red" : "slate";
+  const t = useT();
 
   return (
     <SurfaceCard>
@@ -222,10 +225,10 @@ function BookingCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
               <StatusPill tone={tone} dot={booking.status === "CONFIRMED" || booking.status === "PENDING"}>
-                {booking.status}
+                {t(booking.status)}
               </StatusPill>
               <StatusPill tone={paymentTone}>
-                {booking.paymentStatus === "PAID" ? "Paid" : booking.paymentStatus === "FAILED" ? "Payment failed" : "Unpaid"}
+                {booking.paymentStatus === "PAID" ? t("Paid") : booking.paymentStatus === "FAILED" ? t("Payment failed") : t("Unpaid")}
               </StatusPill>
               <span className="text-[10px] text-slate-400 font-mono">
                 #{booking.bookingNumber || `${countryCodeFromName(booking.transport.departureCountry) || "XX"}-${booking.id.slice(0, 6).toUpperCase()}`}
@@ -239,8 +242,8 @@ function BookingCard({
             </h3>
             {booking.transport.departureAddress && booking.transport.destinationAddress && (
               <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                <span className="font-semibold text-slate-500">Pick-up:</span> {booking.transport.departureAddress} <br />
-                <span className="font-semibold text-slate-500">Drop-off:</span> {booking.transport.destinationAddress}
+                <span className="font-semibold text-slate-500">{t("Pick-up:")}</span> {booking.transport.departureAddress} <br />
+                <span className="font-semibold text-slate-500">{t("Drop-off:")}</span> {booking.transport.destinationAddress}
               </p>
             )}
 
@@ -251,7 +254,7 @@ function BookingCard({
               </span>
               <span className="inline-flex items-center gap-1">
                 <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
-                {booking.seatsBooked} {booking.seatsBooked === 1 ? "seat" : "seats"}
+                {booking.seatsBooked} {booking.seatsBooked === 1 ? t("seat") : t("seats")}
               </span>
             </div>
           </div>
@@ -266,14 +269,14 @@ function BookingCard({
                 href={`/dashboard/traveler/booking/${booking.id}`}
                 className="text-[11px] font-semibold border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all active:scale-[0.98]"
               >
-                Details
+                {t("Details")}
               </Link>
               {booking.status === "COMPLETED" && (
                 <Link
                   href={`/dashboard/rate-journey?bookingId=${booking.id}`}
                   className="text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-all active:scale-[0.98]"
                 >
-                  Rate Journey
+                  {t("Rate Journey")}
                 </Link>
               )}
               {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && booking.paymentStatus !== "PAID" && (
@@ -282,7 +285,7 @@ function BookingCard({
                   disabled={cancelling}
                   className="text-[11px] font-semibold border border-red-200 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
-                  {cancelling ? "..." : "Cancel"}
+                  {cancelling ? "..." : t("Cancel")}
                 </button>
               )}
             </div>
@@ -298,6 +301,7 @@ function ChatModal({
   loading, messages, currentUserId, messageText, sendingMessage,
   onChangeText, onSend, onClose, messagesEndRef,
 }: any) {
+  const t = useT();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -316,8 +320,8 @@ function ChatModal({
       >
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h3 className="text-[14px] font-semibold text-zinc-950">Message transporter</h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">Confirm pickup or ask any questions</p>
+            <h3 className="text-[14px] font-semibold text-zinc-950">{t("Message transporter")}</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">{t("Confirm pickup or ask any questions")}</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-zinc-900 p-1 -m-1">
             <XIcon className="w-4 h-4" />
@@ -325,13 +329,13 @@ function ChatModal({
         </div>
 
         {loading ? (
-          <div className="p-10 text-center text-sm text-slate-400">Loading...</div>
+          <div className="p-10 text-center text-sm text-slate-400">{t("Loading...")}</div>
         ) : (
           <>
             <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50/60">
               {messages.length === 0 ? (
                 <div className="text-center text-[13px] text-slate-400 mt-16">
-                  No messages yet. Say hello.
+                  {t("No messages yet. Say hello.")}
                 </div>
               ) : (
                 messages.map((msg: any, i: number) => {
@@ -361,7 +365,7 @@ function ChatModal({
                 value={messageText}
                 onChange={(e) => onChangeText(e.target.value)}
                 onKeyPress={(e: React.KeyboardEvent) => e.key === "Enter" && !e.shiftKey && onSend()}
-                placeholder="Type a message..."
+                placeholder={t("Type a message...")}
                 className="flex-1 border border-slate-200 rounded-xl px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
               <button

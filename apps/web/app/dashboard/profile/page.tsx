@@ -17,6 +17,7 @@ import { emitAvatarChange } from "@/app/dashboard/_Components/events";
 import { countries } from "@/lib/countries";
 import { currencies, defaultCurrencyForCountry } from "@/lib/currencies";
 import { Combobox } from "@/components/Combobox";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,7 @@ export default function ProfilePage() {
   const [addingContact, setAddingContact] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", relation: "family", phone: "" });
+  const t = useT();
 
   // Mirrors the scoped .input style below, but as plain Tailwind so it can be
   // passed into the Combobox child component (styled-jsx is scoped to this file
@@ -113,22 +115,22 @@ export default function ProfilePage() {
     const nameRegex = /^[\p{L}\s\-\.',]{2,100}$/u;
 
     if (!nameRegex.test(fullName.trim())) {
-      setError("Please enter a valid name (minimum 2 characters, letters and spaces only, no digits)");
+      setError(t("Please enter a valid name (minimum 2 characters, letters and spaces only, no digits)"));
       return;
     }
 
     if (phone && !phoneRegex.test(phone.trim())) {
-      setError("Please enter a valid phone number (e.g. +92 300 1234567)");
+      setError(t("Please enter a valid phone number (e.g. +92 300 1234567)"));
       return;
     }
 
     if (isTransporter) {
       if (bankAccountHolderName && !nameRegex.test(bankAccountHolderName.trim())) {
-        setError("Bank account holder name must be a valid name (letters and spaces only)");
+        setError(t("Bank account holder name must be a valid name (letters and spaces only)"));
         return;
       }
       if (bankAccountNumber && !/^[0-9a-zA-Z\-\s]{5,30}$/.test(bankAccountNumber.trim())) {
-        setError("Please enter a valid bank account number");
+        setError(t("Please enter a valid bank account number"));
         return;
       }
     }
@@ -190,7 +192,7 @@ export default function ProfilePage() {
   }
 
   async function handleDeleteContact(contactId: string) {
-    if (!confirm("Delete this emergency contact?")) return;
+    if (!confirm(t("Delete this emergency contact?"))) return;
     try {
       setError(null);
       await deleteEmergencyContact(contactId);
@@ -209,7 +211,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <Page>
-        <PageHeader title="Profile" />
+        <PageHeader title={t("Profile")} />
         <div className="rounded-2xl bg-white border border-slate-200/80 p-6">
           <div className="flex items-center gap-5">
             <Skeleton className="w-20 h-20 rounded-2xl" />
@@ -226,9 +228,9 @@ export default function ProfilePage() {
   if (!profileData) {
     return (
       <Page>
-        <PageHeader title="Profile" />
+        <PageHeader title={t("Profile")} />
         <div className="rounded-2xl border border-red-100 bg-red-50/60 p-6 text-sm text-red-700">
-          Failed to load profile.
+          {t("Failed to load profile.")}
         </div>
       </Page>
     );
@@ -237,9 +239,9 @@ export default function ProfilePage() {
   return (
     <Page>
       <PageHeader
-        kicker="Account"
-        title="Your profile"
-        subtitle="Personal information, preferences, and emergency contacts."
+        kicker={t("Account")}
+        title={t("Your profile")}
+        subtitle={t("Personal information, preferences, and emergency contacts.")}
       />
 
       <AnimatePresence>
@@ -293,10 +295,10 @@ export default function ProfilePage() {
                   <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-[18px] font-semibold text-zinc-950 truncate">{fullName || "User"}</h2>
+                  <h2 className="text-[18px] font-semibold text-zinc-950 truncate">{fullName || t("User")}</h2>
                   <div className="flex items-center gap-2 mt-1">
                     <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ring-1 ring-inset ${isTransporter ? "bg-blue-50 text-blue-700 ring-blue-200" : "bg-emerald-50 text-emerald-700 ring-emerald-200"}`}>
-                      {roleLabel}
+                      {t(roleLabel)}
                     </span>
                     <span className="text-[11px] text-slate-500 truncate">{profileData.user.email}</span>
                   </div>
@@ -306,16 +308,16 @@ export default function ProfilePage() {
 
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
-                <Field label="Full name" required>
+                <Field label={t("Full name")} required>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Your name"
+                    placeholder={t("Your name")}
                     className="input"
                   />
                 </Field>
-                <Field label="Phone">
+                <Field label={t("Phone")}>
                   <input
                     type="text"
                     value={phone}
@@ -328,32 +330,32 @@ export default function ProfilePage() {
 
               {isTransporter && (
                 <>
-                  <Field label="Business name">
+                  <Field label={t("Business name")}>
                     <input
                       type="text"
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
-                      placeholder="e.g. Star Travels"
+                      placeholder={t("e.g. Star Travels")}
                       className="input"
                     />
                   </Field>
 
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-4 mb-4">
-                    <p className="text-[11px] font-bold text-zinc-900 uppercase tracking-wider">Business Certificate / Permission</p>
+                    <p className="text-[11px] font-bold text-zinc-900 uppercase tracking-wider">{t("Business Certificate / Permission")}</p>
                     <div className="flex items-center gap-4">
                       {businessCertificateUrl ? (
                         <a href={businessCertificateUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-600 hover:text-emerald-700 underline font-medium truncate max-w-xs">
-                          View Uploaded Document
+                          {t("View Uploaded Document")}
                         </a>
                       ) : (
-                        <span className="text-sm text-slate-500">No document uploaded yet.</span>
+                        <span className="text-sm text-slate-500">{t("No document uploaded yet.")}</span>
                       )}
                       <div>
                         <label
                           htmlFor="certificate-upload"
                           className={`inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors shadow-sm ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
-                          {isUploading ? "Uploading..." : businessCertificateUrl ? "Replace Document" : "Upload Document"}
+                          {isUploading ? t("Uploading...") : businessCertificateUrl ? t("Replace Document") : t("Upload Document")}
                         </label>
                         <input id="certificate-upload" type="file" accept="image/jpeg,image/png,application/pdf" onChange={handleCertificateUpload} disabled={isUploading} className="hidden" />
                       </div>
@@ -361,28 +363,28 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-4 mb-4">
-                    <p className="text-[11px] font-bold text-zinc-900 uppercase tracking-wider">Bank Details (for offline payouts)</p>
+                    <p className="text-[11px] font-bold text-zinc-900 uppercase tracking-wider">{t("Bank Details (for offline payouts)")}</p>
                     <div className="grid sm:grid-cols-2 gap-4">
-                      <Field label="Bank Name">
+                      <Field label={t("Bank Name")}>
                         <input
                           type="text"
                           value={bankName}
                           onChange={(e) => setBankName(e.target.value)}
-                          placeholder="e.g. GTBank / Habib Bank"
+                          placeholder={t("e.g. GTBank / Habib Bank")}
                           className="input bg-white"
                         />
                       </Field>
-                      <Field label="Account Holder Name">
+                      <Field label={t("Account Holder Name")}>
                         <input
                           type="text"
                           value={bankAccountHolderName}
                           onChange={(e) => setBankAccountHolderName(e.target.value)}
-                          placeholder="e.g. John Doe / Wick"
+                          placeholder={t("e.g. John Doe / Wick")}
                           className="input bg-white"
                         />
                       </Field>
                     </div>
-                    <Field label="Account Number">
+                    <Field label={t("Account Number")}>
                       <input
                         type="text"
                         value={bankAccountNumber}
@@ -396,10 +398,10 @@ export default function ProfilePage() {
               )}
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Country">
+                <Field label={t("Country")}>
                   <Combobox
                     ariaLabel="Country"
-                    placeholder="Type to search countries…"
+                    placeholder={t("Type to search countries…")}
                     options={countries.map(c => ({ value: c.code, label: c.name, hint: c.code }))}
                     value={country}
                     onChange={(v) => {
@@ -409,10 +411,10 @@ export default function ProfilePage() {
                     className={comboboxInputClass}
                   />
                 </Field>
-                <Field label="Preferred currency">
+                <Field label={t("Preferred currency")}>
                   <Combobox
                     ariaLabel="Preferred currency"
-                    placeholder="Type to search currencies…"
+                    placeholder={t("Type to search currencies…")}
                     options={currencies.map(c => ({ value: c.code, label: `${c.code} — ${c.name}`, hint: c.symbol, search: [c.name, c.code, c.symbol] }))}
                     value={preferredCurrency}
                     onChange={setPreferredCurrency}
@@ -421,11 +423,11 @@ export default function ProfilePage() {
                 </Field>
               </div>
 
-              <Field label="Bio">
+              <Field label={t("Bio")}>
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  placeholder="Tell us about yourself..."
+                  placeholder={t("Tell us about yourself...")}
                   rows={3}
                   className="input resize-none"
                 />
@@ -436,15 +438,15 @@ export default function ProfilePage() {
                   <MailIcon className="w-3.5 h-3.5 text-slate-500" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Email</p>
+                  <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">{t("Email")}</p>
                   <p className="text-[13px] font-medium text-zinc-950 truncate">{profileData.user.email}</p>
                 </div>
-                <span className="text-[10px] text-slate-400">Read only</span>
+                <span className="text-[10px] text-slate-400">{t("Read only")}</span>
               </div>
 
               <div className="pt-2">
                 <PrimaryButton type="submit" disabled={saving}>
-                  {saving ? "Saving..." : "Save changes"}
+                  {saving ? t("Saving...") : t("Save changes")}
                 </PrimaryButton>
               </div>
 
@@ -470,9 +472,9 @@ export default function ProfilePage() {
 
           {isTransporter && (
             <div className="mt-5 p-5 rounded-2xl border border-red-200 bg-red-50/40 space-y-3">
-              <h4 className="text-[12.5px] font-bold text-red-800 uppercase tracking-wider">Profile Deletion Request</h4>
+              <h4 className="text-[12.5px] font-bold text-red-800 uppercase tracking-wider">{t("Profile Deletion Request")}</h4>
               <p className="text-[12px] leading-relaxed text-slate-600">
-                Only SmatWay Administrators can delete registration profiles after submission. If you wish to delete your account or any submitted registration details, please request the administrator by email:
+                {t("Only SmatWay Administrators can delete registration profiles after submission. If you wish to delete your account or any submitted registration details, please request the administrator by email:")}
               </p>
               <div className="flex flex-wrap gap-2">
                 <a
@@ -480,17 +482,17 @@ export default function ProfilePage() {
                   className="inline-flex items-center gap-2 text-xs font-semibold text-red-700 hover:text-red-800 bg-red-50 border border-red-100 hover:bg-red-100/50 px-3.5 py-2 rounded-xl transition-all shadow-sm"
                 >
                   <MailIcon className="w-3.5 h-3.5 text-red-700 animate-pulse" />
-                  Email Administrator (admin@smatway.com)
+                  {t("Email Administrator (admin@smatway.com)")}
                 </a>
                 <button
                   type="button"
                   onClick={() => {
                     navigator.clipboard.writeText("admin@smatway.com");
-                    alert("Email address copied to clipboard!");
+                    alert(t("Email address copied to clipboard!"));
                   }}
                   className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-700 hover:text-zinc-800 bg-white border border-slate-200 hover:bg-slate-50 px-3.5 py-2 rounded-xl transition-all shadow-sm"
                 >
-                  Copy Email Address
+                  {t("Copy Email Address")}
                 </button>
               </div>
             </div>
@@ -502,8 +504,8 @@ export default function ProfilePage() {
           <div className="rounded-2xl bg-white border border-slate-200/80 overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="text-[13px] font-semibold text-zinc-950">Emergency contacts</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">People we reach in case of trouble</p>
+                <h3 className="text-[13px] font-semibold text-zinc-950">{t("Emergency contacts")}</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">{t("People we reach in case of trouble")}</p>
               </div>
               {!addingContact && (
                 <button
@@ -511,14 +513,14 @@ export default function ProfilePage() {
                   className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
                 >
                   <PlusIcon className="w-3 h-3" />
-                  Add
+                  {t("Add")}
                 </button>
               )}
             </div>
 
             <div className="p-4 space-y-2">
               {profileData.emergencyContacts.length === 0 && !addingContact ? (
-                <p className="text-[13px] text-slate-400 text-center py-6">No contacts added yet</p>
+                <p className="text-[13px] text-slate-400 text-center py-6">{t("No contacts added yet")}</p>
               ) : (
                 profileData.emergencyContacts.map((contact) => (
                   <motion.div
@@ -533,7 +535,7 @@ export default function ProfilePage() {
                       <div className="flex items-center gap-1.5">
                         <p className="text-[13px] font-semibold text-zinc-950 truncate">{contact.name}</p>
                         <span className="text-[9px] font-semibold uppercase tracking-wider bg-white ring-1 ring-slate-200 text-slate-500 px-1.5 py-0.5 rounded">
-                          {contact.relation}
+                          {t(contact.relation)}
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500 truncate">{contact.phone}</p>
@@ -562,7 +564,7 @@ export default function ProfilePage() {
                       type="text"
                       value={contactForm.name}
                       onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                      placeholder="Contact name"
+                      placeholder={t("Contact name")}
                       required
                       className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-emerald-500"
                     />
@@ -571,15 +573,15 @@ export default function ProfilePage() {
                       onChange={(e) => setContactForm({ ...contactForm, relation: e.target.value })}
                       className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-emerald-500"
                     >
-                      <option value="family">Family</option>
-                      <option value="friend">Friend</option>
-                      <option value="other">Other</option>
+                      <option value="family">{t("Family")}</option>
+                      <option value="friend">{t("Friend")}</option>
+                      <option value="other">{t("Other")}</option>
                     </select>
                     <input
                       type="tel"
                       value={contactForm.phone}
                       onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                      placeholder="Phone number"
+                      placeholder={t("Phone number")}
                       required
                       className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-emerald-500"
                     />
@@ -588,14 +590,14 @@ export default function ProfilePage() {
                         type="submit"
                         className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-semibold py-2 rounded-lg transition-all active:scale-[0.98]"
                       >
-                        Add contact
+                        {t("Add contact")}
                       </button>
                       <button
                         type="button"
                         onClick={() => setAddingContact(false)}
                         className="flex-1 border border-slate-200 text-slate-700 text-[12px] font-semibold py-2 rounded-lg hover:bg-slate-50 transition-all"
                       >
-                        Cancel
+                        {t("Cancel")}
                       </button>
                     </div>
                   </motion.form>

@@ -11,6 +11,7 @@ import {
   Page, Reveal, PageHeader, EmptyState, SkeletonList, StatusPill,
   PrimaryButton, GhostButton, SurfaceCard, spring,
 } from "@/app/dashboard/_Components/ui";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 const typeTone: Record<string, string> = {
   CAR: "bg-blue-50 text-blue-700 ring-blue-200",
@@ -29,6 +30,7 @@ export default function TransporterVehiclesPage() {
   
   const [requestDeleteModal, setRequestDeleteModal] = useState<{ id: string; name: string } | null>(null);
   const [requestReason, setRequestReason] = useState("");
+  const t = useT();
 
   useEffect(() => {
     getMyVehicles().then(setVehicles).finally(() => setLoading(false));
@@ -36,7 +38,7 @@ export default function TransporterVehiclesPage() {
 
   async function handleDelete(id: string) {
     const vehicle = vehicles.find((v) => v.id === id);
-    setRequestDeleteModal({ id, name: vehicle?.name || "Vehicle" });
+    setRequestDeleteModal({ id, name: vehicle?.name || t("Vehicle") });
     setRequestReason("");
   }
 
@@ -64,7 +66,7 @@ export default function TransporterVehiclesPage() {
 
   async function handleDeleteAllRoutes() {
     if (!deleteModal) return;
-    const reason = window.prompt("Deleting associated routes. Please confirm the reason for deleting this vehicle:");
+    const reason = window.prompt(t("Deleting associated routes. Please confirm the reason for deleting this vehicle:"));
     if (!reason) return;
     try {
       await disableRoutesByVehicle(deleteModal.vehicleId);
@@ -80,15 +82,15 @@ export default function TransporterVehiclesPage() {
   return (
     <Page>
       <PageHeader
-        kicker={`${vehicles.length} ${vehicles.length === 1 ? "vehicle" : "vehicles"}`}
-        title="Your fleet"
-        subtitle="Every vehicle available for routes. Update details, add photos, or retire vehicles that are no longer in service."
+        kicker={t("{count} {label}").replace("{count}", vehicles.length.toString()).replace("{label}", vehicles.length === 1 ? t("vehicle") : t("vehicles"))}
+        title={t("Your fleet")}
+        subtitle={t("Every vehicle available for routes. Update details, add photos, or retire vehicles that are no longer in service.")}
         action={
           <PrimaryButton
             href="/dashboard/vehicles/add"
             icon={<PlusIcon className="w-4 h-4" />}
           >
-            Add vehicle
+            {t("Add vehicle")}
           </PrimaryButton>
         }
       />
@@ -97,9 +99,9 @@ export default function TransporterVehiclesPage() {
         <SkeletonList count={3} />
       ) : vehicles.length === 0 ? (
         <EmptyState
-          title="No vehicles yet"
-          description="Add your first vehicle to start creating routes and accepting bookings."
-          ctaLabel="Add vehicle"
+          title={t("No vehicles yet")}
+          description={t("Add your first vehicle to start creating routes and accepting bookings.")}
+          ctaLabel={t("Add vehicle")}
           ctaHref="/dashboard/vehicles/add"
           icon={<CarIcon className="w-6 h-6" />}
         />
@@ -140,12 +142,12 @@ export default function TransporterVehiclesPage() {
                           </span>
                           {routeCount > 0 && (
                             <StatusPill tone="emerald" dot>
-                              {routeCount} {routeCount === 1 ? "route" : "routes"}
+                              {routeCount} {routeCount === 1 ? t("route") : t("routes")}
                             </StatusPill>
                           )}
                           {vehicle.deleteRequested && (
                             <StatusPill tone="red" dot>
-                              Delete Pending
+                              {t("Delete Pending")}
                             </StatusPill>
                           )}
                         </div>
@@ -153,7 +155,7 @@ export default function TransporterVehiclesPage() {
                           {vehicle.name}
                         </h3>
                         <p className="text-xs text-slate-500 mt-0.5 truncate">
-                          {vehicle.model} · Plate {vehicle.plateNumber}
+                          {vehicle.model} · {t("Plate")} {vehicle.plateNumber}
                         </p>
                       </div>
 
@@ -164,7 +166,7 @@ export default function TransporterVehiclesPage() {
                               href={`/dashboard/vehicles/edit/${vehicle.id}`}
                               icon={<EditIcon className="w-3.5 h-3.5" />}
                             >
-                              <span className="hidden sm:inline">Edit</span>
+                              <span className="hidden sm:inline">{t("Edit")}</span>
                             </GhostButton>
                             <GhostButton
                               onClick={() => handleDelete(vehicle.id)}
@@ -173,13 +175,13 @@ export default function TransporterVehiclesPage() {
                               icon={<TrashIcon className="w-3.5 h-3.5" />}
                             >
                               <span className="hidden sm:inline">
-                                {deleting === vehicle.id ? "..." : "Delete"}
+                                {deleting === vehicle.id ? "..." : t("Delete")}
                               </span>
                             </GhostButton>
                           </>
                         ) : (
                           <span className="text-[11px] font-semibold text-rose-600 bg-rose-50 px-2.5 py-1.5 rounded-lg border border-rose-100">
-                            Delete Requested
+                            {t("Delete Requested")}
                           </span>
                         )}
                       </div>
@@ -229,10 +231,10 @@ export default function TransporterVehiclesPage() {
               </div>
 
               <h2 className="text-[16px] font-semibold text-zinc-950">
-                Delete "{deleteModal.vehicleName}"?
+                {t("Delete '{name}'?").replace("{name}", deleteModal.vehicleName)}
               </h2>
               <p className="text-sm text-slate-500 mt-1.5">
-                This vehicle has active routes. Deleting will disable all routes associated with it.
+                {t("This vehicle has active routes. Deleting will disable all routes associated with it.")}
               </p>
 
               {deleteError && (
@@ -249,13 +251,13 @@ export default function TransporterVehiclesPage() {
                   }}
                   className="flex-1 border border-slate-200 text-slate-700 font-medium py-2.5 rounded-xl hover:bg-slate-50 transition-all active:scale-[0.98] text-sm"
                 >
-                  Cancel
+                  {t("Cancel")}
                 </button>
                 <button
                   onClick={handleDeleteAllRoutes}
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-xl transition-all active:scale-[0.98] text-sm"
                 >
-                  Delete anyway
+                  {t("Delete anyway")}
                 </button>
               </div>
             </motion.div>
@@ -295,21 +297,21 @@ export default function TransporterVehiclesPage() {
 
               <div>
                 <h2 className="text-[16px] font-semibold text-zinc-950">
-                  Request Deletion
+                  {t("Request Deletion")}
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Transporters are not allowed to delete vehicles directly. Please provide a reason to request deletion of "{requestDeleteModal.name}" from the Admin.
+                  {t("Transporters are not allowed to delete vehicles directly. Please provide a reason to request deletion of '{name}' from the Admin.").replace("{name}", requestDeleteModal.name)}
                 </p>
               </div>
 
               <div className="space-y-1.5">
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  Reason for Deletion
+                  {t("Reason for Deletion")}
                 </label>
                 <textarea
                   value={requestReason}
                   onChange={(e) => setRequestReason(e.target.value)}
-                  placeholder="Explain why you want to delete this vehicle..."
+                  placeholder={t("Explain why you want to delete this vehicle...")}
                   rows={3}
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-zinc-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 resize-none transition-all"
                   required
@@ -322,7 +324,7 @@ export default function TransporterVehiclesPage() {
                   onClick={() => setRequestDeleteModal(null)}
                   className="flex-1 border border-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-all active:scale-[0.98] text-xs"
                 >
-                  Cancel
+                  {t("Cancel")}
                 </button>
                 <button
                   type="button"
@@ -330,7 +332,7 @@ export default function TransporterVehiclesPage() {
                   disabled={deleting !== null || !requestReason.trim()}
                   className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-xl transition-all active:scale-[0.98] text-xs disabled:opacity-50"
                 >
-                  {deleting !== null ? "Submitting..." : "Submit Request"}
+                  {deleting !== null ? t("Submitting...") : t("Submit Request")}
                 </button>
               </div>
             </motion.div>

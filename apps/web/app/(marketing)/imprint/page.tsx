@@ -1,4 +1,5 @@
 import React from "react";
+import { Trans } from "@/components/Trans";
 
 export const metadata = {
   title: "Imprint - SmatWay",
@@ -9,21 +10,21 @@ export default function ImprintPage() {
   return (
     <main className="max-w-3xl mx-auto pt-28 pb-16 px-4 sm:px-6 lg:px-8 text-slate-800">
       <h1 className="text-3xl font-bold tracking-tight text-zinc-900 mb-8">
-        Imprint
+        <Trans tKey="legal.imprint" />
       </h1>
 
       <div className="space-y-8 text-sm md:text-base leading-relaxed">
         <section>
           <p className="mb-6">Information pursuant to applicable e-commerce and media laws.</p>
           
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">Company Information</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.company.information" /></h2>
           <address className="not-italic space-y-2 mb-6">
             <p><strong>Company Name:</strong> Smatway Booking Ltd</p>
             <p><strong>Legal Form:</strong> Limited</p>
             <p><strong>Registered Address:</strong> Plot 8, Providence Street, Lekki Phase 1, Lagos State, Nigeria</p>
           </address>
 
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">Contact</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.contact" /></h2>
           <address className="not-italic space-y-2 mb-6">
             <p><strong>Smatway Booking Ltd</strong></p>
             <p>Registered Address: Plot 8, Providence Street, Lekki Phase 1, Lagos State, Nigeria</p>
@@ -32,20 +33,20 @@ export default function ImprintPage() {
             <p><strong>Phone:</strong> +2349137507161</p>
           </address>
 
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">Company Registration</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.company.registration" /></h2>
           <div className="space-y-2 mb-6">
             <p><strong>Registered with:</strong> Corporate Affair Commission of Nigeria</p>
             <p><strong>Registration Number:</strong> 9579402</p>
             <p><strong>VAT Identification Number:</strong> [VAT Number]</p>
           </div>
 
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">Authorized Representative</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.authorized.representative" /></h2>
           <div className="space-y-2 mb-6">
             <p>Benjamin Enwegbara</p>
             <p><a href="mailto:info@smatway.com" className="text-emerald-600 hover:underline">info@smatway.com</a></p>
           </div>
 
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">Regulatory Information</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.regulatory.information" /></h2>
           <p className="mb-4">
             Where transportation services are provided by independent transport operators, the Platform acts as a booking and marketplace service connecting travellers with transport providers.
           </p>
@@ -53,29 +54,29 @@ export default function ImprintPage() {
             Transport services are provided by the respective transport operators, who remain solely responsible for the operation of transportation services, compliance with applicable transportation laws, licensing requirements, insurance obligations, and passenger safety.
           </p>
 
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">Liability for Content</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.liability.for.content" /></h2>
           <p className="mb-6">
             The information provided on this Platform is created with reasonable care. However, we do not guarantee the accuracy, completeness, or timeliness of the information presented.
           </p>
 
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">Liability for External Links</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.liability.for.external.links" /></h2>
           <p className="mb-6">
             Our Platform may contain links to third-party websites. We have no control over the content of such websites and assume no responsibility for their content. Responsibility for linked websites lies solely with their respective operators.
           </p>
 
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">Online Dispute Resolution</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.online.dispute.resolution" /></h2>
           <p className="mb-6">
             If required by applicable law, consumers may have access to online dispute resolution mechanisms or alternative dispute resolution bodies. Information regarding such procedures may be obtained from the relevant consumer protection authorities.
           </p>
 
-          <h2 className="text-xl font-semibold text-zinc-900 mb-3">Contact for Legal Inquiries</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-3"><Trans tKey="legal.contact.for.legal.inquiries" /></h2>
           <div className="space-y-2 mb-8">
             <p>For legal notices, complaints, or regulatory inquiries, please contact:</p>
             <p><strong>Smatway Booking Ltd</strong></p>
             <p><a href="mailto:info@smatway.com" className="text-emerald-600 hover:underline">info@smatway.com</a></p>
           </div>
 
-          <h2 className="text-xl font-semibold text-zinc-900 mb-4">Management Team</h2>
+          <h2 className="text-xl font-semibold text-zinc-900 mb-4"><Trans tKey="legal.management.team" /></h2>
           <div className="space-y-6">
             <div>
               <p className="font-semibold text-zinc-900">Catherine Smith (Strategy & Planning)</p>

@@ -1,7 +1,10 @@
+'use client';
 import { Suspense } from "react";
 import VerifyEmailForm from "./form";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 function LoadingFallback() {
+  const t = useT();
   return (
     <div className="w-full animate-fade-in-up">
       <div className="mb-8">
@@ -11,8 +14,8 @@ function LoadingFallback() {
             <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
           </svg>
         </div>
-        <h1 className="font-[var(--font-display)] text-4xl font-semibold leading-[1.05] tracking-tight text-zinc-950">Verify your email</h1>
-        <p className="mt-2 text-[14px] text-zinc-500">Loading…</p>
+        <h1 className="font-[var(--font-display)] text-4xl font-semibold leading-[1.05] tracking-tight text-zinc-950">{t("Verify your email")}</h1>
+        <p className="mt-2 text-[14px] text-zinc-500">{t("Loading…")}</p>
       </div>
     </div>
   );

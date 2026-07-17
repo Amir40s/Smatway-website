@@ -2063,6 +2063,7 @@ function StickyStep({ step, index }: { step: typeof stepsNew[number]; index: num
 }
 
 function HowItWorks() {
+  const t = useT();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
   const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
@@ -2092,13 +2093,13 @@ function HowItWorks() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-80" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
             </span>
-            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300">How it works</span>
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300">{t("how.kicker")}</span>
           </div>
           <h2 className="mt-5 font-[var(--font-display)] text-4xl md:text-5xl lg:text-6xl tracking-tight leading-[1.02]">
-            Three steps. <span className="italic text-emerald-300">Zero friction.</span>
+            {t("how.title.before")} <span className="italic text-emerald-300">{t("how.title.accent")}</span>
           </h2>
           <p className="mt-5 max-w-md text-[15.5px] leading-relaxed text-zinc-400">
-            From sign-up to safe arrival in under two minutes of your time. Everything else runs on the backend, by design.
+            {t("how.subtitle")}
           </p>
 
           {/* Step pill preview — clickable dot indicators showing active step */}

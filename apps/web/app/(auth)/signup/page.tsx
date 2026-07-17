@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { clearAuthData } from "@/lib/auth";
+import { useT } from "@/lib/i18n/LocaleProvider";
 import { countries } from "@/lib/countries";
 import { currencies, defaultCurrencyForCountry } from "@/lib/currencies";
 import { Combobox } from "@/components/Combobox";
@@ -154,6 +155,7 @@ export default function SignUpPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
 
   type RegisterResponse = {
     email: string;
@@ -334,7 +336,7 @@ export default function SignUpPage() {
     <div className="w-full animate-fade-in-up" suppressHydrationWarning>
       <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 mb-8 transition-colors group">
         <ArrowLeftIcon />
-        <span className="transition-transform group-hover:-translate-x-0.5">Back to home</span>
+        <span className="transition-transform group-hover:-translate-x-0.5">{t("Back to home")}</span>
       </Link>
 
       {/* Mobile brand */}
@@ -351,17 +353,17 @@ export default function SignUpPage() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-80" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
           </span>
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">New account</span>
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">{t("New account")}</span>
         </div>
         <h1 className="mt-4 font-[var(--font-display)] text-4xl font-semibold leading-[1.05] tracking-tight text-zinc-950">
-          Start your <span className="italic text-emerald-700">journey.</span>
+          {t("Start your")} <span className="italic text-emerald-700">{t("journey.")}</span>
         </h1>
-        <p className="mt-2 text-[14px] text-zinc-500">Sixty seconds. Two fields, then the road.</p>
+        <p className="mt-2 text-[14px] text-zinc-500">{t("Sixty seconds. Two fields, then the road.")}</p>
       </div>
 
       {/* Account type — premium segmented picker */}
       <div className="mb-5">
-        <label className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">I&apos;m signing up as</label>
+        <label className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("I'm signing up as")}</label>
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -375,8 +377,8 @@ export default function SignUpPage() {
             <div className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${accountType === "traveler" ? "bg-emerald-500 text-white" : "bg-zinc-100 text-zinc-600"}`}>
               <TravelerIcon />
             </div>
-            <div className={`mt-2.5 text-[13px] font-semibold ${accountType === "traveler" ? "text-emerald-900" : "text-zinc-900"}`}>Traveler</div>
-            <div className="text-[11px] text-zinc-500">Book seats, manage trips</div>
+            <div className={`mt-2.5 text-[13px] font-semibold ${accountType === "traveler" ? "text-emerald-900" : "text-zinc-900"}`}>{t("Traveler")}</div>
+            <div className="text-[11px] text-zinc-500">{t("Book seats, manage trips")}</div>
             {accountType === "traveler" && (
               <div className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
                 <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
@@ -395,8 +397,8 @@ export default function SignUpPage() {
             <div className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${accountType === "transporter" ? "bg-emerald-500 text-white" : "bg-zinc-100 text-zinc-600"}`}>
               <TruckIcon />
             </div>
-            <div className={`mt-2.5 text-[13px] font-semibold ${accountType === "transporter" ? "text-emerald-900" : "text-zinc-900"}`}>Transporter</div>
-            <div className="text-[11px] text-zinc-500">Run fleets, earn daily</div>
+            <div className={`mt-2.5 text-[13px] font-semibold ${accountType === "transporter" ? "text-emerald-900" : "text-zinc-900"}`}>{t("Transporter")}</div>
+            <div className="text-[11px] text-zinc-500">{t("Run fleets, earn daily")}</div>
             {accountType === "transporter" && (
               <div className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
                 <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
@@ -420,12 +422,12 @@ export default function SignUpPage() {
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="name" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">
-              {accountType === "transporter" ? "Owner / CEO full name" : "Full name"}
+              {accountType === "transporter" ? t("Owner / CEO full name") : t("Full name")}
             </label>
             <div className="relative flex items-center">
               <span className="absolute left-3.5 pointer-events-none"><UserIcon /></span>
               <input
-                id="name" type="text" placeholder={accountType === "transporter" ? "Owner / CEO full name" : "Your full name"} required
+                id="name" type="text" placeholder={accountType === "transporter" ? t("Owner / CEO full name") : t("Your full name")} required
                 value={formData.name} onChange={handleInputChange}
                 className={inputBase}
               />
@@ -434,11 +436,11 @@ export default function SignUpPage() {
 
           {accountType === "transporter" && (
             <div className="animate-fade-in-up">
-              <label htmlFor="businessName" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Business name</label>
+              <label htmlFor="businessName" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Business name")}</label>
               <div className="relative flex items-center">
                 <span className="absolute left-3.5 pointer-events-none"><TruckIcon className="w-4 h-4 text-zinc-400" /></span>
                 <input
-                  id="businessName" type="text" placeholder="e.g. Star Travels" required
+                  id="businessName" type="text" placeholder={t("e.g. Star Travels")} required
                   value={formData.businessName} onChange={handleInputChange}
                   className={inputBase}
                 />
@@ -447,11 +449,11 @@ export default function SignUpPage() {
           )}
 
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Email</label>
+            <label htmlFor="email" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Email")}</label>
             <div className="relative flex items-center">
               <span className="absolute left-3.5 pointer-events-none"><MailIcon /></span>
               <input
-                id="email" type="email" placeholder="you@example.com" required
+                id="email" type="email" placeholder={t("you@example.com")} required
                 value={formData.email} onChange={handleInputChange}
                 className={inputBase}
               />
@@ -461,7 +463,7 @@ export default function SignUpPage() {
           {/* Phone + Country in a 2-col grid */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="phoneNumber" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Phone</label>
+              <label htmlFor="phoneNumber" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Phone")}</label>
               <div className="relative flex items-center">
                 <span className="absolute left-3.5 pointer-events-none"><PhoneIcon /></span>
                 <input
@@ -472,11 +474,11 @@ export default function SignUpPage() {
               </div>
             </div>
             <div>
-              <label htmlFor="country" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Country</label>
+              <label htmlFor="country" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Country")}</label>
               <Combobox
                 id="country"
                 ariaLabel="Country"
-                placeholder="Type to search countries…"
+                placeholder={t("Type to search countries…")}
                 leftIcon={<GlobeIcon />}
                 options={countries.map(c => ({ value: c.code, label: c.name, hint: c.code }))}
                 value={formData.country}
@@ -492,13 +494,13 @@ export default function SignUpPage() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="emergencyContactName" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Emergency contact name</label>
+              <label htmlFor="emergencyContactName" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Emergency contact name")}</label>
               <div className="relative flex items-center">
                 <span className="absolute left-3.5 pointer-events-none"><UserIcon /></span>
                 <input
                   id="emergencyContactName"
                   type="text"
-                  placeholder="Relative or next of kin"
+                  placeholder={t("Relative or next of kin")}
                   value={formData.emergencyContactName}
                   onChange={handleInputChange}
                   className={inputBase}
@@ -506,13 +508,13 @@ export default function SignUpPage() {
               </div>
             </div>
             <div>
-              <label htmlFor="emergencyContactPhone" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Emergency contact phone</label>
+              <label htmlFor="emergencyContactPhone" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Emergency contact phone")}</label>
               <div className="relative flex items-center">
                 <span className="absolute left-3.5 pointer-events-none"><PhoneIcon /></span>
                 <input
                   id="emergencyContactPhone"
                   type="text"
-                  placeholder="Emergency contact phone"
+                  placeholder={t("Emergency contact phone")}
                   value={formData.emergencyContactPhone}
                   onChange={handleInputChange}
                   className={inputBase}
@@ -523,28 +525,28 @@ export default function SignUpPage() {
 
           {/* Preferred currency — defaults based on country selection, user can override */}
           <div>
-            <label htmlFor="preferredCurrency" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Preferred currency</label>
+            <label htmlFor="preferredCurrency" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Preferred currency")}</label>
             <Combobox
               id="preferredCurrency"
               ariaLabel="Preferred currency"
-              placeholder="Type to search currencies…"
+              placeholder={t("Type to search currencies…")}
               leftIcon={<span className="text-zinc-400 font-mono text-[13px] font-semibold">¤</span>}
               options={currencies.map(c => ({ value: c.code, label: `${c.code} — ${c.name}`, hint: c.symbol, search: [c.name, c.code, c.symbol] }))}
               value={formData.preferredCurrency}
               onChange={(v) => setFormData(prev => ({ ...prev, preferredCurrency: v }))}
               className={inputBase.replace("pl-10 ", "")}
             />
-            <p className="mt-1 text-[11px] text-zinc-500">Used for account preferences. You can change this later in your profile.</p>
+            <p className="mt-1 text-[11px] text-zinc-500">{t("Used for account preferences. You can change this later in your profile.")}</p>
           </div>
 
           {accountType === "transporter" && (
            <div className="space-y-4 rounded-2xl border border-zinc-200 bg-zinc-50/60 p-4">
   <div>
     <h3 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">
-      Transporter payout details
+      {t("Transporter payout details")}
     </h3>
     <p className="mt-1 text-[11px] text-zinc-500">
-      These details help us verify who receives settlement payments.
+      {t("These details help us verify who receives settlement payments.")}
     </p>
   </div>
 
@@ -554,12 +556,12 @@ export default function SignUpPage() {
         htmlFor="bankName"
         className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700"
       >
-        Bank name
+        {t("Bank name")}
       </label>
       <input
         id="bankName"
         type="text"
-        placeholder="e.g. Access Bank"
+        placeholder={t("e.g. Access Bank")}
         value={formData.bankName}
         onChange={handleInputChange}
         className={inputBase}
@@ -571,12 +573,12 @@ export default function SignUpPage() {
         htmlFor="bankAccountNumber"
         className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700"
       >
-        Account number
+        {t("Account number")}
       </label>
       <input
         id="bankAccountNumber"
         type="text"
-        placeholder="Bank account number"
+        placeholder={t("Bank account number")}
         value={formData.bankAccountNumber}
         onChange={handleInputChange}
         className={inputBase}
@@ -588,12 +590,12 @@ export default function SignUpPage() {
         htmlFor="bankAccountHolderName"
         className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700"
       >
-        Account holder
+        {t("Account holder")}
       </label>
       <input
         id="bankAccountHolderName"
         type="text"
-        placeholder="Account holder name"
+        placeholder={t("Account holder name")}
         value={formData.bankAccountHolderName}
         onChange={handleInputChange}
         className={inputBase}
@@ -604,11 +606,11 @@ export default function SignUpPage() {
           )}
 
           <div>
-            <label htmlFor="password" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Password</label>
+            <label htmlFor="password" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Password")}</label>
             <div className="relative flex items-center">
               <span className="absolute left-3.5 pointer-events-none"><LockIcon /></span>
               <input
-                id="password" type={showPassword ? "text" : "password"} placeholder="Create a strong password" required
+                id="password" type={showPassword ? "text" : "password"} placeholder={t("Create a strong password")} required
                 value={formData.password} onChange={handleInputChange}
                 className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 pl-10 pr-11 text-[14px] text-zinc-900 placeholder:text-zinc-400 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-[box-shadow,border-color] duration-200"
               />
@@ -633,11 +635,11 @@ export default function SignUpPage() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">Confirm password</label>
+            <label htmlFor="confirmPassword" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Confirm password")}</label>
             <div className="relative flex items-center">
               <span className="absolute left-3.5 pointer-events-none"><LockIcon /></span>
               <input
-                id="confirmPassword" type={showConfirm ? "text" : "password"} placeholder="Repeat your password" required
+                id="confirmPassword" type={showConfirm ? "text" : "password"} placeholder={t("Repeat your password")} required
                 value={formData.confirmPassword} onChange={handleInputChange}
                 className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 pl-10 pr-11 text-[14px] text-zinc-900 placeholder:text-zinc-400 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-[box-shadow,border-color] duration-200"
               />
@@ -651,10 +653,10 @@ export default function SignUpPage() {
             <div className="space-y-3 rounded-2xl border border-zinc-200 bg-amber-50/50 p-4 animate-fade-in-up">
               <div>
                 <h4 className="text-[12px] font-bold uppercase tracking-[0.08em] text-amber-800">
-                  Legal &amp; Regulatory Confirmations
+                  {t("Legal & Regulatory Confirmations")}
                 </h4>
                 <p className="mt-1 text-[11px] text-zinc-500">
-                  As SmatWay cannot verify individual permits directly, you must confirm these criteria:
+                  {t("As SmatWay cannot verify individual permits directly, you must confirm these criteria:")}
                 </p>
               </div>
               
@@ -668,7 +670,7 @@ export default function SignUpPage() {
                     className="mt-0.5 cursor-pointer accent-amber-600 w-3.5 h-3.5 shrink-0"
                   />
                   <span className="text-[11.5px] leading-tight text-zinc-700">
-                    1) You are duly registered and authorized to operate as a transporter in all countries where you conduct business.
+                    {t("1) You are duly registered and authorized to operate as a transporter in all countries where you conduct business.")}
                   </span>
                 </label>
 
@@ -681,7 +683,7 @@ export default function SignUpPage() {
                     className="mt-0.5 cursor-pointer accent-amber-600 w-3.5 h-3.5 shrink-0"
                   />
                   <span className="text-[11.5px] leading-tight text-zinc-700">
-                    2) You hold all licenses, permits, and approvals required for the countries and routes in which you operate.
+                    {t("2) You hold all licenses, permits, and approvals required for the countries and routes in which you operate.")}
                   </span>
                 </label>
 
@@ -694,7 +696,7 @@ export default function SignUpPage() {
                     className="mt-0.5 cursor-pointer accent-amber-600 w-3.5 h-3.5 shrink-0"
                   />
                   <span className="text-[11.5px] leading-tight text-zinc-700">
-                    3) You comply with all applicable laws, regulations, and requirements imposed by local authorities in the jurisdictions where you operate.
+                    {t("3) You comply with all applicable laws, regulations, and requirements imposed by local authorities in the jurisdictions where you operate.")}
                   </span>
                 </label>
 
@@ -707,7 +709,7 @@ export default function SignUpPage() {
                     className="mt-0.5 cursor-pointer accent-amber-600 w-3.5 h-3.5 shrink-0"
                   />
                   <span className="text-[11.5px] leading-tight text-zinc-700">
-                    4) You agree that failure to comply with these requirements may result in the suspension or termination of your account, either generally or on an order-by-order basis.
+                    {t("4) You agree that failure to comply with these requirements may result in the suspension or termination of your account, either generally or on an order-by-order basis.")}
                   </span>
                 </label>
               </div>
@@ -724,14 +726,14 @@ export default function SignUpPage() {
               className="mt-0.5 cursor-pointer accent-emerald-600 w-4 h-4"
             />
             <span className="text-[12.5px] leading-snug text-zinc-600">
-              I have read and agree to the{" "}
+              {t("I have read and agree to the")}{" "}
               <a
                 href="https://res.cloudinary.com/dge3lt4u6/image/upload/v1766858233/Terms_of_use_and_condition_of_service_y3gdjj.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-emerald-700 underline underline-offset-2 decoration-emerald-300 hover:decoration-emerald-500 transition-colors"
               >
-                Terms of Use &amp; Conditions
+                {t("Terms of Use & Conditions")}
               </a>
             </span>
           </label>
@@ -756,11 +758,11 @@ export default function SignUpPage() {
                 {isLoading ? (
                   <>
                     <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.25" /><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
-                    <span>Creating account…</span>
+                    <span>{t("Creating account…")}</span>
                   </>
                 ) : (
                   <>
-                    <span>Create account</span>
+                    <span>{t("Create account")}</span>
                     <ArrowRightIcon />
                   </>
                 )}
@@ -772,9 +774,9 @@ export default function SignUpPage() {
 
       <div className="mt-7 text-center">
         <p className="text-[13px] text-zinc-500">
-          Already have an account?{" "}
+          {t("Already have an account?")}{" "}
           <Link href="/signin" className="font-semibold text-emerald-700 hover:text-emerald-800 underline underline-offset-2 decoration-emerald-300 hover:decoration-emerald-500 transition-colors">
-            Sign in
+            {t("Sign in")}
           </Link>
         </p>
       </div>

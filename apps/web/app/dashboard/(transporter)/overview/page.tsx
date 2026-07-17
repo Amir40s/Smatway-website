@@ -14,8 +14,10 @@ import {
 } from "@/app/dashboard/_Components/ui";
 import { getMyVehicles, getMyRoutes, getTransportBookings } from "@/lib/api";
 import { formatPrice, convertToUSD } from "@/lib/currencies";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 export default function TransporterDashboardPage() {
+  const t = useT();
   const [loading, setLoading] = useState(true);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [routes, setRoutes] = useState<any[]>([]);
@@ -77,9 +79,9 @@ export default function TransporterDashboardPage() {
       })
     : [
         {
-          label: "Revenue",
+          label: t("Revenue"),
           value: formatPrice(0, "USD"),
-          hint: "0 completed",
+          hint: t("0 completed"),
           icon: <CreditCardIcon className="w-4 h-4" />,
           tone: "rose" as const,
         }
@@ -91,12 +93,12 @@ export default function TransporterDashboardPage() {
   return (
     <Page>
       <PageHeader
-        kicker="Dashboard"
-        title="Welcome back"
-        subtitle="A quick look at your fleet, routes, and activity from today."
+        kicker={t("Dashboard")}
+        title={t("Welcome back")}
+        subtitle={t("A quick look at your fleet, routes, and activity from today.")}
         action={
           <PrimaryButton href="/dashboard/routes/add" icon={<PlusIcon className="w-4 h-4" />}>
-            New route
+            {t("New route")}
           </PrimaryButton>
         }
       />
@@ -109,23 +111,23 @@ export default function TransporterDashboardPage() {
           <StatStrip
             stats={[
               {
-                label: "Fleet",
+                label: t("Fleet"),
                 value: vehicles.length,
-                hint: vehicles.length === 1 ? "vehicle" : "vehicles",
+                hint: vehicles.length === 1 ? t("vehicle") : t("vehicles"),
                 icon: <CarIcon className="w-4 h-4" />,
                 tone: "emerald",
               },
               {
-                label: "Active routes",
+                label: t("Active routes"),
                 value: activeRoutes,
-                hint: `of ${routes.length} total`,
+                hint: t("of {count} total").replace("{count}", routes.length.toString()),
                 icon: <MapPinIcon className="w-4 h-4" />,
                 tone: "blue",
               },
               {
-                label: "Pending bookings",
+                label: t("Pending bookings"),
                 value: pendingBookings,
-                hint: pendingBookings > 0 ? "need review" : "all caught up",
+                hint: pendingBookings > 0 ? t("need review") : t("all caught up"),
                 icon: <ClockIcon className="w-4 h-4" />,
                 tone: "amber",
               },
@@ -146,14 +148,14 @@ export default function TransporterDashboardPage() {
           {/* Recent bookings */}
           <Reveal className="lg:col-span-2">
             <SectionShell
-              title="Recent bookings"
-              hint="Latest activity across your routes"
+              title={t("Recent bookings")}
+              hint={t("Latest activity across your routes")}
               action={
                 <Link
                   href="/dashboard/bookings"
                   className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 inline-flex items-center gap-1"
                 >
-                  View all
+                  {t("View all")}
                   <ArrowRightIcon className="w-3 h-3" />
                 </Link>
               }
@@ -173,7 +175,7 @@ export default function TransporterDashboardPage() {
                 </div>
               ) : recentBookings.length === 0 ? (
                 <div className="px-5 py-10 text-center">
-                  <p className="text-sm text-slate-500">No bookings yet.</p>
+                  <p className="text-sm text-slate-500">{t("No bookings yet.")}</p>
                 </div>
               ) : (
                 <ul className="divide-y divide-slate-100">
@@ -207,8 +209,8 @@ export default function TransporterDashboardPage() {
                               {booking.transport.departureCity} → {booking.transport.destinationCity}
                             </p>
                             <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-                              {traveler?.name || "Traveler"} · {dep.toLocaleDateString()} · {booking.seatsBooked}{" "}
-                              {booking.seatsBooked === 1 ? "seat" : "seats"}
+                              {traveler?.name || t("Traveler")} · {dep.toLocaleDateString()} · {booking.seatsBooked}{" "}
+                              {booking.seatsBooked === 1 ? t("seat") : t("seats")}
                             </p>
                           </div>
                           <StatusPill
@@ -223,7 +225,7 @@ export default function TransporterDashboardPage() {
                             }
                             dot={booking.status === "PENDING" || booking.status === "CONFIRMED"}
                           >
-                            {booking.status}
+                            {t(booking.status)}
                           </StatusPill>
                         </Link>
                       </motion.li>
@@ -236,7 +238,7 @@ export default function TransporterDashboardPage() {
 
           {/* Quick actions */}
           <Reveal>
-            <SectionShell title="Quick actions" hint="One click away">
+            <SectionShell title={t("Quick actions")} hint={t("One click away")}>
               <ul className="divide-y divide-slate-100">
                 {quickActions.map((action) => (
                   <li key={action.href}>
@@ -249,8 +251,8 @@ export default function TransporterDashboardPage() {
                           {action.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-semibold text-zinc-950">{action.title}</p>
-                          <p className="text-[11px] text-slate-500 mt-0.5">{action.description}</p>
+                          <p className="text-[13px] font-semibold text-zinc-950">{t(action.title)}</p>
+                          <p className="text-[11px] text-slate-500 mt-0.5">{t(action.description)}</p>
                         </div>
                         <ArrowRightIcon className="w-3.5 h-3.5 text-slate-300 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
                       </Link>
@@ -263,12 +265,12 @@ export default function TransporterDashboardPage() {
 
           {/* Performance snapshot */}
           <Reveal className="lg:col-span-3">
-            <SectionShell title="Activity snapshot" hint="Your recent traction">
+            <SectionShell title={t("Activity snapshot")} hint={t("Your recent traction")}>
               <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-100">
-                <SnapshotTile icon={<CheckCircleIcon className="w-4 h-4 text-emerald-600" />} label="Completed rides" value={completedBookings} />
-                <SnapshotTile icon={<ClockIcon className="w-4 h-4 text-amber-600" />} label="Awaiting action" value={pendingBookings} />
-                <SnapshotTile icon={<UsersIcon className="w-4 h-4 text-blue-600" />} label="Confirmed now" value={confirmedBookings} />
-                <SnapshotTile icon={<TrendingUpIcon className="w-4 h-4 text-rose-600" />} label="Total bookings" value={bookings.length} />
+                <SnapshotTile icon={<CheckCircleIcon className="w-4 h-4 text-emerald-600" />} label={t("Completed rides")} value={completedBookings} />
+                <SnapshotTile icon={<ClockIcon className="w-4 h-4 text-amber-600" />} label={t("Awaiting action")} value={pendingBookings} />
+                <SnapshotTile icon={<UsersIcon className="w-4 h-4 text-blue-600" />} label={t("Confirmed now")} value={confirmedBookings} />
+                <SnapshotTile icon={<TrendingUpIcon className="w-4 h-4 text-rose-600" />} label={t("Total bookings")} value={bookings.length} />
               </div>
             </SectionShell>
           </Reveal>
@@ -280,6 +282,7 @@ export default function TransporterDashboardPage() {
 
 // ─── Getting Started (empty state) ────────────────────────────────────────────
 function GettingStarted() {
+  const t = useT();
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-emerald-950 text-white p-8 md:p-12">
       {/* Ambient glow */}
@@ -289,13 +292,13 @@ function GettingStarted() {
       <div className="relative max-w-2xl">
         <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 ring-1 ring-emerald-400/20 rounded-full px-2.5 py-1 mb-5">
           <SparklesIcon className="w-3 h-3" />
-          Getting started
+          {t("Getting started")}
         </div>
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-3">
-          Let's get your fleet moving.
+          {t("Let's get your fleet moving.")}
         </h2>
         <p className="text-sm text-slate-300 mb-7 max-w-md">
-          Add your first vehicle, then create a route and you're ready to accept bookings from travelers in minutes.
+          {t("Add your first vehicle, then create a route and you're ready to accept bookings from travelers in minutes.")}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3">
@@ -304,14 +307,14 @@ function GettingStarted() {
             className="inline-flex items-center gap-2 bg-white text-zinc-950 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-100 active:scale-[0.98] transition-all"
           >
             <CarIcon className="w-4 h-4" />
-            Add your first vehicle
+            {t("Add your first vehicle")}
           </Link>
           <Link
             href="/dashboard/routes/add"
             className="inline-flex items-center gap-2 bg-white/10 ring-1 ring-white/15 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition-all"
           >
             <MapPinIcon className="w-4 h-4" />
-            Create a route
+            {t("Create a route")}
           </Link>
         </div>
       </div>
@@ -347,11 +350,12 @@ function SectionShell({
 
 // ─── Snapshot Tile ────────────────────────────────────────────────────────────
 function SnapshotTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: number | string }) {
+  const t = useT();
   return (
     <div className="p-5">
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{label}</p>
+        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{t(label)}</p>
       </div>
       <p className="text-xl md:text-2xl font-semibold text-zinc-950 tabular-nums tracking-tight">{value}</p>
     </div>

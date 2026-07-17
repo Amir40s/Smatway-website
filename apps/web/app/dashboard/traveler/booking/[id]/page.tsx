@@ -7,6 +7,7 @@ import { getBooking, cancelBooking, updatePaymentMethod, createReview, initChat,
 import { formatPrice } from "@/lib/currencies";
 import { countryName, countryCodeFromName } from "@/lib/countries";
 import { RouteTimeline } from "@/app/dashboard/_Components/ui";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 const paymentMethods = [
   {
@@ -70,6 +71,7 @@ export default function BookingDetailPage() {
   const [initializingPayment, setInitializingPayment] = useState(false);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
   const [payingLuggageId, setPayingLuggageId] = useState<string | null>(null);
+  const t = useT();
 
   async function handlePayExcessLuggage(luggageId: string) {
     setPayingLuggageId(luggageId);
@@ -146,7 +148,7 @@ export default function BookingDetailPage() {
   }, [booking?.transport?.transporter?.id]);
 
   async function handleCancel() {
-    if (!confirm("Cancel this booking?")) return;
+    if (!confirm(t("Cancel this booking?"))) return;
     setCancelling(true);
     try {
       const updated = await cancelBooking(id);
@@ -242,8 +244,8 @@ export default function BookingDetailPage() {
     }
   }
 
-  if (loading) return <div className="text-sm text-slate-400 py-10 text-center">Loading booking...</div>;
-  if (error || !booking) return <div className="text-sm text-red-500 py-10 text-center">{error || "Booking not found"}</div>;
+  if (loading) return <div className="text-sm text-slate-400 py-10 text-center">{t("Loading booking...")}</div>;
+  if (error || !booking) return <div className="text-sm text-red-500 py-10 text-center">{error || t("Booking not found")}</div>;
 
   const dep = new Date(booking.transport.departureDateTime);
   const isCancelled = booking.status === "CANCELLED";
@@ -252,8 +254,8 @@ export default function BookingDetailPage() {
   return (
     <div className="max-w-2xl space-y-5">
       <div className="mb-2">
-        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Booking Details</h1>
-        <p className="text-sm text-slate-400 mt-0.5">Booking {bookingCode}</p>
+        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">{t("Booking Details")}</h1>
+        <p className="text-sm text-slate-400 mt-0.5">{t("Booking")} {bookingCode}</p>
       </div>
 
       {/* Digital Boarding Pass / Ticket */}
@@ -267,12 +269,12 @@ export default function BookingDetailPage() {
           <div className="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
             <div>
               <div className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-400/20 rounded-full px-2 py-0.5">
-                Digital Boarding Pass
+                {t("Digital Boarding Pass")}
               </div>
               <h2 className="text-[17px] font-bold tracking-tight text-white mt-1.5">SMATWAY PASS</h2>
             </div>
             <div className="text-right">
-              <span className="text-[11px] text-zinc-400 uppercase tracking-wider block">Ticket Code</span>
+              <span className="text-[11px] text-zinc-400 uppercase tracking-wider block">{t("Ticket Code")}</span>
               <span className="text-[15px] font-mono font-bold text-white tracking-widest">{bookingCode}</span>
             </div>
           </div>
@@ -281,33 +283,33 @@ export default function BookingDetailPage() {
           <div className="px-6 py-5 grid sm:grid-cols-2 gap-4 text-xs">
             <div className="space-y-3.5">
               <div>
-                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Passenger</span>
-                <span className="font-semibold text-white text-[13px]">{booking.traveler?.name || "Passenger"}</span>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">{t("Passenger")}</span>
+                <span className="font-semibold text-white text-[13px]">{booking.traveler?.name || t("Passenger")}</span>
               </div>
               <div>
-                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Route</span>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">{t("Route")}</span>
                 <span className="font-semibold text-white text-[13px]">{booking.transport.departureCity} → {booking.transport.destinationCity}</span>
               </div>
               <div>
-                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Departure Date & Time</span>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">{t("Departure Date & Time")}</span>
                 <span className="font-semibold text-white text-[13px]">
-                  {dep.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} at {dep.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {dep.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} {t("at")} {dep.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             </div>
 
             <div className="space-y-3.5">
               <div>
-                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Vehicle Info</span>
-                <span className="font-semibold text-white text-[13px]">{booking.transport.vehicleModel || "Standard Vehicle"} ({booking.transport.vehiclePlateNumber || "N/A"})</span>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">{t("Vehicle Info")}</span>
+                <span className="font-semibold text-white text-[13px]">{booking.transport.vehicleModel || t("Standard Vehicle")} ({booking.transport.vehiclePlateNumber || "N/A"})</span>
               </div>
               <div>
-                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Reserved Seats</span>
-                <span className="font-semibold text-white text-[13px]">{booking.seatsBooked} {booking.seatsBooked === 1 ? "Seat" : "Seats"}</span>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">{t("Reserved Seats")}</span>
+                <span className="font-semibold text-white text-[13px]">{booking.seatsBooked} {booking.seatsBooked === 1 ? t("Seat") : t("Seats")}</span>
               </div>
               <div>
-                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">Transporter</span>
-                <span className="font-semibold text-white text-[13px]">{booking.transport.transporter?.name || "Verified Transporter"}</span>
+                <span className="text-zinc-400 block uppercase tracking-wider text-[9px]">{t("Transporter")}</span>
+                <span className="font-semibold text-white text-[13px]">{booking.transport.transporter?.name || t("Verified Transporter")}</span>
               </div>
             </div>
           </div>
@@ -322,9 +324,9 @@ export default function BookingDetailPage() {
           {/* Ticket Footer / QR Scanner */}
           <div className="px-6 py-6 bg-zinc-950/40 flex flex-col md:flex-row items-center gap-6 justify-between">
             <div className="flex-1 space-y-2 text-center md:text-left">
-              <h3 className="text-sm font-semibold text-white">Boarding QR Code</h3>
+              <h3 className="text-sm font-semibold text-white">{t("Boarding QR Code")}</h3>
               <p className="text-[11px] text-zinc-400 leading-relaxed max-w-sm">
-                Present this digital ticket to the transporter at departure. The driver will scan this code to check you in. Works offline.
+                {t("Present this digital ticket to the transporter at departure. The driver will scan this code to check you in. Works offline.")}
               </p>
               <button
                 onClick={() => window.print()}
@@ -333,7 +335,7 @@ export default function BookingDetailPage() {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4" />
                 </svg>
-                Print / Save Pass
+                {t("Print / Save Pass")}
               </button>
             </div>
 
@@ -354,7 +356,7 @@ export default function BookingDetailPage() {
                 className="w-28 h-28 object-contain"
               />
               <div className="w-full text-center border-t border-slate-100 pt-2">
-                <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest block">Scanned Output Preview</span>
+                <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest block">{t("Scanned Output Preview")}</span>
                 <span className="text-[10px] font-mono font-bold text-emerald-600 block mt-0.5">{bookingCode}</span>
               </div>
             </div>
@@ -366,8 +368,8 @@ export default function BookingDetailPage() {
       {/* Booking Summary */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
         <div className="flex items-center gap-2 mb-3">
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusColors[booking.status]}`}>{booking.status}</span>
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${paymentStatusColors[booking.paymentStatus]}`}>Payment: {booking.paymentStatus}</span>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusColors[booking.status]}`}>{t(booking.status)}</span>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${paymentStatusColors[booking.paymentStatus]}`}>{t("Payment:")} {t(booking.paymentStatus)}</span>
         </div>
 
         <div className="mt-3 mb-4">
@@ -380,17 +382,17 @@ export default function BookingDetailPage() {
           />
         </div>
         <p className="text-sm text-slate-500">
-          {dep.toLocaleDateString()} at {dep.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          {dep.toLocaleDateString()} {t("at")} {dep.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </p>
-        <p className="text-sm text-slate-500">{booking.transport.vehicleModel} · {booking.transport.vehiclePlateNumber} · {booking.transport.transportType}</p>
+        <p className="text-sm text-slate-500">{booking.transport.vehicleModel} · {booking.transport.vehiclePlateNumber} · {t(booking.transport.transportType)}</p>
 
         <div className="border-t border-slate-100 mt-4 pt-4 flex justify-between">
           <div>
-            <p className="text-xs text-slate-400">Seats booked</p>
+            <p className="text-xs text-slate-400">{t("Seats booked")}</p>
             <p className="font-semibold text-zinc-900">{booking.seatsBooked}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-400">Total</p>
+            <p className="text-xs text-slate-400">{t("Total")}</p>
             <p className="text-xl font-bold text-zinc-900">{formatPrice(booking.totalPrice, booking.transport?.currency)}</p>
           </div>
         </div>
@@ -398,7 +400,7 @@ export default function BookingDetailPage() {
 
       {/* Transporter profile card */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Your transporter</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">{t("Your transporter")}</p>
         <div className="flex items-center gap-4">
           <div className="relative shrink-0">
             {transporterProfile?.profileImageUrl ? (
@@ -415,13 +417,13 @@ export default function BookingDetailPage() {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-semibold text-zinc-950 truncate">{booking.transport.transporter?.name || "Unknown"}</p>
+            <p className="text-[15px] font-semibold text-zinc-950 truncate">{booking.transport.transporter?.name || t("Unknown")}</p>
             <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] text-slate-500">
               {transporterProfile?.totalCompletedRides !== undefined && (
-                <span>{transporterProfile.totalCompletedRides} trips</span>
+                <span>{transporterProfile.totalCompletedRides} {t("trips")}</span>
               )}
               {transporterProfile?.vehicleCount !== undefined && (
-                <span>{transporterProfile.vehicleCount} vehicles</span>
+                <span>{transporterProfile.vehicleCount} {t("vehicles")}</span>
               )}
             </div>
           </div>
@@ -430,7 +432,7 @@ export default function BookingDetailPage() {
             disabled={!transporterProfile && !loadingProfile}
             className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-zinc-700 hover:bg-slate-50 hover:border-slate-300 transition-colors disabled:opacity-50"
           >
-            View profile
+            {t("View profile")}
           </button>
         </div>
       </div>
@@ -446,13 +448,13 @@ export default function BookingDetailPage() {
             className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white rounded-2xl shadow-2xl"
           >
             <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-3 flex items-center justify-between">
-              <p className="text-[13px] font-semibold text-zinc-950">Transporter profile</p>
+              <p className="text-[13px] font-semibold text-zinc-950">{t("Transporter profile")}</p>
               <button onClick={() => setShowProfile(false)} className="text-slate-400 hover:text-zinc-900 p-1 -m-1">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
             </div>
             {loadingProfile ? (
-              <div className="p-10 text-center text-sm text-slate-400">Loading profile…</div>
+              <div className="p-10 text-center text-sm text-slate-400">{t("Loading profile...")}</div>
             ) : transporterProfile ? (
               <>
                 <div className="p-6">
@@ -467,23 +469,23 @@ export default function BookingDetailPage() {
                     )}
                     <div>
                       <h2 className="text-[16px] font-semibold text-zinc-950">{transporterProfile.name}</h2>
-                      <p className="text-[11px] text-slate-500">Member since {new Date(transporterProfile.createdAt).toLocaleDateString()}</p>
+                      <p className="text-[11px] text-slate-500">{t("Member since")} {new Date(transporterProfile.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 divide-x divide-slate-100 border-y border-slate-100">
                   <div className="p-5 text-center">
                     <p className="text-xl font-semibold tabular-nums text-zinc-950">{transporterProfile.totalCompletedRides || 0}</p>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mt-1">Completed</p>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mt-1">{t("Completed")}</p>
                   </div>
                   <div className="p-5 text-center">
                     <p className="text-xl font-semibold tabular-nums text-zinc-950">{transporterProfile.vehicleCount || 0}</p>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mt-1">Vehicles</p>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mt-1">{t("Vehicles")}</p>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="p-10 text-center text-sm text-red-600">Failed to load profile</div>
+              <div className="p-10 text-center text-sm text-red-600">{t("Failed to load profile")}</div>
             )}
           </div>
         </div>,
@@ -493,8 +495,8 @@ export default function BookingDetailPage() {
       {/* Payment Method */}
       {!isCancelled && booking.paymentStatus !== "PAID" && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h3 className="text-sm font-semibold text-zinc-900 mb-1">Select Payment Method</h3>
-          <p className="text-xs text-slate-400 mb-4">Payment integration coming soon. Select your preferred method.</p>
+          <h3 className="text-sm font-semibold text-zinc-900 mb-1">{t("Select Payment Method")}</h3>
+          <p className="text-xs text-slate-400 mb-4">{t("Payment integration coming soon. Select your preferred method.")}</p>
 
           <div className="space-y-3">
             {paymentMethods.map(method => {
@@ -518,7 +520,7 @@ export default function BookingDetailPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-zinc-900">{method.name}</span>
-                      {!['PAYSTACK', 'FLUTTERWAVE', 'PAYPAL', 'REVOLUT'].includes(method.id) && <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Coming Soon</span>}
+                      {!['PAYSTACK', 'FLUTTERWAVE', 'PAYPAL', 'REVOLUT'].includes(method.id) && <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">{t("Coming Soon")}</span>}
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">{method.description}</p>
                   </div>
@@ -537,7 +539,7 @@ export default function BookingDetailPage() {
             disabled={initializingPayment || verifyingPayment || !['PAYSTACK', 'FLUTTERWAVE', 'PAYPAL', 'REVOLUT'].includes(selectedMethod || booking.paymentMethod)}
             className="mt-4 w-full bg-zinc-900 text-white text-sm font-semibold py-3 rounded-xl hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {initializingPayment || verifyingPayment ? "Processing..." : "Proceed to Payment"}
+            {initializingPayment || verifyingPayment ? t("Processing...") : t("Proceed to Payment")}
           </button>
         </div>
       )}
@@ -577,15 +579,15 @@ export default function BookingDetailPage() {
       {/* Cancel */}
       {!isCancelled && booking.status !== "COMPLETED" && booking.paymentStatus !== "PAID" && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h3 className="text-sm font-semibold text-zinc-900 mb-1">Cancel Booking</h3>
-          <p className="text-xs text-slate-400 mb-3">Cancelling will release your seats back to the pool.</p>
+          <h3 className="text-sm font-semibold text-zinc-900 mb-1">{t("Cancel Booking")}</h3>
+          <p className="text-xs text-slate-400 mb-3">{t("Cancelling will release your seats back to the pool.")}</p>
           {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
           <button
             onClick={handleCancel}
             disabled={cancelling}
             className="border border-red-200 text-red-600 text-sm font-medium px-4 py-2 rounded-xl hover:bg-red-50 transition-all disabled:opacity-50"
           >
-            {cancelling ? "Cancelling..." : "Cancel Booking"}
+            {cancelling ? t("Cancelling...") : t("Cancel Booking")}
           </button>
         </div>
       )}
@@ -613,8 +615,8 @@ export default function BookingDetailPage() {
             </svg>
           </div>
           <div>
-            <p className="text-[14px] font-semibold text-emerald-800">Thanks for your review!</p>
-            <p className="mt-0.5 text-[12px] text-emerald-700/80">Your feedback helps future travelers pick the right transporter.</p>
+            <p className="text-[14px] font-semibold text-emerald-800">{t("Thanks for your review!")}</p>
+            <p className="mt-0.5 text-[12px] text-emerald-700/80">{t("Your feedback helps future travelers pick the right transporter.")}</p>
           </div>
         </div>
       )}
@@ -639,16 +641,17 @@ function ReviewForm({
 }) {
   const [hover, setHover] = useState(0);
   const active = hover || rating;
-  const ratingLabel = ["", "Poor", "Fair", "Good", "Great", "Excellent"][active] || "";
+  const t = useT();
+  const ratingLabel = ["", t("Poor"), t("Fair"), t("Good"), t("Great"), t("Excellent")][active] || "";
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">How was your trip?</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">{t("How was your trip?")}</p>
         <h3 className="mt-1 text-[15px] font-semibold text-zinc-950">
-          Rate {transporterName || "your transporter"}
+          {t("Rate {name}").replace("{name}", transporterName || t("your transporter"))}
         </h3>
-        <p className="mt-0.5 text-[12px] text-slate-500">Your rating helps future travelers choose with confidence.</p>
+        <p className="mt-0.5 text-[12px] text-slate-500">{t("Your rating helps future travelers choose with confidence.")}</p>
       </div>
 
       {error && (
@@ -687,7 +690,7 @@ function ReviewForm({
           );
         })}
         <div className="ml-auto text-right">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-slate-400">{active ? ratingLabel : "Tap a star"}</p>
+          <p className="font-mono text-[11px] uppercase tracking-wider text-slate-400">{active ? ratingLabel : t("Tap a star")}</p>
           <p className="font-mono text-[10px] text-slate-400">{active}/5</p>
         </div>
       </div>
@@ -695,19 +698,19 @@ function ReviewForm({
       {/* Feedback */}
       <div className="mb-4">
         <label htmlFor="review-feedback" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.08em] text-slate-600">
-          Share more <span className="font-normal text-slate-400 normal-case">(optional)</span>
+          {t("Share more")} <span className="font-normal text-slate-400 normal-case">({t("optional")})</span>
         </label>
         <textarea
           id="review-feedback"
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
-          placeholder="What stood out? Driver demeanor, punctuality, vehicle cleanliness…"
+          placeholder={t("What stood out? Driver demeanor, punctuality, vehicle cleanliness…")}
           maxLength={500}
           rows={3}
           className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[13px] text-zinc-900 placeholder:text-slate-400 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-colors"
         />
         <div className="mt-1 flex items-center justify-between">
-          <p className="text-[11px] text-slate-400">Only verified booking reviews are shown on a transporter's profile.</p>
+          <p className="text-[11px] text-slate-400">{t("Only verified booking reviews are shown on a transporter's profile.")}</p>
           <p className="font-mono text-[11px] tabular-nums text-slate-400">{feedback.length}/500</p>
         </div>
       </div>
@@ -725,10 +728,10 @@ function ReviewForm({
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.25" />
                 <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
               </svg>
-              Submitting…
+              {t("Submitting…")}
             </>
           ) : (
-            "Submit review"
+            t("Submit review")
           )}
         </span>
       </button>

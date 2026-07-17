@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { searchTransports, createBooking, getTransporterProfile } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
+import { useT } from "@/lib/i18n/LocaleProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatPrice } from "@/lib/currencies";
@@ -42,6 +43,7 @@ export default function SearchRidesPage() {
   const [results, setResults] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const t = useT();
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -64,7 +66,7 @@ export default function SearchRidesPage() {
 
   async function handleSearch() {
     if (isPastDate) {
-      setError("Past dates are unavailable. Pick today or a future date.");
+      setError(t("Past dates are unavailable. Pick today or a future date."));
       setResults(null);
       return;
     }
@@ -81,7 +83,7 @@ export default function SearchRidesPage() {
       });
       setResults(data);
     } catch {
-      setError("Failed to search routes. Please try again.");
+      setError(t("Failed to search routes. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -98,65 +100,65 @@ export default function SearchRidesPage() {
           <div className="relative">
             <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 ring-1 ring-emerald-400/20 rounded-full px-2.5 py-1 mb-5">
               <SparklesIcon className="w-3 h-3" />
-              Trusted transporters
+              {t("Trusted transporters")}
             </div>
             <h1 className="text-3xl md:text-5xl font-semibold tracking-tight mb-3 max-w-2xl">
-              Where are you headed?
+              {t("Where are you headed?")}
             </h1>
             <p className="text-sm md:text-[15px] text-slate-300 max-w-md mb-8">
-              Search verified routes across cities and book a seat in seconds.
+              {t("Search verified routes across cities and book a seat in seconds.")}
             </p>
 
             {/* Search grid */}
             <div className="bg-white rounded-2xl p-4 md:p-5 shadow-2xl">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-                <Field label="From Country" icon={<MapPinIcon className="w-4 h-4" />}>
+                <Field label={t("From Country")} icon={<MapPinIcon className="w-4 h-4" />}>
                   <input
                     type="text"
-                    placeholder="e.g. Nigeria"
+                    placeholder={t("e.g. Nigeria")}
                     value={depCountry}
                     onChange={(e) => setDepCountry(e.target.value)}
                     className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none font-medium mt-1"
                   />
                 </Field>
 
-                <Field label="From City" icon={<MapPinIcon className="w-4 h-4" />}>
+                <Field label={t("From City")} icon={<MapPinIcon className="w-4 h-4" />}>
                   <input
                     type="text"
-                    placeholder="e.g. Lagos"
+                    placeholder={t("e.g. Lagos")}
                     value={depCity}
                     onChange={(e) => setDepCity(e.target.value)}
                     className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none font-medium mt-1"
                   />
                 </Field>
 
-                <Field label="To Country" icon={<MapPinIcon className="w-4 h-4" />}>
+                <Field label={t("To Country")} icon={<MapPinIcon className="w-4 h-4" />}>
                   <input
                     type="text"
-                    placeholder="e.g. Ghana"
+                    placeholder={t("e.g. Ghana")}
                     value={destCountry}
                     onChange={(e) => setDestCountry(e.target.value)}
                     className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none font-medium mt-1"
                   />
                 </Field>
 
-                <Field label="To City" icon={<MapPinIcon className="w-4 h-4" />}>
+                <Field label={t("To City")} icon={<MapPinIcon className="w-4 h-4" />}>
                   <input
                     type="text"
-                    placeholder="e.g. Accra"
+                    placeholder={t("e.g. Accra")}
                     value={destCity}
                     onChange={(e) => setDestCity(e.target.value)}
                     className="w-full bg-transparent text-sm text-zinc-900 placeholder:text-slate-400 focus:outline-none font-medium mt-1"
                   />
                 </Field>
 
-                <Field label="Departure" icon={<CalendarIcon className="w-4 h-4" />} error={isPastDate}>
+                <Field label={t("Departure")} icon={<CalendarIcon className="w-4 h-4" />} error={isPastDate}>
                   <div className="relative mt-1 h-5">
                     <div className={`absolute inset-0 flex items-center text-sm font-medium ${isPastDate ? "text-rose-600" : "text-zinc-900"}`}>
                       {date ? (() => {
                         const [y, m, d] = date.split('-');
                         return `${d}.${m}.${y}`;
-                      })() : "Select date"}
+                      })() : t("Select date")}
                     </div>
                     <input
                       type="date"
@@ -175,20 +177,20 @@ export default function SearchRidesPage() {
                   </div>
                 </Field>
 
-                <Field label="Type" icon={<CarIcon className="w-4 h-4" />}>
+                <Field label={t("Type")} icon={<CarIcon className="w-4 h-4" />}>
                   <div className="relative mt-1">
                     <Select value={transportType} onValueChange={(val) => setTransportType(val as any)}>
                       <SelectTrigger className="w-full border-0 bg-transparent p-0 h-auto font-medium text-sm text-zinc-900 shadow-none hover:bg-transparent focus-visible:ring-0">
-                        <SelectValue placeholder="All types" />
+                        <SelectValue placeholder={t("All types")} />
                       </SelectTrigger>
                       <SelectContent>
-                        {transportTypes.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>
+                        {transportTypes.map((tr) => (
+                          <SelectItem key={tr.value} value={tr.value}>
                             <div className="flex items-center gap-3 py-0.5">
-                              {t.image && (
-                                <img src={t.image} alt={t.label} className="w-16 h-12 object-contain rounded-sm" />
+                              {tr.image && (
+                                <img src={tr.image} alt={tr.label} className="w-16 h-12 object-contain rounded-sm" />
                               )}
-                              <span className="font-medium text-sm">{t.label}</span>
+                              <span className="font-medium text-sm">{t(tr.label)}</span>
                             </div>
                           </SelectItem>
                         ))}
@@ -202,7 +204,7 @@ export default function SearchRidesPage() {
                 {error ? (
                   <p className="text-[12px] text-red-600 flex-1">{error}</p>
                 ) : isPastDate ? (
-                  <p className="text-[12px] text-red-600 flex-1">Past dates are unavailable. Pick a future date.</p>
+                  <p className="text-[12px] text-red-600 flex-1">{t("Past dates are unavailable. Pick a future date.")}</p>
                 ) : null}
                 <button
                   type="button"
@@ -221,12 +223,12 @@ export default function SearchRidesPage() {
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                         className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full"
                       />
-                      Searching
+                      {t("Searching")}
                     </>
                   ) : (
                     <>
                       <SearchIcon className="w-4 h-4" />
-                      Find rides
+                      {t("Find rides")}
                     </>
                   )}
                 </button>
@@ -242,16 +244,16 @@ export default function SearchRidesPage() {
       ) : results === null ? (
         <Reveal>
           <EmptyState
-            title="Start your search"
-            description="Enter your departure and destination above to find available routes from verified transporters."
+            title={t("Start your search")}
+            description={t("Enter your departure and destination above to find available routes from verified transporters.")}
             icon={<SearchIcon className="w-6 h-6" />}
           />
         </Reveal>
       ) : results.length === 0 ? (
         <Reveal>
           <EmptyState
-            title="No routes found"
-            description="Try widening your search, switching dates, or picking a different transport type."
+            title={t("No routes found")}
+            description={t("Try widening your search, switching dates, or picking a different transport type.")}
             icon={<MapPinIcon className="w-6 h-6" />}
           />
         </Reveal>
@@ -259,9 +261,9 @@ export default function SearchRidesPage() {
         <>
           <Reveal className="flex items-center justify-between mb-4">
             <p className="text-[13px] font-semibold text-zinc-950">
-              {results.length} {results.length === 1 ? "route" : "routes"} found
+              {results.length} {results.length === 1 ? t("route") : t("routes")} {t("found")}
             </p>
-            <p className="text-[11px] text-slate-500">Sorted by earliest departure</p>
+            <p className="text-[11px] text-slate-500">{t("Sorted by earliest departure")}</p>
           </Reveal>
           <motion.div
             initial="hidden"
@@ -301,6 +303,7 @@ function TransportCard({ transport }: { transport: any }) {
   const [showProfile, setShowProfile] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const t = useT();
 
   async function handleBook() {
     setBooking(true);
@@ -309,7 +312,7 @@ function TransportCard({ transport }: { transport: any }) {
       const result = await createBooking({ transportId: transport.id, seatsBooked: seats });
       setBooked(result);
     } catch (e: any) {
-      setError(e?.message || "Booking failed");
+      setError(e?.message || t("Booking failed"));
     } finally {
       setBooking(false);
     }
@@ -371,7 +374,7 @@ function TransportCard({ transport }: { transport: any }) {
                 {dep.toLocaleDateString()} · {dep.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
               <span className="text-slate-400">
-                Arrives by {maxReach.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {t("Arrives by")} {maxReach.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
             </div>
 
@@ -401,9 +404,9 @@ function TransportCard({ transport }: { transport: any }) {
                 </AvatarFallback>
               </Avatar>
               <span className="text-[11px] font-semibold text-zinc-950">
-                {transport.transporter?.name || "Unknown"}
+                {transport.transporter?.name || t("Unknown")}
               </span>
-              <span className="text-[10px] text-slate-400">· {rides} rides</span>
+              <span className="text-[10px] text-slate-400">· {rides} {t("rides")}</span>
             </button>
           </div>
 
@@ -413,7 +416,7 @@ function TransportCard({ transport }: { transport: any }) {
               <p className="text-xl font-semibold text-zinc-950 tabular-nums leading-tight">
                 {formatPrice(transport.price, transport.currency)}
               </p>
-              <p className="text-[10px] text-slate-400">per seat</p>
+              <p className="text-[10px] text-slate-400">{t("per seat")}</p>
             </div>
             {booked ? (
               <Link
@@ -421,7 +424,7 @@ function TransportCard({ transport }: { transport: any }) {
                 className="text-xs font-semibold text-emerald-700 inline-flex items-center gap-1 hover:text-emerald-800"
               >
                 <CheckCircleIcon className="w-3.5 h-3.5" />
-                View booking
+                {t("View booking")}
               </Link>
             ) : (
               <div className="flex items-center gap-1.5">
@@ -437,7 +440,7 @@ function TransportCard({ transport }: { transport: any }) {
                   disabled={booking}
                   className="bg-zinc-950 hover:bg-zinc-800 disabled:opacity-50 text-white text-[12px] font-semibold px-3.5 py-2 rounded-lg transition-all active:scale-[0.98]"
                 >
-                  {booking ? "..." : "Book"}
+                  {booking ? "..." : t("Book")}
                 </button>
               </div>
             )}
@@ -481,6 +484,7 @@ function TransporterProfileModalInner({ loading, profile, onClose }: { loading: 
       document.body.style.overflow = prev;
     };
   }, []);
+  const t = useT();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -498,14 +502,14 @@ function TransporterProfileModalInner({ loading, profile, onClose }: { loading: 
         className="bg-white rounded-2xl w-full max-w-md max-h-[85vh] overflow-y-auto shadow-2xl"
       >
         <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-3 flex items-center justify-between">
-          <p className="text-[13px] font-semibold text-zinc-950">Transporter profile</p>
+          <p className="text-[13px] font-semibold text-zinc-950">{t("Transporter profile")}</p>
           <button onClick={onClose} className="text-slate-400 hover:text-zinc-900 p-1 -m-1">
             <XIcon className="w-4 h-4" />
           </button>
         </div>
 
         {loading ? (
-          <div className="p-10 text-center text-sm text-slate-400">Loading profile...</div>
+          <div className="p-10 text-center text-sm text-slate-400">{t("Loading profile...")}</div>
         ) : profile ? (
           <>
             <div className="p-6">
@@ -519,20 +523,20 @@ function TransporterProfileModalInner({ loading, profile, onClose }: { loading: 
                 <div>
                   <h2 className="text-[16px] font-semibold text-zinc-950">{profile.name}</h2>
                   <p className="text-[11px] text-slate-500">
-                    Member since {new Date(profile.createdAt).toLocaleDateString()}
+                    {t("Member since")} {new Date(profile.createdAt).toLocaleDateString()}
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 divide-x divide-slate-100 border-y border-slate-100">
-              <ProfileStat label="Completed" value={profile.totalCompletedRides || 0} />
-              <ProfileStat label="Vehicles" value={profile.vehicleCount || 0} />
+              <ProfileStat label={t("Completed")} value={profile.totalCompletedRides || 0} />
+              <ProfileStat label={t("Vehicles")} value={profile.vehicleCount || 0} />
             </div>
 
           </>
         ) : (
-          <div className="p-10 text-center text-sm text-red-600">Failed to load profile</div>
+          <div className="p-10 text-center text-sm text-red-600">{t("Failed to load profile")}</div>
         )}
       </motion.div>
     </motion.div>

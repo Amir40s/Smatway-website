@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { ReactNode } from "react";
 import { ArrowLeftIcon, PlusIcon } from "./Icons";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 // ─── Motion variants ──────────────────────────────────────────────────────────
 export const spring = { type: "spring" as const, stiffness: 120, damping: 22, mass: 0.5 };
@@ -56,6 +57,7 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title, subtitle, description, icon, backHref, action, kicker }: PageHeaderProps) {
+  const t = useT();
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
@@ -70,7 +72,7 @@ export function PageHeader({ title, subtitle, description, icon, backHref, actio
             className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-zinc-900 transition-colors mb-3 group"
           >
             <ArrowLeftIcon className="w-3.5 h-3.5 -translate-x-0 group-hover:-translate-x-0.5 transition-transform" />
-            Back
+            {t("Back")}
           </Link>
         )}
         {kicker && (
@@ -370,6 +372,7 @@ export function TabFilter<T extends string>({
   onChange: (v: T) => void;
   counts?: Partial<Record<T, number>>;
 }) {
+  const t = useT();
   return (
     // Outer scroll container — horizontally scrollable on narrow screens without a visible scrollbar
     <div className="relative -mx-1 overflow-x-auto no-scrollbar">
@@ -390,7 +393,7 @@ export function TabFilter<T extends string>({
                 />
               )}
               <span className={`relative flex items-center gap-1.5 ${active ? "text-zinc-900" : "text-slate-500 hover:text-slate-700"}`}>
-                {tab}
+                {t(tab)}
                 {counts?.[tab] !== undefined && (
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${active ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"}`}>
                     {counts[tab]}
@@ -425,6 +428,7 @@ export function RouteTimeline({
   stops?: { city: string; address: string }[];
   className?: string;
 }) {
+  const t = useT();
   const allPoints = [
     { city: departureCity, address: departureAddress, type: "start" as const },
     ...stops.map((s, idx) => ({ city: s.city, address: s.address, type: "stop" as const, index: idx })),
@@ -460,17 +464,17 @@ export function RouteTimeline({
                 <span className="text-xs font-semibold text-zinc-950">{pt.city}</span>
                 {pt.type === "stop" && (
                   <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-100">
-                    Stop {pt.index !== undefined ? pt.index + 1 : ""}
+                    {t("Stop")} {pt.index !== undefined ? pt.index + 1 : ""}
                   </span>
                 )}
                 {pt.type === "start" && (
                   <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-100">
-                    Departure
+                    {t("Departure")}
                   </span>
                 )}
                 {pt.type === "end" && (
                   <span className="text-[9px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-100">
-                    Destination
+                    {t("Destination")}
                   </span>
                 )}
               </div>

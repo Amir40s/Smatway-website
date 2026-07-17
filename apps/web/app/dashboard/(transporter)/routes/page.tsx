@@ -13,6 +13,7 @@ import {
   Page, Reveal, PageHeader, EmptyState, SkeletonList, StatusPill,
   PrimaryButton, GhostButton, SurfaceCard, spring, RouteTimeline,
 } from "@/app/dashboard/_Components/ui";
+import { useT } from "@/lib/i18n/LocaleProvider";
 
 function XIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -37,6 +38,7 @@ export default function TransporterRoutesPage() {
   
   const [requestDeleteModal, setRequestDeleteModal] = useState<{ id: string; name: string } | null>(null);
   const [requestReason, setRequestReason] = useState("");
+  const t = useT();
 
   useEffect(() => {
     getMyRoutes().then(setRoutes).finally(() => setLoading(false));
@@ -44,7 +46,7 @@ export default function TransporterRoutesPage() {
 
   async function handleDelete(id: string) {
     const route = routes.find((r) => r.id === id);
-    const itinerary = route ? `${route.departureCity} → ${route.destinationCity}` : "Route";
+    const itinerary = route ? `${route.departureCity} → ${route.destinationCity}` : t("Route");
     setRequestDeleteModal({ id, name: itinerary });
     setRequestReason("");
   }
@@ -70,12 +72,12 @@ export default function TransporterRoutesPage() {
   return (
     <Page>
       <PageHeader
-        kicker={`${active} active · ${totalBookings} total bookings`}
-        title="Routes"
-        subtitle="Each route is a scheduled trip travelers can book. Keep them fresh and retire routes that have passed."
+        kicker={t("{active} active · {total} total bookings").replace("{active}", active.toString()).replace("{total}", totalBookings.toString())}
+        title={t("Routes")}
+        subtitle={t("Each route is a scheduled trip travelers can book. Keep them fresh and retire routes that have passed.")}
         action={
           <PrimaryButton href="/dashboard/routes/add" icon={<PlusIcon className="w-4 h-4" />}>
-            Create route
+            {t("Create route")}
           </PrimaryButton>
         }
       />
@@ -84,9 +86,9 @@ export default function TransporterRoutesPage() {
         <SkeletonList count={4} />
       ) : routes.length === 0 ? (
         <EmptyState
-          title="No routes yet"
-          description="Create your first route to start accepting bookings from travelers."
-          ctaLabel="Create route"
+          title={t("No routes yet")}
+          description={t("Create your first route to start accepting bookings from travelers.")}
+          ctaLabel={t("Create route")}
           ctaHref="/dashboard/routes/add"
           icon={<MapPinIcon className="w-6 h-6" />}
         />
@@ -103,11 +105,11 @@ export default function TransporterRoutesPage() {
             const label =
               route.status === "INACTIVE"
                 ? route.vehicle?.deleted
-                  ? "Vehicle removed"
+                  ? t("Vehicle removed")
                   : expired
-                  ? "Expired"
-                  : "Inactive"
-                : route.status;
+                  ? t("Expired")
+                  : t("Inactive")
+                : t(route.status);
             const bookings = route._count?.bookings ?? 0;
             const seats = route.availableSeats ?? 0;
 
@@ -138,7 +140,7 @@ export default function TransporterRoutesPage() {
                           </StatusPill>
                           {route.deleteRequested && (
                             <StatusPill tone="red" dot>
-                              Delete Pending
+                              {t("Delete Pending")}
                             </StatusPill>
                           )}
                           <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200">
@@ -159,7 +161,7 @@ export default function TransporterRoutesPage() {
 
                       <p className="text-[15px] font-semibold text-zinc-950 tabular-nums shrink-0">
                         {formatPrice(route.price, route.currency)}
-                        <span className="text-[10px] font-normal text-slate-400 ml-0.5">/seat</span>
+                        <span className="text-[10px] font-normal text-slate-400 ml-0.5">/{t("seat")}</span>
                       </p>
                     </div>
 
@@ -167,10 +169,10 @@ export default function TransporterRoutesPage() {
                     <div className="flex items-center gap-4 text-[11px] text-slate-500 mt-3 flex-wrap">
                       <span className="inline-flex items-center gap-1.5">
                         <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
-                        {dep.toLocaleDateString()} at {dep.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {dep.toLocaleDateString()} {t("at")} {dep.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </span>
                       <span className="font-medium text-emerald-700">
-                        {bookings} {bookings === 1 ? "booking" : "bookings"}
+                        {bookings} {bookings === 1 ? t("booking") : t("bookings")}
                       </span>
                     </div>
 
@@ -179,7 +181,7 @@ export default function TransporterRoutesPage() {
                         href={`/dashboard/routes/${route.id}/bookings`}
                         tone="emerald"
                       >
-                        View bookings
+                        {t("View bookings")}
                       </GhostButton>
                       {!route.deleteRequested ? (
                         <GhostButton
@@ -188,11 +190,11 @@ export default function TransporterRoutesPage() {
                           tone="red"
                           icon={<TrashIcon className="w-3.5 h-3.5" />}
                         >
-                          {deleting === route.id ? "..." : "Delete"}
+                          {deleting === route.id ? "..." : t("Delete")}
                         </GhostButton>
                       ) : (
                         <span className="text-[11px] font-semibold text-rose-600 bg-rose-50 px-2.5 py-1.5 rounded-lg border border-rose-100">
-                          Delete Requested
+                          {t("Delete Requested")}
                         </span>
                       )}
                     </div>
@@ -236,21 +238,21 @@ export default function TransporterRoutesPage() {
 
               <div>
                 <h2 className="text-[16px] font-semibold text-zinc-950">
-                  Request Deletion
+                  {t("Request Deletion")}
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Transporters are not allowed to delete routes directly. Please provide a reason to request deletion of route "{requestDeleteModal.name}" from the Admin.
+                  {t("Transporters are not allowed to delete routes directly. Please provide a reason to request deletion of route '{name}' from the Admin.").replace("{name}", requestDeleteModal.name)}
                 </p>
               </div>
 
               <div className="space-y-1.5">
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  Reason for Deletion
+                  {t("Reason for Deletion")}
                 </label>
                 <textarea
                   value={requestReason}
                   onChange={(e) => setRequestReason(e.target.value)}
-                  placeholder="Explain why you want to delete this route..."
+                  placeholder={t("Explain why you want to delete this route...")}
                   rows={3}
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-zinc-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 resize-none transition-all"
                   required
@@ -263,7 +265,7 @@ export default function TransporterRoutesPage() {
                   onClick={() => setRequestDeleteModal(null)}
                   className="flex-1 border border-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-all active:scale-[0.98] text-xs"
                 >
-                  Cancel
+                  {t("Cancel")}
                 </button>
                 <button
                   type="button"
@@ -271,7 +273,7 @@ export default function TransporterRoutesPage() {
                   disabled={deleting !== null || !requestReason.trim()}
                   className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-xl transition-all active:scale-[0.98] text-xs disabled:opacity-50"
                 >
-                  {deleting !== null ? "Submitting..." : "Submit Request"}
+                  {deleting !== null ? t("Submitting...") : t("Submit Request")}
                 </button>
               </div>
             </motion.div>
