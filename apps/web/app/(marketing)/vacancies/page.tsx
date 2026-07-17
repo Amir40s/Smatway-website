@@ -15,10 +15,10 @@ export default function VacanciesPage() {
 
   return (
     <main className="max-w-5xl mx-auto pt-28 pb-20 px-4 sm:px-6 lg:px-8 text-slate-800">
-      <ApplyModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        defaultSubject={modalSubject} 
+      <ApplyModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        defaultSubject={modalSubject}
       />
 
       {/* Hero Section */}
@@ -73,7 +73,7 @@ export default function VacanciesPage() {
           <h2 className="text-3xl font-bold mb-4"><Trans tKey="How Can We Help You?" /></h2>
           <p className="text-slate-400"><Trans tKey="Choose the option that best describes you." /></p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-left mb-12">
           {/* Option 1 */}
           <div className="space-y-4">
@@ -81,7 +81,7 @@ export default function VacanciesPage() {
             <p className="text-slate-400 text-sm leading-relaxed">
               <Trans tKey="Send us your CV and we'll consider you for current and future opportunities." />
             </p>
-            <button 
+            <button
               onClick={() => handleApplyClick("General Employment Inquiry")}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-white hover:text-emerald-300 transition-colors mt-2 group cursor-pointer"
             >
@@ -89,14 +89,14 @@ export default function VacanciesPage() {
               <ArrowRight className="w-4 h-4 transition-transform rtl:-scale-x-100 group-hover:rtl:-translate-x-1 group-hover:translate-x-1" />
             </button>
           </div>
-          
+
           {/* Option 2 */}
           <div className="space-y-4">
             <h3 className="font-semibold text-lg text-emerald-400"><Trans tKey="Driver Seeking Employment?" /></h3>
             <p className="text-slate-400 text-sm leading-relaxed">
               <Trans tKey="Send us your CV and we help connect you with transport companies looking for qualified drivers." />
             </p>
-            <button 
+            <button
               onClick={() => handleApplyClick("Driver Application")}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-white hover:text-emerald-300 transition-colors mt-2 group cursor-pointer"
             >
@@ -104,14 +104,14 @@ export default function VacanciesPage() {
               <ArrowRight className="w-4 h-4 transition-transform rtl:-scale-x-100 group-hover:rtl:-translate-x-1 group-hover:translate-x-1" />
             </button>
           </div>
-          
+
           {/* Option 3 */}
           <div className="space-y-4">
             <h3 className="font-semibold text-lg text-emerald-400"><Trans tKey="Need Drivers?" /></h3>
             <p className="text-slate-400 text-sm leading-relaxed">
               <Trans tKey="Transport Company Looking for Drivers? Send us your requirements, and we'll help connect you with suitable driver candidates." />
             </p>
-            <button 
+            <button
               onClick={() => handleApplyClick("Transport Company Requesting Drivers")}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-white hover:text-emerald-300 transition-colors mt-2 group cursor-pointer"
             >
@@ -124,8 +124,8 @@ export default function VacanciesPage() {
         <div className="pt-8 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Mail className="w-5 h-5 text-slate-500" />
           <span className="text-slate-300"><Trans tKey="Send Email to:" /></span>
-          <a href="mailto:carrers@smatway.com" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors text-lg" dir="ltr">
-            carrers@smatway.com
+          <a href="mailto:careers@smatway.com" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors text-lg" dir="ltr">
+            careers@smatway.com
           </a>
         </div>
       </div>

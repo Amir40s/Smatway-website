@@ -721,7 +721,7 @@ function Hero() {
               className="pt-6 border-t border-slate-100/80"
             >
               <p className="text-[11px] font-bold tracking-[0.12em] text-slate-400 uppercase mb-4">
-                All Modes of Transport Supported
+                {t("All Modes of Transport Supported")}
               </p>
               <div className="flex flex-wrap items-center gap-3.5 sm:gap-5">
                 {[
@@ -731,7 +731,6 @@ function Hero() {
                   { name: "Bus", src: "/vehicle-img/bus.jpeg" },
                   { name: "Train", src: "/vehicle-img/train.png" },
                   { name: "Ship", src: "/vehicle-img/ship.png" },
-                
                 ].map((item) => (
                   <div key={item.name} className="flex flex-col items-center gap-1.5 group">
                     <div className="w-12 h-10 sm:w-14 sm:h-12 bg-slate-50/50 hover:bg-emerald-50/40 rounded-xl border border-slate-200/40 p-1.5 flex items-center justify-center transition-all duration-200 hover:scale-105 hover:border-emerald-200/50 hover:shadow-[0_4px_12px_rgba(16,185,129,0.05)]">
@@ -742,7 +741,7 @@ function Hero() {
                       />
                     </div>
                     <span className="text-[10px] font-semibold text-slate-400 group-hover:text-emerald-600 transition-colors">
-                      {item.name}
+                      {t(item.name as any)}
                     </span>
                   </div>
                 ))}
@@ -2712,6 +2711,7 @@ function CTA() {
 
 export default function Home() {
   const [isCharterModalOpen, setIsCharterModalOpen] = useState(false);
+  const t = useT();
 
   return (
     <>
@@ -2734,7 +2734,7 @@ export default function Home() {
             boxShadow: "-4px 0 15px rgba(0,0,0,0.1)"
           }}
         >
-          Need Charter? Contact Us
+          {t("Need Charter? Contact Us")}
         </button>
       </div>
 
@@ -2749,24 +2749,24 @@ export default function Home() {
               className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative"
             >
               <div className="p-6">
-                <h3 className="text-xl font-bold text-zinc-900 mb-1">Request a Charter</h3>
-                <p className="text-sm text-zinc-500 mb-6">Fill out your requirements and we will get back to you.</p>
-                <form onSubmit={(e) => { e.preventDefault(); alert('Charter request submitted successfully!'); setIsCharterModalOpen(false); }} className="space-y-4">
+                <h3 className="text-xl font-bold text-zinc-900 mb-1">{t("Request a Charter")}</h3>
+                <p className="text-sm text-zinc-500 mb-6">{t("Fill out your requirements and we will get back to you.")}</p>
+                <form onSubmit={(e) => { e.preventDefault(); alert(t("Charter request submitted successfully!")); setIsCharterModalOpen(false); }} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Name</label>
-                    <input required type="text" className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Your name" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">{t("Name")}</label>
+                    <input required type="text" className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder={t("Your name")} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Email / Phone</label>
-                    <input required type="text" className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Your contact details" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">{t("Email / Phone")}</label>
+                    <input required type="text" className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder={t("Your contact details")} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">Requirements</label>
-                    <textarea required rows={4} className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Tell us about your trip (number of people, dates, destinations)..."></textarea>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">{t("Requirements")}</label>
+                    <textarea required rows={4} className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder={t("Tell us about your trip (number of people, dates, destinations)...")}></textarea>
                   </div>
                   <div className="flex justify-end gap-3 mt-6 pt-2">
-                    <button type="button" onClick={() => setIsCharterModalOpen(false)} className="px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors">Cancel</button>
-                    <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">Submit Request</button>
+                    <button type="button" onClick={() => setIsCharterModalOpen(false)} className="px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors">{t("Cancel")}</button>
+                    <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">{t("Submit Request")}</button>
                   </div>
                 </form>
               </div>

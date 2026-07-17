@@ -43,6 +43,22 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 const defaultStorageKey = "smatway:locale";
 
 const exactPhrases: Record<string, Partial<Record<Exclude<Locale, "en">, string>>> = {
+  "Need Charter? Contact Us": { fr: "Besoin d'un charter ? Contactez-nous", pt: "Precisa de um charter? Contate-nos", ar: "هل تحتاج إلى استئجار حافلة؟ اتصل بنا", sw: "Unahitaji Charter? Wasiliana Nasi", ha: "Kuna buƙatar Charter? Tuntube Mu", es: "¿Necesita un chárter? Contáctenos" },
+  "Request a Charter": { fr: "Demander un charter", pt: "Solicitar um charter", ar: "طلب استئجار حافلة", sw: "Omba Charter", ha: "Nemi Charter", es: "Solicitar un chárter" },
+  "Fill out your requirements and we will get back to you.": { fr: "Remplissez vos exigences et nous vous recontacterons.", pt: "Preencha seus requisitos e entraremos em contato.", ar: "قم بملء متطلباتك وسنتواصل معك.", sw: "Jaza mahitaji yako na tutawasiliana nawe.", ha: "Cika buƙatunku kuma za mu tuntuɓar ku.", es: "Complete sus requisitos y nos pondremos en contacto con usted." },
+  "All Modes of Transport Supported": { fr: "Tous les modes de transport pris en charge", pt: "Todos os modos de transporte suportados", ar: "جميع وسائل النقل مدعومة", sw: "Njia zote za usafiri zinasaidiwa", ha: "Duk hanyoyin sufuri da aka goyi baya", es: "Todos los modos de transporte soportados" },
+  "Train": { fr: "Train", pt: "Trem", ar: "قطار", sw: "Treni", ha: "Jirgin ƙasa", es: "Tren" },
+  "Ship": { fr: "Navire", pt: "Navio", ar: "سفينة", sw: "Meli", ha: "Jirgin ruwa", es: "Barco" },
+  "Van": { fr: "Fourgonnette", pt: "Furgão", ar: "شاحنة صغيرة", sw: "Gari la mizigo", ha: "Motar kaya", es: "Furgoneta" },
+
+  "Your name": { fr: "Votre nom", pt: "Seu nome", ar: "اسمك", sw: "Jina lako", ha: "Sunanka", es: "Su nombre" },
+  "Email / Phone": { fr: "E-mail / Téléphone", pt: "E-mail / Telefone", ar: "البريد الإلكتروني / الهاتف", sw: "Barua pepe / Simu", ha: "Imel / Waya", es: "Correo electrónico / Teléfono" },
+  "Your contact details": { fr: "Vos coordonnées", pt: "Seus detalhes de contato", ar: "بيانات الاتصال الخاصة بك", sw: "Maelezo yako ya mawasiliano", ha: "Bayanan tuntuɓar ku", es: "Sus datos de contacto" },
+  "Requirements": { fr: "Exigences", pt: "Requisitos", ar: "المتطلبات", sw: "Mahitaji", ha: "Buƙatu", es: "Requisitos" },
+  "Tell us about your trip (number of people, dates, destinations)...": { fr: "Parlez-nous de votre voyage (nombre de personnes, dates, destinations)...", pt: "Conte-nos sobre sua viagem (número de pessoas, datas, destinos)...", ar: "أخبرنا عن رحلتك (عدد الأشخاص، التواريخ، الوجهات)...", sw: "Tuambie kuhusu safari yako (idadi ya watu, tarehe, vituo)...", ha: "Gaya mana game da tafiyarka (yawan mutane, kwanan wata, wurare)...", es: "Cuéntanos sobre tu viaje (número de personas, fechas, destinos)..." },
+
+  "Submit Request": { fr: "Soumettre la demande", pt: "Enviar Solicitação", ar: "إرسال الطلب", sw: "Tuma Ombi", ha: "Aika Buƙata", es: "Enviar Solicitud" },
+  "Charter request submitted successfully!": { fr: "Demande de charter soumise avec succès !", pt: "Solicitação de charter enviada com sucesso!", ar: "تم تقديم طلب استئجار الحافلة بنجاح!", sw: "Ombi la charter limewasilishwa kikamilifu!", ha: "An aiko da buƙatar charter cikin nasara!", es: "¡Solicitud de chárter enviada con éxito!" },
   "Vacancies": { fr: "Offres d'emploi", pt: "Vagas", ar: "الوظائف الشاغرة", sw: "Nafasi za Kazi", ha: "Gurbin Aiki", es: "Vacantes" },
   "Looking for Your Next Opportunity?": { fr: "À la recherche de votre prochaine opportunité ?", pt: "Procurando sua próxima oportunidade?", ar: "هل تبحث عن فرصتك القادمة؟", sw: "Unatafuta Fursa Yako Inayofuata?", ha: "Kuna neman damar aiki na gaba?", es: "¿Buscando tu próxima oportunidad?" },
   "Submit your CV today and we'll connect you with employers seeking qualified talent.": { fr: "Soumettez votre CV aujourd'hui et nous vous mettrons en contact avec des employeurs.", pt: "Envie seu currículo hoje e nós o conectaremos com empregadores.", ar: "أرسل سيرتك الذاتية اليوم وسنقوم بتوصيلك بأصحاب العمل الذين يبحثون عن المواهب المؤهلة.", sw: "Tuma CV yako leo na tutakuunganisha na waajiri.", ha: "Sanya CV dinka yau don mu haɗa ka da masu daukan aiki.", es: "Envía tu CV hoy y te conectaremos con empleadores." },
@@ -269,7 +285,6 @@ const exactPhrases: Record<string, Partial<Record<Exclude<Locale, "en">, string>
   "Too short": { fr: "Trop court", pt: "Muito curta", ar: "قصير جدًا", sw: "Fupi sana", ha: "Ya yi gajere", es: "Demasiado corta" },
   "Total": { fr: "Total", pt: "Total", ar: "الإجمالي", sw: "Jumla", ha: "Jimla", es: "Total" },
   "Total Bookings": { fr: "Total des réservations", pt: "Total de reservas", ar: "إجمالي الحجوزات", sw: "Jumla ya uhifadhi", ha: "Jimillar ajiyoyi", es: "Total de reservas" },
-  "Train": { fr: "Train", pt: "Trem", ar: "قطار", sw: "Treni", ha: "Jirgin ƙasa", es: "Tren" },
   "Transaction ID": { fr: "ID de transaction", pt: "ID da transação", ar: "معرّف المعاملة", sw: "Kitambulisho cha muamala", ha: "Lambar ma'amala", es: "ID de transacción" },
   "Transport Type": { fr: "Type de transport", pt: "Tipo de transporte", ar: "نوع النقل", sw: "Aina ya usafiri", ha: "Nau'in sufuri", es: "Tipo de transporte" },
   "Transport not found": { fr: "Transport introuvable", pt: "Transporte não encontrado", ar: "لم يتم العثور على النقل", sw: "Usafiri haukupatikana", ha: "Ba a sami sufuri ba", es: "Transporte no encontrado" },
@@ -286,8 +301,7 @@ const exactPhrases: Record<string, Partial<Record<Exclude<Locale, "en">, string>
   "Upload images": { fr: "Téléverser des images", pt: "Enviar imagens", ar: "رفع الصور", sw: "Pakia picha", ha: "Loda hotuna", es: "Subir imágenes" },
   "User Name": { fr: "Nom d'utilisateur", pt: "Nome do usuário", ar: "اسم المستخدم", sw: "Jina la mtumiaji", ha: "Sunan mai amfani", es: "Nombre de usuario" },
   "Users": { fr: "Utilisateurs", pt: "Usuários", ar: "المستخدمون", sw: "Watumiaji", ha: "Masu amfani", es: "Usuarios" },
-  "Van": { fr: "Van", pt: "Van", ar: "فان", sw: "Vani", ha: "Baban mota", es: "Furgoneta" },
-  "Vehicle Details": { fr: "Détails du véhicule", pt: "Detalhes do veículo", ar: "تفاصيل المركبة", sw: "Maelezo ya gari", ha: "Bayanan abin hawa", es: "Detalles del vehículo" },
+   "Vehicle Details": { fr: "Détails du véhicule", pt: "Detalhes do veículo", ar: "تفاصيل المركبة", sw: "Maelezo ya gari", ha: "Bayanan abin hawa", es: "Detalles del vehículo" },
   "Vehicle Name": { fr: "Nom du véhicule", pt: "Nome do veículo", ar: "اسم المركبة", sw: "Jina la gari", ha: "Sunan abin hawa", es: "Nombre del vehículo" },
   "Vehicle not found": { fr: "Véhicule introuvable", pt: "Veículo não encontrado", ar: "المركبة غير موجودة", sw: "Gari halikupatikana", ha: "Ba a sami abin hawa ba", es: "Vehículo no encontrado" },
   "Vehicle Photos (Upload up to 5)": { fr: "Photos du véhicule (jusqu'à 5)", pt: "Fotos do veículo (envie até 5)", ar: "صور المركبة (حتى 5)", sw: "Picha za gari (pakia hadi 5)", ha: "Hotunan abin hawa (loda har 5)", es: "Fotos del vehículo (sube hasta 5)" },
