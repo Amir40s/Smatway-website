@@ -727,11 +727,11 @@ function Hero() {
                 {[
                   { name: "Car", src: "/vehicle-img/car.png" },
                   { name: "Van", src: "/vehicle-img/van.png" },
-                  { name: "Minibus", src: "/vehicle-img/minibus.jpg" },
+                  { name: "Minibus", src: "/vehicle-img/minibus2.png" },
                   { name: "Bus", src: "/vehicle-img/bus.jpeg" },
                   { name: "Train", src: "/vehicle-img/train.png" },
                   { name: "Ship", src: "/vehicle-img/ship.png" },
-                  { name: "Plane", src: "/vehicle-img/plan.jpeg" },
+                
                 ].map((item) => (
                   <div key={item.name} className="flex flex-col items-center gap-1.5 group">
                     <div className="w-12 h-10 sm:w-14 sm:h-12 bg-slate-50/50 hover:bg-emerald-50/40 rounded-xl border border-slate-200/40 p-1.5 flex items-center justify-center transition-all duration-200 hover:scale-105 hover:border-emerald-200/50 hover:shadow-[0_4px_12px_rgba(16,185,129,0.05)]">
@@ -2711,6 +2711,8 @@ function CTA() {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
+  const [isCharterModalOpen, setIsCharterModalOpen] = useState(false);
+
   return (
     <>
       <Hero />
@@ -2718,6 +2720,60 @@ export default function Home() {
       <AppPreview />
       {/* <HowItWorks /> */}
       <CTA />
+
+      {/* Need Charter Button */}
+      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50 flex">
+        <button 
+          onClick={() => setIsCharterModalOpen(true)}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl flex items-center justify-center font-semibold text-sm transition-all"
+          style={{
+            writingMode: "vertical-rl",
+            padding: "20px 10px",
+            borderTopLeftRadius: "12px",
+            borderBottomLeftRadius: "12px",
+            boxShadow: "-4px 0 15px rgba(0,0,0,0.1)"
+          }}
+        >
+          Need Charter? Contact Us
+        </button>
+      </div>
+
+      {/* Charter Modal */}
+      <AnimatePresence>
+        {isCharterModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/50 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative"
+            >
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-zinc-900 mb-1">Request a Charter</h3>
+                <p className="text-sm text-zinc-500 mb-6">Fill out your requirements and we will get back to you.</p>
+                <form onSubmit={(e) => { e.preventDefault(); alert('Charter request submitted successfully!'); setIsCharterModalOpen(false); }} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">Name</label>
+                    <input required type="text" className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Your name" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">Email / Phone</label>
+                    <input required type="text" className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Your contact details" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">Requirements</label>
+                    <textarea required rows={4} className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Tell us about your trip (number of people, dates, destinations)..."></textarea>
+                  </div>
+                  <div className="flex justify-end gap-3 mt-6 pt-2">
+                    <button type="button" onClick={() => setIsCharterModalOpen(false)} className="px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">Submit Request</button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
