@@ -816,8 +816,8 @@ function Hero() {
               { name: "Train", src: "/vehicle-img/train.png" },
               { name: "Ship", src: "/vehicle-img/ship.png" },
             ].map((item) => (
-              <div key={item.name} className="flex flex-col items-center gap-1.5 group min-w-[48px] sm:min-w-[56px]">
-                <div className="w-12 h-10 sm:w-14 sm:h-12 lg:w-[4.25rem] lg:h-[3.5rem] bg-slate-50/50 hover:bg-emerald-50/40 rounded-xl border border-slate-200/40 p-1.5 flex items-center justify-center transition-all duration-200 hover:scale-105 hover:border-emerald-200/50 hover:shadow-[0_4px_12px_rgba(16,185,129,0.05)]">
+              <div key={item.name} className="flex flex-col items-center gap-1.5 group min-w-[80px] sm:min-w-[96px]">
+                <div className="w-20 h-16 sm:w-24 sm:h-20 lg:w-[6.5rem] lg:h-[5rem] bg-slate-50/50 hover:bg-emerald-50/40 rounded-xl border border-slate-200/40 p-1.5 flex items-center justify-center transition-all duration-200 hover:scale-105 hover:border-emerald-200/50 hover:shadow-[0_4px_12px_rgba(16,185,129,0.05)]">
                   <img 
                     src={item.src} 
                     alt={item.name} 
