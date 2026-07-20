@@ -29,20 +29,19 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Configure the Gmail transporter
+    // Configure the SMTP transporter
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      requireTLS: true,
+      host: process.env.SMTP_HOST || "mail.your-server.de",
+      port: parseInt(process.env.SMTP_PORT || "587"),
+      secure: process.env.SMTP_PORT === "465",
       auth: {
-        user: process.env.SMTP_USER || "sitet740@gmail.com",
-        pass: process.env.SMTP_PASS || "gszxuefeetckvied",
+        user: process.env.SMTP_USER || "noreply@smatway.com",
+        pass: process.env.SMTP_PASS || ".Benjamino1.",
       },
     });
 
     const mailOptions = {
-      from: `"${name}" <${process.env.SMTP_USER || "sitet740@gmail.com"}>`,
+      from: `"SmatWay Careers" <${process.env.SMTP_USER || "noreply@smatway.com"}>`,
       replyTo: email,
       to: "careers@smatway.com", // Updated to the correct spelling (careers)
       subject: `New Application: ${subject || "Employment Inquiry"}`,

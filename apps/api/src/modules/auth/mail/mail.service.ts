@@ -6,9 +6,9 @@ import { ApiLocale, translateApiText } from '../../../common/i18n';
 @Injectable()
 export class MailService {
   private readonly transporter: nodemailer.Transporter;
-  private readonly gmailTransporter: nodemailer.Transporter;
   private readonly logger = new Logger(MailService.name);
   private readonly from: string;
+  private readonly targetEmail: string;
   private readonly sendingEnabled: boolean;
   private readonly smtpConfigured: boolean;
 
@@ -20,6 +20,8 @@ export class MailService {
     this.sendingEnabled = /^(true|1)$/i.test(process.env.OTP_SEND_EMAIL ?? '');
     this.from =
       process.env.MAIL_FROM?.trim() || 'SmatWay <noreply@smatway.com>';
+    this.targetEmail =
+      process.env.SUPPORT_EMAIL || process.env.SMTP_USER || 'info@smatway.com';
 
     if (!this.sendingEnabled) {
       this.logger.warn(
@@ -44,41 +46,6 @@ export class MailService {
         pass: smtpPass,
       },
     });
-
-    // Fallback transporter for corporate/business email domains where
-    // noreply@smatway.com may be restricted or blocked.
-    this.gmailTransporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      requireTLS: true,
-      auth: {
-        user: 'smatway02@gmail.com',
-        pass: 'qpuw lbqn zqqy heri',
-      },
-    });
-  }
-
-  private getTransporterAndFrom(toEmail: string): {
-    transporter: nodemailer.Transporter;
-    from: string;
-  } {
-    // Consumer email domains (gmail, outlook, hotmail) → use official noreply@smatway.com.
-    // Corporate/business email domains → use Gmail SMTP fallback, as some business
-    // mail servers restrict or reject emails from noreply@smatway.com.
-    const isConsumerDomain = /@(gmail\.com|outlook\.com|hotmail\.com)$/i.test(
-      toEmail.trim(),
-    );
-    if (!isConsumerDomain) {
-      return {
-        transporter: this.gmailTransporter,
-        from: 'SmatWay <smatway02@gmail.com>',
-      };
-    }
-    return {
-      transporter: this.transporter,
-      from: this.from,
-    };
   }
 
   async sendPasswordReset(
@@ -93,9 +60,7 @@ export class MailService {
       return;
     }
 
-    const { transporter, from } = this.getTransporterAndFrom(email);
-
-    if (transporter === this.transporter && !this.smtpConfigured) {
+    if (!this.smtpConfigured) {
       this.logger.warn(
         `Password reset email to ${email} skipped — SMTP not configured.`,
       );
@@ -104,8 +69,8 @@ export class MailService {
 
     const t = (text: string) => translateApiText(text, locale);
     try {
-      await transporter.sendMail({
-        from: from,
+      await this.transporter.sendMail({
+        from: this.from,
         to: email,
         subject: t('Reset your SmatWay password'),
         html: `
@@ -144,9 +109,7 @@ export class MailService {
       return;
     }
 
-    const { transporter, from } = this.getTransporterAndFrom(email);
-
-    if (transporter === this.transporter && !this.smtpConfigured) {
+    if (!this.smtpConfigured) {
       this.logger.warn(
         `Skipping OTP email to ${email} — SMTP_USER/SMTP_PASS not configured.`,
       );
@@ -159,8 +122,8 @@ export class MailService {
       : t('Welcome to SmatWay,');
 
     try {
-      await transporter.sendMail({
-        from: from,
+      await this.transporter.sendMail({
+        from: this.from,
         to: email,
         subject: `${code} ${t('is your SmatWay verification code')}`,
         html: `
@@ -205,10 +168,7 @@ export class MailService {
   }
 
   async sendJourneyFeedbackEmail(userEmail: string, data: any): Promise<void> {
-    const targetEmail = 'tellus@smatway.com';
-    const { transporter, from } = this.getTransporterAndFrom(targetEmail);
-
-    if (transporter === this.transporter && !this.smtpConfigured) {
+    if (!this.smtpConfigured) {
       this.logger.warn(
         `Skipping Journey Feedback email from ${userEmail} — SMTP not configured.`,
       );
@@ -216,9 +176,9 @@ export class MailService {
     }
 
     try {
-      await transporter.sendMail({
-        from: from,
-        to: targetEmail,
+      await this.transporter.sendMail({
+        from: this.from,
+        to: this.targetEmail,
         subject: `New Journey Feedback from ${userEmail}`,
         html: `
           <h2>Rate the Journey Feedback</h2>
@@ -278,7 +238,6 @@ export class MailService {
     bookingDetails: any,
     locale: ApiLocale = 'en',
   ): Promise<void> {
-    const { transporter, from } = this.getTransporterAndFrom(userEmail);
     const t = (text: string) => translateApiText(text, locale);
 
     if (!this.smtpConfigured) {
@@ -315,8 +274,8 @@ export class MailService {
     const qrSrc = qrBuffer ? 'cid:qrcode' : qrFallbackUrl;
 
     try {
-      await transporter.sendMail({
-        from: from,
+      await this.transporter.sendMail({
+        from: this.from,
         to: userEmail,
         subject: `${t('Your SmatWay Booking Ticket')} — ${bookingDetails.bookingNumber}`,
         html: `
@@ -407,10 +366,7 @@ export class MailService {
     rating: number,
     comment: string,
   ): Promise<void> {
-    const targetEmail = 'tellus@smatway.com';
-    const { transporter, from } = this.getTransporterAndFrom(targetEmail);
-
-    if (transporter === this.transporter && !this.smtpConfigured) {
+    if (!this.smtpConfigured) {
       this.logger.warn(
         `Skipping Site Feedback email from ${userEmail} — SMTP not configured.`,
       );
@@ -418,9 +374,9 @@ export class MailService {
     }
 
     try {
-      await transporter.sendMail({
-        from: from,
-        to: targetEmail,
+      await this.transporter.sendMail({
+        from: this.from,
+        to: this.targetEmail,
         subject: `New Site Feedback from ${userEmail}`,
         html: `
           <h2>Site Feedback Received</h2>
@@ -460,10 +416,7 @@ export class MailService {
       requirements: string;
     },
   ): Promise<void> {
-    const targetEmail = 'charter@smatway.com';
-    const { transporter, from } = this.getTransporterAndFrom(targetEmail);
-
-    if (transporter === this.transporter && !this.smtpConfigured) {
+    if (!this.smtpConfigured) {
       this.logger.warn(
         `Skipping Charter Request email from ${userEmail} — SMTP not configured.`,
       );
@@ -471,9 +424,9 @@ export class MailService {
     }
 
     try {
-      await transporter.sendMail({
-        from: from,
-        to: targetEmail,
+      await this.transporter.sendMail({
+        from: this.from,
+        to: this.targetEmail,
         subject: `New Charter Request from ${userEmail}`,
         html: `
           <h2>Charter Service Request</h2>
