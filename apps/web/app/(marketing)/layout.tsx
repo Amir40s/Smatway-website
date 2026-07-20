@@ -61,7 +61,7 @@ function Navbar() {
     <>
     <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-xl z-50 border-b border-slate-200/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 md:h-20">
+        <div className="flex justify-between items-center h-14 md:h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 cursor-pointer group">
             <div className="bg-linear-to-br from-emerald-500 via-emerald-600 to-teal-600 p-2 md:p-2.5 rounded-xl transition-all duration-300">

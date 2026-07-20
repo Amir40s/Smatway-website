@@ -651,7 +651,7 @@ function Hero() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#fafaf8] pt-24 pb-16 sm:pt-28 sm:pb-20 lg:pt-40 lg:pb-32">
+    <section className="relative overflow-hidden bg-[#fafaf8] pt-20 pb-12 sm:pt-24 sm:pb-16 lg:pt-20 lg:pb-16">
       <div className="absolute inset-0 grain" />
       {/* Decorative blurred ambient blobs — desktop only. Filter blur on a
           700px element is the single most expensive paint op on low-end phones. */}
@@ -665,7 +665,7 @@ function Hero() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-24 items-center">
           {/* Left — content */}
-          <div className="space-y-6 sm:space-y-8 lg:space-y-10">
+          <div className="space-y-4 sm:space-y-5 lg:space-y-5">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               className="inline-flex items-center gap-2.5 bg-white/80 backdrop-blur-sm border border-emerald-200/50 px-4 py-2 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
               <span className="relative flex h-2 w-2">
@@ -714,39 +714,6 @@ function Hero() {
               </Link>
             </motion.div>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              transition={{ duration: 0.7, delay: 0.6, ease: [0.16, 1, 0.3, 1] }} 
-              className="pt-6 border-t border-slate-100/80"
-            >
-              <p className="text-[11px] font-bold tracking-[0.12em] text-slate-400 uppercase mb-4">
-                {t("All Modes of Transport Supported")}
-              </p>
-              <div className="flex flex-wrap items-center gap-3.5 sm:gap-5">
-                {[
-                  { name: "Car", src: "/vehicle-img/car.png" },
-                  { name: "Van", src: "/vehicle-img/van.png" },
-                  { name: "Minibus", src: "/vehicle-img/minibus2.png" },
-                  { name: "Bus", src: "/vehicle-img/bus.jpeg" },
-                  { name: "Train", src: "/vehicle-img/train.png" },
-                  { name: "Ship", src: "/vehicle-img/ship.png" },
-                ].map((item) => (
-                  <div key={item.name} className="flex flex-col items-center gap-1.5 group">
-                    <div className="w-12 h-10 sm:w-14 sm:h-12 bg-slate-50/50 hover:bg-emerald-50/40 rounded-xl border border-slate-200/40 p-1.5 flex items-center justify-center transition-all duration-200 hover:scale-105 hover:border-emerald-200/50 hover:shadow-[0_4px_12px_rgba(16,185,129,0.05)]">
-                      <img 
-                        src={item.src} 
-                        alt={item.name} 
-                        className="w-full h-full object-contain filter group-hover:brightness-105"
-                      />
-                    </div>
-                    <span className="text-[10px] font-semibold text-slate-400 group-hover:text-emerald-600 transition-colors">
-                      {t(item.name as any)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
           </div>
 
           {/* Right — Car video hero */}
@@ -830,6 +797,40 @@ function Hero() {
             </div>
           </motion.div>
         </div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.7, delay: 0.6, ease: [0.16, 1, 0.3, 1] }} 
+          className="mt-2 lg:mt-2 pt-3 sm:pt-4 border-t border-slate-100/80 w-full"
+        >
+          <p className="text-[11px] font-bold tracking-[0.12em] text-slate-400 uppercase mb-4">
+            {t("All Modes of Transport Supported")}
+          </p>
+          <div className="flex flex-nowrap items-center justify-between gap-2 w-full overflow-x-auto pb-2 sm:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+            {[
+              { name: "Car", src: "/vehicle-img/car.png" },
+              { name: "Van", src: "/vehicle-img/van.png" },
+              { name: "Minibus", src: "/vehicle-img/minibus2.png" },
+              { name: "Bus", src: "/vehicle-img/bus.jpeg" },
+              { name: "Train", src: "/vehicle-img/train.png" },
+              { name: "Ship", src: "/vehicle-img/ship.png" },
+            ].map((item) => (
+              <div key={item.name} className="flex flex-col items-center gap-1.5 group min-w-[48px] sm:min-w-[56px]">
+                <div className="w-12 h-10 sm:w-14 sm:h-12 lg:w-[4.25rem] lg:h-[3.5rem] bg-slate-50/50 hover:bg-emerald-50/40 rounded-xl border border-slate-200/40 p-1.5 flex items-center justify-center transition-all duration-200 hover:scale-105 hover:border-emerald-200/50 hover:shadow-[0_4px_12px_rgba(16,185,129,0.05)]">
+                  <img 
+                    src={item.src} 
+                    alt={item.name} 
+                    className="w-full h-full object-contain filter group-hover:brightness-105"
+                  />
+                </div>
+                <span className="text-[10px] font-semibold text-slate-400 group-hover:text-emerald-600 transition-colors">
+                  {t(item.name as any)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -2722,19 +2723,15 @@ export default function Home() {
       <CTA />
 
       {/* Need Charter Button */}
-      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50 flex">
+      <div className="fixed bottom-6 right-4 sm:right-6 sm:bottom-8 z-50 flex">
         <button 
           onClick={() => setIsCharterModalOpen(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl flex items-center justify-center font-semibold text-sm transition-all"
-          style={{
-            writingMode: "vertical-rl",
-            padding: "20px 10px",
-            borderTopLeftRadius: "12px",
-            borderBottomLeftRadius: "12px",
-            boxShadow: "-4px 0 15px rgba(0,0,0,0.1)"
-          }}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgba(16,185,129,0.3)] flex items-center justify-center font-semibold text-sm transition-all hover:-translate-y-1 active:scale-95 px-5 py-3 sm:px-6 sm:py-3.5 rounded-full"
         >
-          {t("Need Charter? Contact Us")}
+          <span className="flex items-center gap-2.5">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            {t("Need Charter? Contact Us")}
+          </span>
         </button>
       </div>
 
