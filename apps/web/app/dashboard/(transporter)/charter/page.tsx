@@ -12,7 +12,7 @@ export default function CharterServicePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     vehicleTypes: "",
     capacity: "",
     amenities: "",
@@ -24,48 +24,51 @@ export default function CharterServicePage() {
     paymentTerms: "",
     maxKilometerCover: "",
     otherConditions: "",
-  });
+  };
 
-  const [images, setImages] = useState<File[]>([]);
+  const [formData, setFormData] = useState(initialFormData);
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
+  const [images, setImages] = useState<File[]>([]);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
 
   useEffect(() => {
-    loadCharter();
-  }, []);
-
-  async function loadCharter() {
-    try {
-      setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'}/charter/me`, {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
-      if (!res.ok) throw new Error("Failed to load charter details");
-      const data = await res.json();
-      if (data) {
-        setFormData({
-          vehicleTypes: data.vehicleTypes?.join(", ") || "",
-          capacity: data.capacity || "",
-          amenities: data.amenities?.join(", ") || "",
-          operatingLocations: data.operatingLocations?.join(", ") || "",
-          serviceTimes: data.serviceTimes || "",
-          charges: data.charges || "",
-          includesFuelAndMaintenance: data.includesFuelAndMaintenance || false,
-          currency: data.currency || "USD",
-          paymentTerms: data.paymentTerms || "",
-          maxKilometerCover: data.maxKilometerCover || "",
-          otherConditions: data.otherConditions || "",
+    async function fetchCharter() {
+      try {
+        setLoading(true);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'}/charter/me`, {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem('auth_token')}`
+          }
         });
-        setExistingPhotos(data.vehiclePhotos || []);
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            setFormData({
+              vehicleTypes: Array.isArray(data.vehicleTypes) ? data.vehicleTypes.join(", ") : data.vehicleTypes || "",
+              capacity: data.capacity || "",
+              amenities: Array.isArray(data.amenities) ? data.amenities.join(", ") : data.amenities || "",
+              operatingLocations: Array.isArray(data.operatingLocations) ? data.operatingLocations.join(", ") : data.operatingLocations || "",
+              serviceTimes: data.serviceTimes || "",
+              charges: data.charges || "",
+              includesFuelAndMaintenance: Boolean(data.includesFuelAndMaintenance),
+              currency: data.currency || "USD",
+              paymentTerms: data.paymentTerms || "",
+              maxKilometerCover: data.maxKilometerCover || "",
+              otherConditions: data.otherConditions || "",
+            });
+            if (Array.isArray(data.vehiclePhotos)) {
+              setExistingPhotos(data.vehiclePhotos);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load charter details", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      // It's okay if it doesn't exist yet
-    } finally {
-      setLoading(false);
     }
-  }
+    fetchCharter();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -99,13 +102,18 @@ export default function CharterServicePage() {
         body: data,
       });
 
-      if (!res.ok) throw new Error("Failed to save charter service");
+      if (!res.ok) throw new Error("Failed to submit charter service offer");
 
-      setSuccess("Charter service saved successfully.");
+      const savedData = await res.json().catch(() => null);
+      if (savedData && Array.isArray(savedData.vehiclePhotos)) {
+        setExistingPhotos(savedData.vehiclePhotos);
+      }
+
+      setSuccess("Charter service offer submitted successfully!");
       setImages([]);
-      loadCharter();
+      setPreviewImages([]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      setError(err instanceof Error ? err.message : "Failed to send charter request");
     } finally {
       setSaving(false);
     }

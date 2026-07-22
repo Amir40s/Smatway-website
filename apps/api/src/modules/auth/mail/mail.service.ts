@@ -465,5 +465,36 @@ export class MailService {
       );
     }
   }
+
+  async sendTransporterCharterOfferEmail(transporterEmail: string, details: any) {
+    const charterRecipient = process.env.CHARTER_EMAIL || 'charter@smatway.com';
+
+    try {
+      await this.getTransporter().sendMail({
+        from: this.from,
+        to: charterRecipient,
+        subject: `New Transporter Charter Offer from ${transporterEmail}`,
+        html: this.appendNoReplyNotice(`
+          <h2>Transporter Charter Service Offer</h2>
+          <p><strong>Transporter Email:</strong> ${transporterEmail}</p>
+          <p><strong>Vehicle Types:</strong> ${Array.isArray(details.vehicleTypes) ? details.vehicleTypes.join(', ') : details.vehicleTypes || 'N/A'}</p>
+          <p><strong>Capacity:</strong> ${details.capacity || 'N/A'}</p>
+          <p><strong>Operating Locations:</strong> ${Array.isArray(details.operatingLocations) ? details.operatingLocations.join(', ') : details.operatingLocations || 'N/A'}</p>
+          <p><strong>Service Times:</strong> ${details.serviceTimes || 'N/A'}</p>
+          <p><strong>Charges:</strong> ${details.charges || 'N/A'} ${details.currency || 'USD'}</p>
+          <p><strong>Includes Fuel & Maintenance:</strong> ${details.includesFuelAndMaintenance ? 'Yes' : 'No'}</p>
+          <p><strong>Payment Terms:</strong> ${details.paymentTerms || 'Standard'}</p>
+          <p><strong>Max KM Cover:</strong> ${details.maxKilometerCover || 'N/A'}</p>
+          <p><strong>Other Conditions:</strong> ${details.otherConditions || 'None'}</p>
+        `),
+      });
+      this.logger.log(`Transporter Charter Offer email sent from ${transporterEmail} to ${charterRecipient}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to send transporter charter offer email from ${transporterEmail}`,
+        error,
+      );
+    }
+  }
 }
 

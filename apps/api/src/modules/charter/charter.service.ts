@@ -67,6 +67,15 @@ export class CharterService {
       vehiclePhotos: combinedPhotos,
     };
 
+    const transporter = await this.prisma.user.findUnique({
+      where: { id: transporterId },
+      select: { email: true },
+    });
+
+    if (transporter) {
+      await this.mailService.sendTransporterCharterOfferEmail(transporter.email, dto);
+    }
+
     if (existing) {
       return this.prisma.charterService.update({
         where: { id: existing.id },
