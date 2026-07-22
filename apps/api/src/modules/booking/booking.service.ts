@@ -11,6 +11,16 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { BookingStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
 import { MailService } from '../auth/mail/mail.service';
 
+function maskTravelerName(fullName?: string | null): string {
+  if (!fullName || !fullName.trim()) return 'Traveler';
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0] || 'Traveler';
+  const firstName = parts[0] || 'Traveler';
+  const lastPart = parts[parts.length - 1] || '';
+  const lastNameInitial = lastPart.charAt(0).toUpperCase();
+  return `${firstName} ${lastNameInitial}.`;
+}
+
 @Injectable()
 export class BookingService {
   constructor(
@@ -96,27 +106,6 @@ export class BookingService {
       totalPrice,
       route: `${transport.departureCity} → ${transport.destinationCity}`,
     });
-
-    if (traveler?.email) {
-      const transporterName =
-        transport.transporter.profile?.companyName ||
-        transport.transporter.name ||
-        'SmatWay Transporter';
-      await this.mailService
-        .sendBookingTicketEmail(traveler.email, {
-          bookingId: booking.id,
-          passengerName: traveler.name,
-          bookingNumber: booking.bookingNumber,
-          route: `${transport.departureCity} -> ${transport.destinationCity}`,
-          dateTime: transport.departureDateTime.toISOString(),
-          seats: dto.seatsBooked,
-          price: `${transport.currency} ${totalPrice.toFixed(2)}`,
-          transporterName,
-        })
-        .catch((err) =>
-          console.error('Failed to send booking ticket email', err),
-        );
-    }
 
     return booking;
   }
@@ -284,7 +273,8 @@ export class BookingService {
           : null,
         user: booking.traveler
           ? {
-              ...booking.traveler,
+              id: booking.traveler.id,
+              name: maskTravelerName(booking.traveler.name),
               avatarUrl: booking.traveler.avatarUrl
                 ? await this.storageService.resolveImageUrl(
                     booking.traveler.avatarUrl,
@@ -326,6 +316,17 @@ export class BookingService {
     return Promise.all(
       bookings.map(async (booking: any) => ({
         ...booking,
+        traveler: booking.traveler
+          ? {
+              id: booking.traveler.id,
+              name: maskTravelerName(booking.traveler.name),
+              avatarUrl: booking.traveler.avatarUrl
+                ? await this.storageService.resolveImageUrl(
+                    booking.traveler.avatarUrl,
+                  )
+                : null,
+            }
+          : null,
         transport: {
           ...booking.transport,
           vehicle: booking.transport.vehicle
@@ -341,7 +342,8 @@ export class BookingService {
         },
         user: booking.traveler
           ? {
-              ...booking.traveler,
+              id: booking.traveler.id,
+              name: maskTravelerName(booking.traveler.name),
               avatarUrl: booking.traveler.avatarUrl
                 ? await this.storageService.resolveImageUrl(
                     booking.traveler.avatarUrl,
@@ -436,7 +438,7 @@ export class BookingService {
           price: `${booking.transport.currency} ${booking.totalPrice}`,
           transporterName,
         })
-        .catch((err) =>
+        .catch((err: any) =>
           console.error('Failed to send booking ticket email', err),
         );
     }
@@ -456,8 +458,10 @@ export class BookingService {
     if (!booking) throw new NotFoundException('Booking not found');
     if (booking.transport.transporterId !== transporterId)
       throw new ForbiddenException();
+    if (booking.paymentStatus === PaymentStatus.PAID || booking.status === BookingStatus.CONFIRMED)
+      throw new BadRequestException('Paid or confirmed bookings cannot be cancelled by the transporter');
     if (booking.status !== BookingStatus.PENDING)
-      throw new BadRequestException('Only pending bookings can be rejected');
+      throw new BadRequestException('Only pending unpaid bookings can be rejected');
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({

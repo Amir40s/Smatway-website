@@ -358,6 +358,9 @@ export default function ProfilePage() {
                           {isUploading ? t("Uploading...") : businessCertificateUrl ? t("Replace Document") : t("Upload Document")}
                         </label>
                         <input id="certificate-upload" type="file" accept="image/jpeg,image/png,application/pdf" onChange={handleCertificateUpload} disabled={isUploading} className="hidden" />
+                        <span className="block mt-2 text-[10px] font-extrabold text-zinc-900 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded border border-slate-200 inline-block">
+                          ACCEPTED FORMATS: PDF, PNG, JPG (MAX 5MB)
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -411,16 +414,18 @@ export default function ProfilePage() {
                     className={comboboxInputClass}
                   />
                 </Field>
-                <Field label={t("Preferred currency")}>
-                  <Combobox
-                    ariaLabel="Preferred currency"
-                    placeholder={t("Type to search currencies…")}
-                    options={currencies.map(c => ({ value: c.code, label: `${c.code} — ${c.name}`, hint: c.symbol, search: [c.name, c.code, c.symbol] }))}
-                    value={preferredCurrency}
-                    onChange={setPreferredCurrency}
-                    className={comboboxInputClass}
-                  />
-                </Field>
+                {profileData.user.accountType !== 'TRAVELER' && (
+                  <Field label={t("Preferred currency")}>
+                    <Combobox
+                      ariaLabel="Preferred currency"
+                      placeholder={t("Type to search currencies…")}
+                      options={currencies.map(c => ({ value: c.code, label: `${c.code} — ${c.name}`, hint: c.symbol, search: [c.name, c.code, c.symbol] }))}
+                      value={preferredCurrency}
+                      onChange={setPreferredCurrency}
+                      className={comboboxInputClass}
+                    />
+                  </Field>
+                )}
               </div>
 
               <Field label={t("Bio")}>

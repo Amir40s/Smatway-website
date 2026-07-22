@@ -7,13 +7,13 @@ import { updateVehicle, getMyVehicles } from "@/lib/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const transportTypes = [
-  { label: "Car", value: "CAR", image: "/vehicle img/car.png" },
-  { label: "Bus", value: "BUS", image: "/vehicle img/bus.jpeg" },
-  { label: "Van", value: "VAN", image: "/vehicle img/van.png" },
-  { label: "Minibus", value: "MINIBUS", image: "/vehicle img/minibus.jpg" },
-  { label: "Ferry", value: "FERRY", image: "/vehicle img/ship.png" },
-  { label: "Train", value: "TRAIN", image: "/vehicle img/train.png" },
-  { label: "Charter", value: "CHARTER", image: "/vehicle img/plan.jpeg" },
+  { label: "Car", value: "CAR", image: "/vehicle-img/car.png" },
+  { label: "Luxury Bus", value: "BUS", image: "/vehicle-img/bus.jpeg" },
+  { label: "Van", value: "VAN", image: "/vehicle-img/van.png" },
+  { label: "Minibus", value: "MINIBUS", image: "/vehicle-img/minibus2.png" },
+  { label: "Ship/Ferry", value: "FERRY", image: "/vehicle-img/ship.png" },
+  { label: "Train", value: "TRAIN", image: "/vehicle-img/train.png" },
+  { label: "Charter", value: "CHARTER", image: "/vehicle-img/plan.jpeg" },
 ];
 
 export default function EditVehiclePage() {
@@ -26,6 +26,7 @@ export default function EditVehiclePage() {
   const [error, setError] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [initialImageCount, setInitialImageCount] = useState(0);
   const [form, setForm] = useState({
     name: "",
     model: "",
@@ -76,8 +77,10 @@ export default function EditVehiclePage() {
         }
         if (vehicle.imageUrls && Array.isArray(vehicle.imageUrls)) {
           setImagePreviews(vehicle.imageUrls);
+          setInitialImageCount(vehicle.imageUrls.length);
         } else if (vehicle.imageUrl) {
           setImagePreviews([vehicle.imageUrl]);
+          setInitialImageCount(1);
         }
       } catch (e) {
         setError("Failed to load vehicle");
@@ -98,7 +101,7 @@ export default function EditVehiclePage() {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    if (images.length + files.length > 5) {
+    if (imagePreviews.length + files.length > 5) {
       setError("You can upload a maximum of 5 images");
       return;
     }
@@ -106,8 +109,9 @@ export default function EditVehiclePage() {
     const validFiles: File[] = [];
 
     for (const file of files) {
-      if (!["image/jpeg", "image/png", "image/gif"].includes(file.type)) {
-        setError("Please upload only valid images (JPG, PNG, or GIF).");
+      const isImage = file.type.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(file.name);
+      if (!isImage) {
+        setError("Please upload a valid image file (JPG, PNG, GIF, WEBP).");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
@@ -117,7 +121,6 @@ export default function EditVehiclePage() {
       validFiles.push(file);
     }
 
-    // Resetting files completely if uploading new ones to match the backend expectation
     setImages(prev => [...prev, ...validFiles]);
     setError("");
 
@@ -135,7 +138,12 @@ export default function EditVehiclePage() {
   }
 
   function removeImage(index: number) {
-    setImages(images.filter((_, idx) => idx !== index));
+    if (index < initialImageCount) {
+      alert("Submitted photos cannot be deleted by transporters. Only Admin can delete submitted photos.");
+      return;
+    }
+    const stagedIndex = index - initialImageCount;
+    setImages(images.filter((_, idx) => idx !== stagedIndex));
     setImagePreviews(imagePreviews.filter((_, idx) => idx !== index));
   }
 
@@ -224,13 +232,20 @@ export default function EditVehiclePage() {
               {imagePreviews.map((preview, index) => (
                 <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group">
                   <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-1.5 right-1.5 bg-rose-600 text-white rounded-full p-1 shadow-sm opacity-90 hover:opacity-100 transition-all"
-                  >
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                  </button>
+                  {index >= initialImageCount ? (
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1.5 right-1.5 bg-rose-600 text-white rounded-full p-1 shadow-sm opacity-90 hover:opacity-100 transition-all cursor-pointer"
+                      title="Remove unsent photo"
+                    >
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    </button>
+                  ) : (
+                    <span className="absolute bottom-1.5 left-1.5 right-1.5 text-[9px] font-extrabold text-center bg-zinc-950/85 text-emerald-400 py-1 px-1 rounded backdrop-blur-sm uppercase tracking-wider">
+                      🔒 Submitted (Admin Only)
+                    </span>
+                  )}
                 </div>
               ))}
               {imagePreviews.length < 5 && (

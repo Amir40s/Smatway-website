@@ -58,9 +58,15 @@ export default function TransporterRoutesPage() {
     const id = requestDeleteModal.id;
     setDeleting(id);
     try {
-      await deleteTransport(id, requestReason);
-      setRoutes((r) => r.map((t) => t.id === id ? { ...t, deleteRequested: true } : t));
+      const res = await deleteTransport(id, requestReason);
+      if (res && res.deleteRequested) {
+        setRoutes((r) => r.map((t) => t.id === id ? { ...t, deleteRequested: true, status: "INACTIVE" } : t));
+      } else {
+        setRoutes((r) => r.filter((t) => t.id !== id));
+      }
       setRequestDeleteModal(null);
+    } catch (err: any) {
+      console.error("Failed to delete route:", err);
     } finally {
       setDeleting(null);
     }
@@ -182,6 +188,12 @@ export default function TransporterRoutesPage() {
                         tone="emerald"
                       >
                         {t("View bookings")}
+                      </GhostButton>
+                      <GhostButton
+                        href={`/dashboard/routes/${route.id}/manifest`}
+                        tone="emerald"
+                      >
+                        {t("Manifest & Payout")}
                       </GhostButton>
                       {!route.deleteRequested ? (
                         <GhostButton

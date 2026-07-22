@@ -13,6 +13,13 @@ const statusColors: Record<string, string> = {
   CANCELLED: "bg-red-50 text-red-600 border-red-200",
 };
 
+function formatTravelerName(name?: string | null): string {
+  if (!name || !name.trim()) return "Traveler";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
+}
+
 export default function RouteBookingsPage() {
   const { id } = useParams<{ id: string }>();
   const [bookings, setBookings] = useState<any[]>([]);
@@ -122,7 +129,7 @@ export default function RouteBookingsPage() {
                   <div className="flex items-center gap-2 mb-1">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusColors[booking.status]}`}>{booking.status}</span>
                   </div>
-                  <p className="font-semibold text-zinc-900 text-sm">{booking.traveler?.name || "Unknown Traveler"}</p>
+                  <p className="font-semibold text-zinc-900 text-sm">{formatTravelerName(booking.traveler?.name || booking.user?.name)}</p>
                   <p className="text-xs text-slate-500 mt-0.5">{booking.seatsBooked} seat{booking.seatsBooked > 1 ? "s" : ""} · {formatPrice(booking.totalPrice, booking.transport?.currency)}</p>
                   <p className="text-xs text-slate-400 mt-0.5">Ref: #{booking.id.slice(0, 8).toUpperCase()} · Booked {new Date(booking.createdAt).toLocaleDateString()}</p>
                 </div>

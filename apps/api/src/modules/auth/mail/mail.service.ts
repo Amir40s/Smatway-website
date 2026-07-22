@@ -22,6 +22,7 @@ export class MailService {
       process.env.MAIL_FROM?.trim() || 'SmatWay <noreply@smatway.com>';
     this.targetEmail =
       process.env.SUPPORT_EMAIL || process.env.SMTP_USER || 'info@smatway.com';
+    this.transporter = this.getTransporter();
 
     if (!this.sendingEnabled) {
       this.logger.warn(
@@ -32,12 +33,16 @@ export class MailService {
         'SMTP_USER or SMTP_PASS is not set — OTP emails cannot be sent even though OTP_SEND_EMAIL is true.',
       );
     }
+  }
 
-    const smtpHost = process.env.SMTP_HOST ?? 'smtp.gmail.com';
+  private getTransporter(): nodemailer.Transporter {
+    const smtpUser = process.env.SMTP_USER ?? '';
+    const smtpPass = process.env.SMTP_PASS ?? '';
+    const smtpHost = process.env.SMTP_HOST ?? 'mail.your-server.de';
     const smtpPort = parseInt(process.env.SMTP_PORT ?? '587');
     const isSecure = smtpPort === 465;
 
-    this.transporter = nodemailer.createTransport({
+    return nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
       secure: isSecure,
@@ -407,6 +412,16 @@ export class MailService {
     }
   }
 
+  private appendNoReplyNotice(html: string): string {
+    const notice = `
+      <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b;">
+        <p style="margin: 0; font-weight: 600;">Please do not reply to this email.</p>
+        <p style="margin: 4px 0 0 0;">This email was sent from an unmonitored mailbox (noreply@smatway.com). For support or inquiries, please contact <a href="mailto:info@smatway.com" style="color: #059669; text-decoration: underline;">info@smatway.com</a>.</p>
+      </div>
+    `;
+    return html + notice;
+  }
+
   async sendCharterRequestEmail(
     userEmail: string,
     details: {
@@ -423,12 +438,14 @@ export class MailService {
       return;
     }
 
+    const charterRecipient = process.env.CHARTER_EMAIL || 'charter@smatway.com';
+
     try {
-      await this.transporter.sendMail({
+      await this.getTransporter().sendMail({
         from: this.from,
-        to: this.targetEmail,
+        to: charterRecipient,
         subject: `New Charter Request from ${userEmail}`,
-        html: `
+        html: this.appendNoReplyNotice(`
           <h2>Charter Service Request</h2>
           <p><strong>Submitted by:</strong> ${userEmail}</p>
           <p><strong>Vehicle Type:</strong> ${details.vehicleType}</p>
@@ -438,15 +455,15 @@ export class MailService {
           <blockquote style="background:#f9f9f9;padding:10px;border-left:5px solid #ccc;">
             ${details.requirements || 'None provided'}
           </blockquote>
-        `,
+        `),
       });
-      this.logger.log(`Charter Request email sent from ${userEmail}`);
+      this.logger.log(`Charter Request email sent from ${userEmail} to ${charterRecipient}`);
     } catch (error) {
       this.logger.error(
-        `Failed to send charter request email from ${userEmail}`,
+        `Failed to send charter request email from ${userEmail} (SMTP error logged)`,
         error,
       );
-      throw error;
     }
   }
 }
+

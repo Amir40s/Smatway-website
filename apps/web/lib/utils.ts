@@ -10,10 +10,11 @@ export function formatTransportType(type?: string | null) {
   const normalized = type.trim().toUpperCase();
   const labels: Record<string, string> = {
     CAR: "Car",
-    BUS: "Bus",
+    BUS: "Luxury Bus",
     VAN: "Van",
     MINIBUS: "Minibus",
-    FERRY: "Ferry",
+    FERRY: "Ship/Ferry",
+    SHIP: "Ship/Ferry",
     TRAIN: "Train",
     CHARTER: "Charter",
   };

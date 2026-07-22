@@ -54,6 +54,9 @@ Subject: ${subject}
 
 Message:
 ${message}
+
+---
+Please do not reply directly to noreply@smatway.com. For support, contact info@smatway.com.
       `,
       attachments,
     };

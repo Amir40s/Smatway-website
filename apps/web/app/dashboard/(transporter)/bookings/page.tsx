@@ -265,8 +265,8 @@ function BookingRow({
                 >
                   {t(booking.status)}
                 </StatusPill>
-                <span className="text-[10px] text-slate-400 font-mono">
-                  #{countryCodeFromName(booking.transport.departureCountry) || "XX"}-{booking.id.slice(0, 6).toUpperCase()}
+                <span className="text-[10px] text-slate-500 font-mono font-bold bg-slate-100 px-1.5 py-0.5 rounded">
+                  {booking.bookingNumber || `#${countryCodeFromName(booking.transport.departureCountry) || "XX"}-${booking.id.slice(0, 6).toUpperCase()}`}
                 </span>
               </div>
               <p className="text-[14px] font-semibold text-zinc-950 truncate">

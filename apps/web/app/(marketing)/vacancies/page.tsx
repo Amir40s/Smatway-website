@@ -8,6 +8,7 @@ import { Trans } from "@/components/Trans";
 export default function VacanciesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalSubject, setModalSubject] = useState("");
+
   const handleApplyClick = (subject: string) => {
     setModalSubject(subject);
     setIsModalOpen(true);
@@ -31,24 +32,6 @@ export default function VacanciesPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-        {/* General Vacancies */}
-        <div className="bg-white rounded-3xl p-8 md:p-10 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
-          <div className="bg-emerald-50 w-14 h-14 rounded-2xl flex items-center justify-center mb-6">
-            <Briefcase className="w-7 h-7 text-emerald-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-zinc-900 mb-4"><Trans tKey="General Vacancies" /></h2>
-          <p className="text-slate-600 leading-relaxed mb-8">
-            <Trans tKey="Looking for employment? Submit your CV to be considered for current and future opportunities across various roles in our organization and partner network." />
-          </p>
-          <button
-            onClick={() => handleApplyClick("General Employment Inquiry")}
-            className="inline-flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-6 py-3 rounded-xl transition-colors cursor-pointer"
-          >
-            <Trans tKey="Submit Your CV" /> <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
-          </button>
-        </div>
-
         {/* Driver Vacancies */}
         <div className="bg-white rounded-3xl p-8 md:p-10 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
           <div className="bg-teal-50 w-14 h-14 rounded-2xl flex items-center justify-center mb-6">
@@ -65,7 +48,6 @@ export default function VacanciesPage() {
             <Trans tKey="Submit Your CV" /> <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
           </button>
         </div>
-      </div>
 
       {/* CTA Sections */}
       <div className="bg-zinc-950 rounded-[2.5rem] p-8 md:p-14 text-white">
@@ -124,7 +106,13 @@ export default function VacanciesPage() {
         <div className="pt-8 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Mail className="w-5 h-5 text-slate-500" />
           <span className="text-slate-300"><Trans tKey="Send Email to:" /></span>
-          <a href="mailto:careers@smatway.com" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors text-lg" dir="ltr">
+          <a
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=careers@smatway.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors text-lg cursor-pointer underline decoration-emerald-500/40 hover:decoration-emerald-400"
+            dir="ltr"
+          >
             careers@smatway.com
           </a>
         </div>

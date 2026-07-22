@@ -200,7 +200,11 @@ export default function ApplyModal({ isOpen, onClose, defaultSubject }: ApplyMod
                                   <span><span className="font-semibold text-emerald-600">Click to upload</span> or drag and drop</span>
                                 )}
                               </div>
-                              <p className="text-xs text-slate-500 mt-1">PDF, DOC, DOCX up to 5MB</p>
+                              <div className="mt-2.5">
+                                <span className="inline-block px-3 py-1 bg-zinc-900 text-white font-extrabold text-xs tracking-wider rounded-lg uppercase shadow-sm">
+                                  ACCEPTED FORMATS: PDF, DOC, DOCX (MAX 5MB)
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>

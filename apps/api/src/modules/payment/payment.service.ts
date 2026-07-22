@@ -308,11 +308,12 @@ export class PaymentService {
     let paymentCurrency = booking.transport.currency || 'NGN';
     let paymentAmount = Number(booking.totalPrice);
 
-    // Standard Paystack merchant accounts only support NGN, GHS, and USD directly.
-    // Other currencies will be converted to NGN to prevent "Currency not supported by merchant" errors.
-    const PAYSTACK_SUPPORTED_CURRENCIES = ['NGN', 'GHS', 'USD'];
+    // Paystack standard merchant accounts require NGN currency.
+    // Convert non-NGN currencies to NGN to prevent "Currency not supported by merchant" errors.
+    const PAYSTACK_SUPPORTED_CURRENCIES = ['NGN'];
     if (!PAYSTACK_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
       const exchangeRatesToUSD: Record<string, number> = {
+        USD: 1.0,
         PKR: 0.0036,
         INR: 0.012,
         EUR: 1.08,
@@ -639,6 +640,51 @@ export class PaymentService {
       }
     }
 
+    if (gateway === 'FLUTTERWAVE') {
+      if (!this.flutterwaveSecretKey) {
+        throw new InternalServerErrorException('Flutterwave secret key is not configured');
+      }
+      const txRef = `el_flw_${normalizeCountryCode(luggage.booking.transport.departureCountry)}_${luggage.id}_${Date.now()}`;
+      const payload = {
+        tx_ref: txRef,
+        amount: Number(luggage.amount),
+        currency: luggage.currency || 'NGN',
+        redirect_url: finalCallbackUrl.includes('?') ? `${finalCallbackUrl}&reference=${txRef}` : `${finalCallbackUrl}?reference=${txRef}`,
+        customer: {
+          email: luggage.booking.traveler.email || 'traveler@smatway.com',
+          name: luggage.booking.traveler.name || 'Traveler',
+        },
+        customizations: {
+          title: 'SmatWay Excess Luggage Payment',
+          description: luggage.description || 'Excess luggage charge',
+        },
+        meta: {
+          excessLuggageId: luggage.id,
+          bookingId: luggage.bookingId,
+        },
+      };
+
+      try {
+        const response = await firstValueFrom(
+          this.httpService.post(
+            'https://api.flutterwave.com/v3/payments',
+            payload,
+            {
+              headers: {
+                Authorization: `Bearer ${this.flutterwaveSecretKey}`,
+                'Content-Type': 'application/json',
+              },
+            },
+          ),
+        );
+        return { authorization_url: response.data.data.link, reference: txRef };
+      } catch (error: any) {
+        throw new InternalServerErrorException(
+          error.response?.data?.message || 'Flutterwave payment initialization failed',
+        );
+      }
+    }
+
     // Default to Paystack for simplicity
     if (!this.paystackSecretKey) {
       throw new InternalServerErrorException(
@@ -649,10 +695,15 @@ export class PaymentService {
     let paymentCurrency = luggage.currency || 'NGN';
     let paymentAmount = Number(luggage.amount);
 
-    const PAYSTACK_SUPPORTED_CURRENCIES = ['NGN', 'GHS', 'USD'];
+    const PAYSTACK_SUPPORTED_CURRENCIES = ['NGN'];
     if (!PAYSTACK_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
       const rateUSDToNGN = 1 / 0.00067;
-      paymentAmount = paymentAmount * rateUSDToNGN;
+      if (paymentCurrency === 'USD') {
+        paymentAmount = paymentAmount * rateUSDToNGN;
+      } else {
+        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
+        paymentAmount = (paymentAmount * rateToUSD) * rateUSDToNGN;
+      }
       paymentCurrency = 'NGN';
     }
 
@@ -660,10 +711,10 @@ export class PaymentService {
 
     const payload = {
       amount: amountInMinorUnits,
-      email: luggage.booking.traveler.email,
+      email: luggage.booking.traveler.email || 'traveler@smatway.com',
       reference: `el_${normalizeCountryCode(luggage.booking.transport.departureCountry)}_${luggage.id}_${Date.now()}`,
       currency: paymentCurrency,
-      callback_url: callbackUrl || fallbackCallbackUrl,
+      callback_url: finalCallbackUrl.includes('?') ? `${finalCallbackUrl}&reference=el_${luggage.id}` : `${finalCallbackUrl}?reference=el_${luggage.id}`,
       metadata: {
         excessLuggageId: luggage.id,
         bookingId: luggage.bookingId,
@@ -696,6 +747,35 @@ export class PaymentService {
       const luggageId = reference.split('_')[3];
       const luggage = await this.prisma.excessLuggage.findUnique({ where: { id: luggageId } });
       if (!luggage) throw new NotFoundException('Excess luggage charge not found');
+      return { success: luggage.status === PaymentStatus.PAID, status: luggage.status, excessLuggageId: luggageId };
+    }
+
+    if (reference.startsWith('el_flw_')) {
+      const parts = reference.split('_');
+      const luggageId = parts[3];
+      const luggage = await this.prisma.excessLuggage.findUnique({ where: { id: luggageId } });
+      if (!luggage) throw new NotFoundException('Excess luggage charge not found');
+
+      try {
+        const response = await firstValueFrom(
+          this.httpService.get(
+            `https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref=${reference}`,
+            {
+              headers: { Authorization: `Bearer ${this.flutterwaveSecretKey}` },
+            },
+          ),
+        );
+        const data = response.data?.data;
+        if (data && data.status === 'successful') {
+          await this.prisma.excessLuggage.update({
+            where: { id: luggageId },
+            data: { status: PaymentStatus.PAID, paymentMethod: PaymentMethod.FLUTTERWAVE },
+          });
+          return { success: true, status: 'PAID', excessLuggageId: luggageId };
+        }
+      } catch (e) {
+        // Fallback
+      }
       return { success: luggage.status === PaymentStatus.PAID, status: luggage.status, excessLuggageId: luggageId };
     }
 

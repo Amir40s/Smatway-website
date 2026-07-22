@@ -24,13 +24,13 @@ import {
 
 const transportTypes = [
   { label: "All types", value: "All", image: null },
-  { label: "Car", value: "CAR", image: "/vehicle img/car.png" },
-  { label: "Van", value: "VAN", image: "/vehicle img/van.png" },
-  { label: "Minibus", value: "MINIBUS", image: "/vehicle img/minibus.jpg" },
-  { label: "Bus", value: "BUS", image: "/vehicle img/bus.jpeg" },
-  { label: "Ferry", value: "FERRY", image: "/vehicle img/ship.png" },
-  { label: "Train", value: "TRAIN", image: "/vehicle img/train.png" },
-  { label: "Charter", value: "CHARTER", image: "/vehicle img/plan.jpeg" },
+  { label: "Car", value: "CAR", image: "/vehicle-img/car.png" },
+  { label: "Van", value: "VAN", image: "/vehicle-img/van.png" },
+  { label: "Minibus", value: "MINIBUS", image: "/vehicle-img/minibus2.png" },
+  { label: "Luxury Bus", value: "BUS", image: "/vehicle-img/bus.jpeg" },
+  { label: "Ship/Ferry", value: "FERRY", image: "/vehicle-img/ship.png" },
+  { label: "Train", value: "TRAIN", image: "/vehicle-img/train.png" },
+  { label: "Charter", value: "CHARTER", image: "/vehicle-img/plan.jpeg" },
 ] as const;
 
 export default function SearchRidesPage() {
@@ -183,14 +183,20 @@ export default function SearchRidesPage() {
                       <SelectTrigger className="w-full border-0 bg-transparent p-0 h-auto font-medium text-sm text-zinc-900 shadow-none hover:bg-transparent focus-visible:ring-0">
                         <SelectValue placeholder={t("All types")} />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="min-w-[220px]">
                         {transportTypes.map((tr) => (
-                          <SelectItem key={tr.value} value={tr.value}>
-                            <div className="flex items-center gap-3 py-0.5">
-                              {tr.image && (
-                                <img src={tr.image} alt={tr.label} className="w-16 h-12 object-contain rounded-sm" />
+                          <SelectItem key={tr.value} value={tr.value} className="cursor-pointer py-2">
+                            <div className="flex items-center gap-3">
+                              {tr.image ? (
+                                <div className="w-10 h-7 rounded bg-slate-100/80 p-0.5 border border-slate-200/60 flex items-center justify-center shrink-0 overflow-hidden">
+                                  <img src={tr.image} alt={tr.label} className="w-full h-full object-contain" />
+                                </div>
+                              ) : (
+                                <div className="w-10 h-7 rounded bg-slate-100/60 border border-slate-200/50 flex items-center justify-center shrink-0 text-[10px] font-extrabold text-slate-400">
+                                  ALL
+                                </div>
                               )}
-                              <span className="font-medium text-sm">{t(tr.label)}</span>
+                              <span className="font-semibold text-sm text-zinc-900">{t(tr.label)}</span>
                             </div>
                           </SelectItem>
                         ))}

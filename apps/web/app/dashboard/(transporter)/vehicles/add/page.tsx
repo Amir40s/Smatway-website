@@ -7,13 +7,13 @@ import { createVehicle } from "@/lib/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const transportTypes = [
-  { label: "Car", value: "CAR", image: "/vehicle img/car.png" },
-  { label: "Bus", value: "BUS", image: "/vehicle img/bus.jpeg" },
-  { label: "Van", value: "VAN", image: "/vehicle img/van.png" },
-  { label: "Minibus", value: "MINIBUS", image: "/vehicle img/minibus.jpg" },
-  { label: "Ferry", value: "FERRY", image: "/vehicle img/ship.png" },
-  { label: "Train", value: "TRAIN", image: "/vehicle img/train.png" },
-  { label: "Charter", value: "CHARTER", image: "/vehicle img/plan.jpeg" },
+  { label: "Car", value: "CAR", image: "/vehicle-img/car.png" },
+  { label: "Luxury Bus", value: "BUS", image: "/vehicle-img/bus.jpeg" },
+  { label: "Van", value: "VAN", image: "/vehicle-img/van.png" },
+  { label: "Minibus", value: "MINIBUS", image: "/vehicle-img/minibus2.png" },
+  { label: "Ship/Ferry", value: "FERRY", image: "/vehicle-img/ship.png" },
+  { label: "Train", value: "TRAIN", image: "/vehicle-img/train.png" },
+  { label: "Charter", value: "CHARTER", image: "/vehicle-img/plan.jpeg" },
 ];
 
 export default function AddVehiclePage() {
@@ -71,8 +71,9 @@ export default function AddVehiclePage() {
     const validFiles: File[] = [];
 
     for (const file of files) {
-      if (!["image/jpeg", "image/png", "image/gif"].includes(file.type)) {
-        setError("Please upload only valid images (JPG, PNG, or GIF).");
+      const isImage = file.type.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(file.name);
+      if (!isImage) {
+        setError("Please upload a valid image file (JPG, PNG, GIF, WEBP).");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {

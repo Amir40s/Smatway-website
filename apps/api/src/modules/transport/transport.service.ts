@@ -535,13 +535,21 @@ export class TransportService {
   }
 
   async remove(id: string, transporterId: string, reason?: string) {
-    const transport = await this.prisma.transport.findUnique({ where: { id } });
+    const transport = await this.prisma.transport.findUnique({
+      where: { id },
+      include: { _count: { select: { bookings: true } } },
+    });
     if (!transport) throw new NotFoundException('Transport not found');
     if (transport.transporterId !== transporterId)
       throw new ForbiddenException();
+
+    if (transport._count?.bookings === 0) {
+      return this.prisma.transport.delete({ where: { id } });
+    }
+
     return this.prisma.transport.update({
       where: { id },
-      data: { deleteRequested: true, deleteReason: reason },
+      data: { status: TransportStatus.INACTIVE, deleteRequested: true, deleteReason: reason },
     });
   }
 
@@ -571,5 +579,78 @@ export class TransportService {
       where: { vehicleId },
       data: { status: TransportStatus.INACTIVE },
     });
+  }
+
+  async getTripManifest(transportId: string, transporterId: string) {
+    const transport = await this.prisma.transport.findUnique({
+      where: { id: transportId },
+      include: {
+        vehicle: true,
+        transporter: { select: { id: true, name: true } },
+        bookings: {
+          include: {
+            traveler: { select: { id: true, name: true, phoneNumber: true } },
+            excessLuggages: true,
+          },
+        },
+      },
+    });
+
+    if (!transport) throw new NotFoundException('Transport not found');
+    if (transport.transporterId !== transporterId) throw new ForbiddenException();
+
+    const paidBookings = transport.bookings.filter(
+      (b) => b.paymentStatus === 'PAID' || b.status === 'CONFIRMED' || b.status === 'COMPLETED',
+    );
+
+    const totalTravelers = paidBookings.reduce((sum, b) => sum + b.seatsBooked, 0);
+    const totalFaresPaid = paidBookings.reduce((sum, b) => sum + Number(b.totalPrice), 0);
+
+    const totalExcessLuggagePaid = paidBookings.reduce((sum, b) => {
+      const paidCharges = b.excessLuggages.filter((el) => el.status === 'PAID');
+      return sum + paidCharges.reduce((s, el) => s + Number(el.amount), 0);
+    }, 0);
+
+    const grossTotal = totalFaresPaid + totalExcessLuggagePaid;
+    const commissionRate = 0.10; // 10% Platform Commission
+    const platformCommission = Math.round(grossTotal * commissionRate * 100) / 100;
+    const netPayoutToTransporter = Math.round((grossTotal - platformCommission) * 100) / 100;
+
+    const isCompleted = transport.status === TransportStatus.INACTIVE || (transport.maxReachDateTime ? new Date(transport.maxReachDateTime) < new Date() : false);
+    const payoutStatus = isCompleted ? 'Payment Processed' : 'Pending Trip Completion';
+
+    const manifestTravelers = paidBookings.map((b) => {
+      const parts = (b.traveler?.name || 'Traveler').trim().split(/\s+/);
+      const firstName = parts[0] || 'Traveler';
+      const lastPart = parts[parts.length - 1] || '';
+      const maskedName = parts.length > 1 && lastPart ? `${firstName} ${lastPart.charAt(0).toUpperCase()}.` : firstName;
+      return {
+        bookingId: b.id,
+        bookingNumber: b.bookingNumber || `#${b.id.slice(0, 8)}`,
+        maskedName,
+        seatsBooked: b.seatsBooked,
+        totalFare: b.totalPrice,
+        excessLuggagePaid: b.excessLuggages.filter((el) => el.status === 'PAID').reduce((s, el) => s + Number(el.amount), 0),
+        status: b.status,
+      };
+    });
+
+    return {
+      transportId: transport.id,
+      route: `${transport.departureCity} (${transport.departureCountry}) → ${transport.destinationCity} (${transport.destinationCountry})`,
+      vehicle: transport.vehicle ? `${transport.vehicle.name} (${transport.vehicle.plateNumber})` : 'Assigned Vehicle',
+      departureDateTime: transport.departureDateTime,
+      totalTravelersManifest: totalTravelers,
+      totalFaresPaid,
+      totalExcessLuggagePaid,
+      grossTotal,
+      platformCommissionRate: '10%',
+      platformCommission,
+      netPayoutToTransporter,
+      payoutStatus,
+      payoutStatusColor: isCompleted ? 'purple' : 'emerald',
+      currency: transport.currency || 'NGN',
+      travelers: manifestTravelers,
+    };
   }
 }

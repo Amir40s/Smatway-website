@@ -91,6 +91,12 @@ export class TransportController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get(':id/manifest')
+  getTripManifest(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.transportService.getTripManifest(id, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete('vehicle/:vehicleId')
   deleteByVehicle(
     @Param('vehicleId') vehicleId: string,

@@ -36,6 +36,7 @@ const transporterNav = [
   { key: "/dashboard/t-announcements", label: "Announcements", icon: MegaphoneIcon },
   { key: "/dashboard/payments", label: "Payments", icon: CreditCardIcon },
   { key: "/dashboard/charter", label: "Charter Service", icon: CarIcon },
+  { key: "/dashboard/driver", label: "Driver Station", icon: CarIcon },
   { key: "/dashboard/profile", label: "Profile", icon: UserIcon },
   { key: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
 ];

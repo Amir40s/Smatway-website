@@ -6,9 +6,18 @@ import { PaymentStatus } from '@prisma/client';
 export class ExcessLuggageService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createCharge(bookingId: string, amount: number, description?: string) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: bookingId },
+  async createCharge(bookingIdOrNumber: string, amount: number, description?: string) {
+    const searchStr = bookingIdOrNumber.trim();
+    const booking = await this.prisma.booking.findFirst({
+      where: {
+        OR: [
+          { id: searchStr },
+          { bookingNumber: searchStr },
+          { bookingNumber: searchStr.toUpperCase() },
+          { bookingNumber: searchStr.toLowerCase() },
+          { id: { startsWith: searchStr.toLowerCase().replace('#', '') } },
+        ],
+      },
       include: { transport: true },
     });
 
@@ -27,17 +36,44 @@ export class ExcessLuggageService {
     });
   }
 
-  async getChargesByBookingId(bookingId: string) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: { excessLuggages: true },
+  async getChargesByBookingId(bookingIdOrNumber: string) {
+    const searchStr = bookingIdOrNumber.trim();
+    const booking = await this.prisma.booking.findFirst({
+      where: {
+        OR: [
+          { id: searchStr },
+          { bookingNumber: searchStr },
+          { bookingNumber: searchStr.toUpperCase() },
+          { bookingNumber: searchStr.toLowerCase() },
+          { id: { startsWith: searchStr.toLowerCase().replace('#', '') } },
+        ],
+      },
+      include: {
+        excessLuggages: true,
+        transport: { include: { vehicle: true } },
+        traveler: { select: { id: true, name: true, phoneNumber: true } },
+      },
     });
 
     if (!booking) {
-      throw new NotFoundException('Booking not found');
+      throw new NotFoundException('Booking not found. Please verify the ticket number.');
     }
 
-    return booking.excessLuggages;
+    return {
+      booking: {
+        id: booking.id,
+        bookingNumber: booking.bookingNumber || `#${booking.id.slice(0, 8).toUpperCase()}`,
+        status: booking.status,
+        paymentStatus: booking.paymentStatus,
+        seatsBooked: booking.seatsBooked,
+        totalPrice: booking.totalPrice,
+        currency: booking.transport.currency || 'NGN',
+        travelerName: booking.traveler?.name || 'Traveler',
+        routeName: `${booking.transport.departureCity} → ${booking.transport.destinationCity}`,
+        vehicleName: booking.transport.vehicle ? booking.transport.vehicle.name : 'Assigned Vehicle',
+      },
+      excessLuggages: booking.excessLuggages,
+    };
   }
 
   async getChargeById(id: string) {
