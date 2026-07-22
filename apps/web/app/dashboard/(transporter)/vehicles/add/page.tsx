@@ -71,13 +71,13 @@ export default function AddVehiclePage() {
     const validFiles: File[] = [];
 
     for (const file of files) {
-      const isImage = file.type.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(file.name);
-      if (!isImage) {
-        setError("Please upload a valid image file (JPG, PNG, GIF, WEBP).");
+      const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+      if (!isPdf) {
+        setError("Please upload a valid PDF file.");
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Each image must be less than 5MB");
+      if (file.size > 20 * 1024 * 1024) {
+        setError("Each file must be less than 20MB");
         return;
       }
       validFiles.push(file);
@@ -135,8 +135,8 @@ export default function AddVehiclePage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-zinc-900">Vehicle Photos (Upload up to 5)</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Upload front, side, back, and interior views of the vehicle.</p>
+              <h3 className="text-sm font-semibold text-zinc-900">Vehicle Documents (Upload up to 5)</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Upload PDF documents of the vehicle front, side, back, and interior views.</p>
             </div>
             {images.length < 5 && (
               <button
@@ -160,15 +160,16 @@ export default function AddVehiclePage() {
                 <svg className="w-8 h-8 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <p className="text-base font-medium text-zinc-900">Upload images</p>
-                <p className="text-sm font-bold text-zinc-500">Only JPG, PNG or GIF (Max 5MB each)</p>
+                <p className="text-base font-medium text-zinc-900">Upload documents</p>
+                <p className="text-sm font-bold text-zinc-500">Only PDF (Max 20MB each)</p>
               </div>
             </button>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {imagePreviews.map((preview, index) => (
-                <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group">
-                  <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group flex flex-col items-center justify-center p-2">
+                  <svg className="w-10 h-10 text-rose-500 mb-2" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9.5 11.5c0 .8-.7 1.5-1.5 1.5H7v2H5.5V7H8c.8 0 1.5.7 1.5 1.5v3zm5 2c0 .8-.7 1.5-1.5 1.5h-2.5V7H13c.8 0 1.5.7 1.5 1.5v5zm4-1.5h-2.5V14h-1.5V7h4v1.5h-2.5v1h2.5V12zM7.5 10h-2V8.5h2V10zm4.5 3h-2V8.5h2V13z"/></svg>
+                  <span className="text-xs font-medium text-slate-600 truncate w-full text-center">PDF {index + 1}</span>
                   <button
                     type="button"
                     onClick={() => removeImage(index)}
@@ -195,7 +196,7 @@ export default function AddVehiclePage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="application/pdf"
             multiple
             onChange={handleImageChange}
             className="hidden"

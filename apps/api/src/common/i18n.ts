@@ -505,6 +505,14 @@ const apiTranslations: Record<
     ha: 'Masu sufuri kawai za su iya ganin sanarwar da suka wallafa',
     es: 'Solo los transportistas pueden ver sus anuncios publicados',
   },
+  'Please do not reply or send Email to noreply@smatway.com.': {
+    fr: 'Veuillez ne pas répondre ni envoyer d’e-mail à noreply@smatway.com.',
+    pt: 'Por favor, não responda nem envie e-mail para noreply@smatway.com.',
+    ar: 'يرجى عدم الرد أو إرسال بريد إلكتروني إلى noreply@smatway.com.',
+    sw: 'Tafadhali usijibu wala kutuma barua pepe kwa noreply@smatway.com.',
+    ha: 'Duk da haka kar ka amsa ko aika imel zuwa noreply@smatway.com.',
+    es: 'Por favor no responda ni envíe correos a noreply@smatway.com.',
+  },
   'Only travelers can give feedback': {
     fr: 'Seuls les voyageurs peuvent donner un retour',
     pt: 'Apenas viajantes podem enviar feedback',

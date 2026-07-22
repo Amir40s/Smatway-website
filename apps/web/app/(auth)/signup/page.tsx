@@ -485,7 +485,7 @@ export default function SignUpPage() {
                 onChange={(v) => setFormData(prev => ({
                   ...prev,
                   country: v,
-                  preferredCurrency: prev.preferredCurrency || defaultCurrencyForCountry(v),
+                  preferredCurrency: accountType === "transporter" ? (prev.preferredCurrency || defaultCurrencyForCountry(v)) : "",
                 }))}
                 className={inputBase.replace("pl-10 ", "")}
               />
@@ -523,21 +523,23 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          {/* Preferred currency — defaults based on country selection, user can override */}
-          <div>
-            <label htmlFor="preferredCurrency" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Preferred currency")}</label>
-            <Combobox
-              id="preferredCurrency"
-              ariaLabel="Preferred currency"
-              placeholder={t("Type to search currencies…")}
-              leftIcon={<span className="text-zinc-400 font-mono text-[13px] font-semibold">¤</span>}
-              options={currencies.map(c => ({ value: c.code, label: `${c.code} — ${c.name}`, hint: c.symbol, search: [c.name, c.code, c.symbol] }))}
-              value={formData.preferredCurrency}
-              onChange={(v) => setFormData(prev => ({ ...prev, preferredCurrency: v }))}
-              className={inputBase.replace("pl-10 ", "")}
-            />
-            <p className="mt-1 text-[11px] text-zinc-500">{t("Used for account preferences. You can change this later in your profile.")}</p>
-          </div>
+          {/* Preferred currency — Only displayed for Transporters so they can set fares in their currency */}
+          {accountType === "transporter" && (
+            <div>
+              <label htmlFor="preferredCurrency" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-zinc-700">{t("Preferred currency")}</label>
+              <Combobox
+                id="preferredCurrency"
+                ariaLabel="Preferred currency"
+                placeholder={t("Type to search currencies…")}
+                leftIcon={<span className="text-zinc-400 font-mono text-[13px] font-semibold">¤</span>}
+                options={currencies.map(c => ({ value: c.code, label: `${c.code} — ${c.name}`, hint: c.symbol, search: [c.name, c.code, c.symbol] }))}
+                value={formData.preferredCurrency}
+                onChange={(v) => setFormData(prev => ({ ...prev, preferredCurrency: v }))}
+                className={inputBase.replace("pl-10 ", "")}
+              />
+              <p className="mt-1 text-[11px] text-zinc-500">{t("Used for fare listings and account payout preferences.")}</p>
+            </div>
+          )}
 
           {accountType === "transporter" && (
            <div className="space-y-4 rounded-2xl border border-zinc-200 bg-zinc-50/60 p-4">

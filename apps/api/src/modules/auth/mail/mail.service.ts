@@ -83,6 +83,7 @@ export class MailService {
           <p>${t('Click the link below to set a new password. This link expires in 1 hour.')}</p>
           <p><a href="${resetUrl}">${t('Reset Password')}</a></p>
           <p>${t('If you did not request this, ignore this email — your password will not change.')}</p>
+          <p style="font-size:12px;color:#64748b;margin-top:20px;padding-top:12px;border-top:1px solid #e2e8f0;">${t('Please do not reply or send Email to noreply@smatway.com.')}</p>
         `,
         text: `
           ${t('You requested a password reset for your SmatWay account.')}
@@ -91,6 +92,8 @@ export class MailService {
           ${resetUrl}
           
           ${t('If you did not request this, ignore this email — your password will not change.')}
+          
+          ${t('Please do not reply or send Email to noreply@smatway.com.')}
         `
           .trim()
           .replace(/^[ \t]+/gm, ''),
@@ -130,7 +133,7 @@ export class MailService {
       await this.transporter.sendMail({
         from: this.from,
         to: email,
-        subject: `${code} ${t('is your SmatWay verification code')}`,
+        subject: `${code} ${t('is your SmatWay verification code. Please do not reply or send Email to noreply@smatway.com')}`,
         html: `
           <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#0f172a;">
             <div style="background:linear-gradient(135deg,#10b981,#0d9488);height:4px;border-radius:4px;margin-bottom:32px;"></div>
@@ -145,7 +148,10 @@ export class MailService {
             <p style="font-size:13px;line-height:1.6;color:#64748b;margin:24px 0 0 0;">
               ${t('If you did not sign up for SmatWay, ignore this email — no account will be created without this code.')}
             </p>
-            <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
+            <div style="margin-top:20px;padding:12px 16px;background:#f8fafc;border-radius:8px;font-size:12px;line-height:1.5;color:#64748b;border:1px solid #e2e8f0;text-align:center;">
+              ${t('Please do not reply or send Email to noreply@smatway.com.')}
+            </div>
+            <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
               ${t('SmatWay — travel the way it should be.')}
             </div>
           </div>
@@ -159,6 +165,8 @@ export class MailService {
           ${t('Expires in 10 minutes')}
           
           ${t('If you did not sign up for SmatWay, ignore this email — no account will be created without this code.')}
+          
+          ${t('Please do not reply or send Email to noreply@smatway.com.')}
           
           ${t('SmatWay — travel the way it should be.')}
         `
@@ -332,6 +340,7 @@ export class MailService {
 
             <!-- Footer -->
             <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
+              <p style="margin:0 0 8px 0;font-size:12px;color:#64748b;">${t('Please do not reply or send Email to noreply@smatway.com.')}</p>
               ${t('SmatWay — travel the way it should be.')}
             </div>
           </div>
@@ -345,6 +354,7 @@ export class MailService {
           ${t('Total Price')}: ${bookingDetails.price}
           ${t('Transporter')}: ${bookingDetails.transporterName}
           ${t('Driver Scan Code (QR)')}: ${qrFallbackUrl}
+          ${t('Please do not reply or send Email to noreply@smatway.com.')}
           ${t('Thank you for booking with SmatWay!')}
         `
           .trim()
@@ -415,7 +425,7 @@ export class MailService {
   private appendNoReplyNotice(html: string): string {
     const notice = `
       <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b;">
-        <p style="margin: 0; font-weight: 600;">Please do not reply to this email.</p>
+        <p style="margin: 0; font-weight: 600;">Please do not reply or send Email to noreply@smatway.com.</p>
         <p style="margin: 4px 0 0 0;">This email was sent from an unmonitored mailbox (noreply@smatway.com). For support or inquiries, please contact <a href="mailto:info@smatway.com" style="color: #059669; text-decoration: underline;">info@smatway.com</a>.</p>
       </div>
     `;
