@@ -150,7 +150,7 @@ model UserProfile {
   licenseNumber           String?
   licenseExpiry           DateTime?
   vehicleType             String?
-  businessCertificateUrl  String?
+  businessCertificateUrls String[] @default([])
 
   bankName                String?
   bankAccountNumber       String?

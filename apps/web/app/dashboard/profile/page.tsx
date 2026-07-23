@@ -9,6 +9,7 @@ import {
   getProfile, updateProfile, uploadAvatar, uploadBusinessCertificate,
   addEmergencyContact, deleteEmergencyContact,
 } from "@/lib/api";
+import { compressImage } from "@/lib/imageCompression";
 import type { ProfileResponse } from "@/types/profile.types";
 import {
   Page, Reveal, PageHeader, Skeleton, PrimaryButton, GhostButton, spring,
@@ -33,7 +34,7 @@ export default function ProfilePage() {
   const [businessName, setBusinessName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [businessCertificateUrl, setBusinessCertificateUrl] = useState<string | null>(null);
+  const [businessCertificateUrls, setBusinessCertificateUrls] = useState<string[]>([]);
 
   // NEW Transporter Bank Details
   const [bankName, setBankName] = useState("");
@@ -42,6 +43,7 @@ export default function ProfilePage() {
 
   const [addingContact, setAddingContact] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isCompressingAvatar, setIsCompressingAvatar] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", relation: "family", phone: "" });
   const t = useT();
 
@@ -65,7 +67,7 @@ export default function ProfilePage() {
       setBusinessName(data.profile?.companyName || "");
       setBio(data.profile?.bio || "");
       setAvatarUrl(data.user.avatarUrl || null);
-      setBusinessCertificateUrl((data.profile as any)?.businessCertificateUrl || null);
+      setBusinessCertificateUrls((data.profile as any)?.businessCertificateUrls || []);
       setBankName(data.profile?.bankName || "");
       setBankAccountNumber(data.profile?.bankAccountNumber || "");
       setBankAccountHolderName(data.profile?.bankAccountHolderName || "");
@@ -81,7 +83,9 @@ export default function ProfilePage() {
     if (!file) return;
     try {
       setError(null);
-      const { avatarUrl: url } = await uploadAvatar(file);
+      setIsCompressingAvatar(true);
+      const compressedFile = await compressImage(file);
+      const { avatarUrl: url } = await uploadAvatar(compressedFile);
       setAvatarUrl(url);
       // Push to the navbar immediately — no reload, no layout refetch.
       emitAvatarChange(url);
@@ -89,24 +93,42 @@ export default function ProfilePage() {
       setTimeout(() => setSuccess(null), 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload avatar");
+    } finally {
+      setIsCompressingAvatar(false);
+      // Reset input
+      e.target.value = "";
     }
   }
 
   async function handleCertificateUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.currentTarget.files?.[0];
-    if (!file) return;
+    const files = e.currentTarget.files ? Array.from(e.currentTarget.files) : [];
+    if (!files.length) return;
+    
+    // limit to 5
+    if (businessCertificateUrls.length + files.length > 5) {
+      setError(t("You can upload a maximum of 5 files."));
+      return;
+    }
+
     try {
       setIsUploading(true);
       setError(null);
-      const { certificateUrl: url } = await uploadBusinessCertificate(file);
-      setBusinessCertificateUrl(url);
-      setSuccess("Business certificate uploaded");
+      const compressedFiles = await Promise.all(files.map((file) => compressImage(file)));
+      const { certificateUrls } = await uploadBusinessCertificate(compressedFiles);
+      setBusinessCertificateUrls((prev) => [...prev, ...certificateUrls]);
+      setSuccess("Business certificates uploaded");
       setTimeout(() => setSuccess(null), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to upload certificate");
+      setError(err instanceof Error ? err.message : "Failed to upload certificates");
     } finally {
       setIsUploading(false);
+      // Reset input
+      e.target.value = "";
     }
+  }
+
+  function handleRemoveCertificate(indexToRemove: number) {
+    setBusinessCertificateUrls((prev) => prev.filter((_, i) => i !== indexToRemove));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -151,7 +173,7 @@ export default function ProfilePage() {
         updateData.bankName = bankName.trim() || undefined;
         updateData.bankAccountNumber = bankAccountNumber.trim() || undefined;
         updateData.bankAccountHolderName = bankAccountHolderName.trim() || undefined;
-        updateData.businessCertificateUrl = businessCertificateUrl || undefined;
+        updateData.businessCertificateUrls = businessCertificateUrls;
       }
       await updateProfile(updateData);
       setSuccess("Profile updated");
@@ -286,13 +308,20 @@ export default function ProfilePage() {
                       {initial}
                     </div>
                   )}
-                  <label
+                    <label
                     htmlFor="avatar-upload"
                     className="absolute -bottom-1 -right-1 w-7 h-7 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-md hover:bg-slate-50 cursor-pointer transition-all"
                   >
-                    <CameraIcon className="w-3.5 h-3.5 text-slate-600" />
+                    {isCompressingAvatar ? (
+                      <svg className="w-3.5 h-3.5 text-emerald-600 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"></circle>
+                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" className="opacity-75"></path>
+                      </svg>
+                    ) : (
+                      <CameraIcon className="w-3.5 h-3.5 text-slate-600" />
+                    )}
                   </label>
-                  <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                  <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarUpload} disabled={isCompressingAvatar} className="hidden" />
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-[18px] font-semibold text-zinc-950 truncate">{fullName || t("User")}</h2>
@@ -341,25 +370,34 @@ export default function ProfilePage() {
                   </Field>
 
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-4 mb-4">
-                    <p className="text-[11px] font-bold text-zinc-900 uppercase tracking-wider">{t("Business Certificate / Permission")}</p>
-                    <div className="flex items-center gap-4">
-                      {businessCertificateUrl ? (
-                        <a href={businessCertificateUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-600 hover:text-emerald-700 underline font-medium truncate max-w-xs">
-                          {t("View Uploaded Document")}
-                        </a>
+                    <p className="text-[11px] font-bold text-zinc-900 uppercase tracking-wider">{t("Business Certificates / Permission")}</p>
+                    <div className="flex flex-col gap-4">
+                      {businessCertificateUrls.length > 0 ? (
+                        <div className="space-y-2">
+                          {businessCertificateUrls.map((url, i) => (
+                            <div key={i} className="flex items-center gap-3">
+                              <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-600 hover:text-emerald-700 underline font-medium truncate max-w-xs">
+                                {t("View Document")} {i + 1}
+                              </a>
+                              <button type="button" onClick={() => handleRemoveCertificate(i)} className="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 bg-red-50 rounded">
+                                {t("Remove")}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       ) : (
-                        <span className="text-sm text-slate-500">{t("No document uploaded yet.")}</span>
+                        <span className="text-sm text-slate-500">{t("No documents uploaded yet.")}</span>
                       )}
                       <div>
                         <label
                           htmlFor="certificate-upload"
-                          className={`inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors shadow-sm ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          className={`inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors shadow-sm ${isUploading || businessCertificateUrls.length >= 5 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
-                          {isUploading ? t("Uploading...") : businessCertificateUrl ? t("Replace Document") : t("Upload Document")}
+                          {isUploading ? t("Uploading...") : t("Upload Documents")}
                         </label>
-                        <input id="certificate-upload" type="file" accept="image/jpeg,image/png,application/pdf" onChange={handleCertificateUpload} disabled={isUploading} className="hidden" />
+                        <input id="certificate-upload" type="file" multiple accept="image/jpeg,image/png,application/pdf" onChange={handleCertificateUpload} disabled={isUploading || businessCertificateUrls.length >= 5} className="hidden" />
                         <span className="block mt-2 text-[10px] font-extrabold text-zinc-900 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded border border-slate-200 inline-block">
-                          ACCEPTED FORMATS: PDF, PNG, JPG (MAX 5MB)
+                          ACCEPTED FORMATS: PDF, PNG, JPG (MAX 5MB/FILE, MAX 5 FILES)
                         </span>
                       </div>
                     </div>

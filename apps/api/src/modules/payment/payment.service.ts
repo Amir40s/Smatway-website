@@ -46,6 +46,67 @@ export class PaymentService {
     private readonly chatGateway: ChatGateway,
   ) {}
 
+  calculateConversion(amount: number, currency: string, gateway: string) {
+    let paymentCurrency = currency || 'USD';
+    let paymentAmount = Number(amount);
+    let requiresConversion = false;
+    let exchangeRate = 1;
+
+    if (gateway === 'FLUTTERWAVE') {
+      const FLUTTERWAVE_SUPPORTED_CURRENCIES = ['NGN', 'GHS', 'ZAR', 'KES', 'RWF', 'UGX', 'USD', 'EUR', 'GBP', 'TZS', 'ZMW', 'XOF', 'XAF'];
+      if (!FLUTTERWAVE_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
+        requiresConversion = true;
+        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
+        exchangeRate = rateToUSD;
+        paymentAmount = paymentAmount * rateToUSD;
+        paymentCurrency = 'USD';
+      }
+    } else if (gateway === 'PAYPAL') {
+      const PAYPAL_SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
+      if (!PAYPAL_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
+        requiresConversion = true;
+        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
+        exchangeRate = rateToUSD;
+        paymentAmount = paymentAmount * rateToUSD;
+        paymentCurrency = 'USD';
+      }
+    } else if (gateway === 'REVOLUT') {
+      const REVOLUT_SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'CHF', 'JPY', 'NZD', 'PLN', 'SEK', 'ZAR'];
+      if (!REVOLUT_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
+        requiresConversion = true;
+        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
+        exchangeRate = rateToUSD;
+        paymentAmount = paymentAmount * rateToUSD;
+        paymentCurrency = 'USD';
+      }
+    } else if (gateway === 'PAYSTACK' || !gateway) {
+      const PAYSTACK_SUPPORTED_CURRENCIES = ['NGN'];
+      paymentCurrency = paymentCurrency === 'USD' ? 'USD' : (paymentCurrency || 'NGN'); // Handle defaults
+      if (!PAYSTACK_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
+        requiresConversion = true;
+        const rateUSDToNGN = 1 / (this.EXCHANGE_RATES_TO_USD['NGN'] || 0.00067);
+        if (paymentCurrency === 'USD') {
+          exchangeRate = rateUSDToNGN;
+          paymentAmount = paymentAmount * rateUSDToNGN;
+        } else {
+          const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
+          exchangeRate = rateToUSD * rateUSDToNGN;
+          paymentAmount = paymentAmount * exchangeRate;
+        }
+        paymentCurrency = 'NGN';
+      }
+    }
+
+    return {
+      requiresConversion,
+      originalCurrency: currency || 'USD',
+      originalAmount: Number(amount),
+      paymentCurrency,
+      paymentAmount: Number(paymentAmount.toFixed(2)),
+      exchangeRate: Number(exchangeRate.toFixed(4)),
+    };
+  }
+
   async initializePayment(
     bookingId: string,
     userId: string,
@@ -78,49 +139,9 @@ export class PaymentService {
         );
       }
 
-      let paymentCurrency = booking.transport.currency || 'USD';
-      let paymentAmount = Number(booking.totalPrice);
-
-      const FLUTTERWAVE_SUPPORTED_CURRENCIES = [
-        'NGN',
-        'GHS',
-        'ZAR',
-        'KES',
-        'RWF',
-        'UGX',
-        'USD',
-        'EUR',
-        'GBP',
-        'TZS',
-        'ZMW',
-        'XOF',
-        'XAF',
-      ];
-      if (!FLUTTERWAVE_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
-        // Convert to USD using simple static rates if currency not supported by Flutterwave
-        const exchangeRatesToUSD: Record<string, number> = {
-          PKR: 0.0036,
-          INR: 0.012,
-          EUR: 1.08,
-          GBP: 1.26,
-          AED: 0.27,
-          SAR: 0.27,
-          EGP: 0.021,
-          ETB: 0.017,
-          ZMW: 0.038,
-          MWK: 0.00057,
-          MZN: 0.016,
-          SLE: 0.000044,
-          XOF: 0.0017,
-          XAF: 0.0017,
-          MAD: 0.1,
-          DZD: 0.0074,
-          TND: 0.32,
-        };
-        const rateToUSD = exchangeRatesToUSD[paymentCurrency] || 1;
-        paymentAmount = paymentAmount * rateToUSD;
-        paymentCurrency = 'USD';
-      }
+      const conversion = this.calculateConversion(Number(booking.totalPrice), booking.transport.currency || 'USD', 'FLUTTERWAVE');
+      let paymentCurrency = conversion.paymentCurrency;
+      let paymentAmount = conversion.paymentAmount;
 
       const txRef = `flw_${normalizeCountryCode(booking.transport.departureCountry)}_${booking.id}_${Date.now()}`;
       const fallbackCallbackUrl = `${process.env.WEB_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/traveler/booking/${booking.id}`;
@@ -193,16 +214,9 @@ export class PaymentService {
       const finalCallbackUrl = callbackUrl || fallbackCallbackUrl;
       const redirectUrl = finalCallbackUrl.includes('?') ? `${finalCallbackUrl}&reference=${txRef}` : `${finalCallbackUrl}?reference=${txRef}`;
 
-      let paymentCurrency = booking.transport.currency || 'USD';
-      let paymentAmount = Number(booking.totalPrice);
-      
-      // Convert to USD if not supported
-      const PAYPAL_SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY']; // subset
-      if (!PAYPAL_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
-        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
-        paymentAmount = paymentAmount * rateToUSD;
-        paymentCurrency = 'USD';
-      }
+      const conversion = this.calculateConversion(Number(booking.totalPrice), booking.transport.currency || 'USD', 'PAYPAL');
+      let paymentCurrency = conversion.paymentCurrency;
+      let paymentAmount = conversion.paymentAmount;
 
       try {
         const paypalApiUrl = this.paypalEnvironment === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
@@ -260,15 +274,9 @@ export class PaymentService {
       const finalCallbackUrl = callbackUrl || fallbackCallbackUrl;
       const redirectUrl = finalCallbackUrl.includes('?') ? `${finalCallbackUrl}&reference=${txRef}` : `${finalCallbackUrl}?reference=${txRef}`;
 
-      let paymentCurrency = booking.transport.currency || 'USD';
-      let paymentAmount = Number(booking.totalPrice);
-      
-      const REVOLUT_SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'CHF', 'JPY', 'NZD', 'PLN', 'SEK', 'ZAR'];
-      if (!REVOLUT_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
-        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
-        paymentAmount = paymentAmount * rateToUSD;
-        paymentCurrency = 'USD';
-      }
+      const conversion = this.calculateConversion(Number(booking.totalPrice), booking.transport.currency || 'USD', 'REVOLUT');
+      let paymentCurrency = conversion.paymentCurrency;
+      let paymentAmount = conversion.paymentAmount;
 
       try {
         const revolutApiUrl = this.revolutEnvironment === 'sandbox' ? 'https://sandbox-merchant.revolut.com' : 'https://merchant.revolut.com';
@@ -305,46 +313,9 @@ export class PaymentService {
       );
     }
 
-    let paymentCurrency = booking.transport.currency || 'NGN';
-    let paymentAmount = Number(booking.totalPrice);
-
-    // Paystack standard merchant accounts require NGN currency.
-    // Convert non-NGN currencies to NGN to prevent "Currency not supported by merchant" errors.
-    const PAYSTACK_SUPPORTED_CURRENCIES = ['NGN'];
-    if (!PAYSTACK_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
-      const exchangeRatesToUSD: Record<string, number> = {
-        USD: 1.0,
-        PKR: 0.0036,
-        INR: 0.012,
-        EUR: 1.08,
-        GBP: 1.26,
-        AED: 0.27,
-        SAR: 0.27,
-        EGP: 0.021,
-        ETB: 0.017,
-        ZMW: 0.038,
-        MWK: 0.00057,
-        MZN: 0.016,
-        SLE: 0.000044,
-        XOF: 0.0017,
-        XAF: 0.0017,
-        MAD: 0.1,
-        DZD: 0.0074,
-        TND: 0.32,
-        KES: 0.0076,
-        ZAR: 0.054,
-        RWF: 0.00077,
-        UGX: 0.00026,
-        GHS: 0.071,
-        NGN: 0.00067,
-      };
-      const rateToUSD = exchangeRatesToUSD[paymentCurrency] || 1;
-      const amountInUSD = paymentAmount * rateToUSD;
-      // Convert USD to NGN
-      const rateUSDToNGN = 1 / (exchangeRatesToUSD['NGN'] || 0.00067);
-      paymentAmount = amountInUSD * rateUSDToNGN;
-      paymentCurrency = 'NGN';
-    }
+    const conversion = this.calculateConversion(Number(booking.totalPrice), booking.transport.currency || 'NGN', 'PAYSTACK');
+    let paymentCurrency = conversion.paymentCurrency;
+    let paymentAmount = conversion.paymentAmount;
 
     const amountInMinorUnits = Math.round(paymentAmount * 100);
 
@@ -569,14 +540,9 @@ export class PaymentService {
       const txRef = `el_ppal_${normalizeCountryCode(luggage.booking.transport.departureCountry)}_${luggage.id}_${Date.now()}`;
       const redirectUrl = finalCallbackUrl.includes('?') ? `${finalCallbackUrl}&reference=${txRef}` : `${finalCallbackUrl}?reference=${txRef}`;
       
-      let paymentCurrency = luggage.currency || 'USD';
-      let paymentAmount = Number(luggage.amount);
-      const PAYPAL_SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
-      if (!PAYPAL_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
-        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
-        paymentAmount = paymentAmount * rateToUSD;
-        paymentCurrency = 'USD';
-      }
+      const conversion = this.calculateConversion(Number(luggage.amount), luggage.currency || 'USD', 'PAYPAL');
+      let paymentCurrency = conversion.paymentCurrency;
+      let paymentAmount = conversion.paymentAmount;
 
       try {
         const paypalApiUrl = this.paypalEnvironment === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
@@ -610,14 +576,9 @@ export class PaymentService {
       const txRef = `el_rev_${normalizeCountryCode(luggage.booking.transport.departureCountry)}_${luggage.id}_${Date.now()}`;
       const redirectUrl = finalCallbackUrl.includes('?') ? `${finalCallbackUrl}&reference=${txRef}` : `${finalCallbackUrl}?reference=${txRef}`;
       
-      let paymentCurrency = luggage.currency || 'USD';
-      let paymentAmount = Number(luggage.amount);
-      const REVOLUT_SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'CHF', 'JPY', 'NZD', 'PLN', 'SEK', 'ZAR'];
-      if (!REVOLUT_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
-        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
-        paymentAmount = paymentAmount * rateToUSD;
-        paymentCurrency = 'USD';
-      }
+      const conversion = this.calculateConversion(Number(luggage.amount), luggage.currency || 'USD', 'REVOLUT');
+      let paymentCurrency = conversion.paymentCurrency;
+      let paymentAmount = conversion.paymentAmount;
 
       try {
         const revolutApiUrl = this.revolutEnvironment === 'sandbox' ? 'https://sandbox-merchant.revolut.com' : 'https://merchant.revolut.com';
@@ -645,10 +606,11 @@ export class PaymentService {
         throw new InternalServerErrorException('Flutterwave secret key is not configured');
       }
       const txRef = `el_flw_${normalizeCountryCode(luggage.booking.transport.departureCountry)}_${luggage.id}_${Date.now()}`;
+      const conversion = this.calculateConversion(Number(luggage.amount), luggage.currency || 'USD', 'FLUTTERWAVE');
       const payload = {
         tx_ref: txRef,
-        amount: Number(luggage.amount),
-        currency: luggage.currency || 'NGN',
+        amount: conversion.paymentAmount,
+        currency: conversion.paymentCurrency,
         redirect_url: finalCallbackUrl.includes('?') ? `${finalCallbackUrl}&reference=${txRef}` : `${finalCallbackUrl}?reference=${txRef}`,
         customer: {
           email: luggage.booking.traveler.email || 'traveler@smatway.com',
@@ -692,20 +654,9 @@ export class PaymentService {
       );
     }
 
-    let paymentCurrency = luggage.currency || 'NGN';
-    let paymentAmount = Number(luggage.amount);
-
-    const PAYSTACK_SUPPORTED_CURRENCIES = ['NGN'];
-    if (!PAYSTACK_SUPPORTED_CURRENCIES.includes(paymentCurrency)) {
-      const rateUSDToNGN = 1 / 0.00067;
-      if (paymentCurrency === 'USD') {
-        paymentAmount = paymentAmount * rateUSDToNGN;
-      } else {
-        const rateToUSD = this.EXCHANGE_RATES_TO_USD[paymentCurrency] || 1;
-        paymentAmount = (paymentAmount * rateToUSD) * rateUSDToNGN;
-      }
-      paymentCurrency = 'NGN';
-    }
+    const conversion = this.calculateConversion(Number(luggage.amount), luggage.currency || 'NGN', 'PAYSTACK');
+    let paymentCurrency = conversion.paymentCurrency;
+    let paymentAmount = conversion.paymentAmount;
 
     const amountInMinorUnits = Math.round(paymentAmount * 100);
 

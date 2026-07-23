@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { CarIcon, CameraIcon } from "@/app/dashboard/_Components/Icons";
 import { Page, Reveal, PageHeader, Skeleton, PrimaryButton } from "@/app/dashboard/_Components/ui";
+import { compressImage } from "@/lib/imageCompression";
 
 
 export default function CharterServicePage() {
@@ -30,6 +31,7 @@ export default function CharterServicePage() {
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   useEffect(() => {
     async function fetchCharter() {
@@ -119,13 +121,29 @@ export default function CharterServicePage() {
     }
   }
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
-      setImages(prev => [...prev, ...filesArray]);
+      setIsCompressing(true);
+      setError(null);
       
-      const newPreviews = filesArray.map(file => URL.createObjectURL(file));
-      setPreviewImages(prev => [...prev, ...newPreviews]);
+      try {
+        const compressedFiles: File[] = [];
+        for (const file of filesArray) {
+          const compressed = await compressImage(file);
+          compressedFiles.push(compressed);
+        }
+        
+        setImages(prev => [...prev, ...compressedFiles]);
+        
+        const newPreviews = compressedFiles.map(file => URL.createObjectURL(file));
+        setPreviewImages(prev => [...prev, ...newPreviews]);
+      } catch (err: any) {
+        setError(err.message || "Failed to compress images");
+      } finally {
+        setIsCompressing(false);
+        e.target.value = "";
+      }
     }
   }
 
@@ -225,13 +243,20 @@ export default function CharterServicePage() {
                   multiple
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  disabled={isCompressing}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                 />
                 <div className="pointer-events-none">
-                  <div className="mx-auto w-10 h-10 mb-2 rounded-full bg-slate-100 flex items-center justify-center">
-                    <CameraIcon className="w-5 h-5 text-slate-500" />
-                  </div>
-                  <p className="text-[14px] font-medium text-slate-700">Click or drag photos to upload</p>
+                  {isCompressing ? (
+                    <div className="mx-auto w-10 h-10 mb-2 rounded-full bg-slate-100 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-emerald-600 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" className="opacity-75"></path></svg>
+                    </div>
+                  ) : (
+                    <div className="mx-auto w-10 h-10 mb-2 rounded-full bg-slate-100 flex items-center justify-center">
+                      <CameraIcon className="w-5 h-5 text-slate-500" />
+                    </div>
+                  )}
+                  <p className="text-[14px] font-medium text-slate-700">{isCompressing ? "Compressing images..." : "Click or drag photos to upload"}</p>
                   <p className="text-[12px] text-slate-400 mt-1">Select new photos to add to your gallery. (Max 10)</p>
                 </div>
               </div>

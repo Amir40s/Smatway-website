@@ -10,11 +10,12 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   BadRequestException,
   ForbiddenException,
   HttpCode,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import type Multer from 'multer';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -150,26 +151,30 @@ export class UsersController {
 
   @Post('profile/upload-certificate')
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+    FilesInterceptor('files', 10, { limits: { fileSize: 10 * 1024 * 1024 } }),
   )
-  async uploadCertificate(@CurrentUser() user: User, @UploadedFile() file: any) {
-    if (!file) throw new BadRequestException('No file uploaded');
+  async uploadCertificate(@CurrentUser() user: User, @UploadedFiles() files: any[]) {
+    if (!files || files.length === 0) throw new BadRequestException('No files uploaded');
 
     const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    if (!validTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Only JPEG, PNG, and PDF files are allowed');
+    const urls: string[] = [];
+
+    for (const file of files) {
+      if (!validTypes.includes(file.mimetype)) {
+        throw new BadRequestException('Only JPEG, PNG, and PDF files are allowed');
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        throw new BadRequestException('File size must be less than 10MB');
+      }
+
+      const { presignedUrl } = await this.storageService.uploadFile(
+        file,
+        `certificates/${user.id}`,
+      );
+      urls.push(presignedUrl);
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      throw new BadRequestException('File size must be less than 10MB');
-    }
-
-    const { presignedUrl } = await this.storageService.uploadFile(
-      file,
-      `certificates/${user.id}`,
-    );
-
-    return { certificateUrl: presignedUrl };
+    return { certificateUrls: urls };
   }
 
   @Post('emergency-contacts')

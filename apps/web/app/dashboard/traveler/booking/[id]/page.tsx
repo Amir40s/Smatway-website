@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { getBooking, cancelBooking, updatePaymentMethod, createReview, initChat, getChatByBooking, getMessages, sendMessage, getTransporterProfile, initializePayment, verifyPayment, initializeExcessLuggagePayment } from "@/lib/api";
+import { getBooking, cancelBooking, updatePaymentMethod, createReview, initChat, getChatByBooking, getMessages, sendMessage, getTransporterProfile, initializePayment, verifyPayment, initializeExcessLuggagePayment, getConversionPreview } from "@/lib/api";
 import { formatPrice } from "@/lib/currencies";
 import { countryName, countryCodeFromName } from "@/lib/countries";
 import { RouteTimeline } from "@/app/dashboard/_Components/ui";
@@ -71,9 +71,36 @@ export default function BookingDetailPage() {
   const [initializingPayment, setInitializingPayment] = useState(false);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
   const [payingLuggageId, setPayingLuggageId] = useState<string | null>(null);
+  const [conversionPreview, setConversionPreview] = useState<any>(null);
+  const [previewingType, setPreviewingType] = useState<"BOOKING" | "LUGGAGE" | null>(null);
+  const [previewingLuggageId, setPreviewingLuggageId] = useState<string | null>(null);
   const t = useT();
 
   async function handlePayExcessLuggage(luggageId: string) {
+    const luggage = booking.excessLuggages?.find((l: any) => l.id === luggageId);
+    if (!luggage) return;
+
+    setPayingLuggageId(luggageId);
+    setError("");
+
+    try {
+      const preview = await getConversionPreview(Number(luggage.amount), luggage.currency || 'USD', 'PAYSTACK');
+      if (preview.requiresConversion) {
+        setConversionPreview(preview);
+        setPreviewingType("LUGGAGE");
+        setPreviewingLuggageId(luggageId);
+        setPayingLuggageId(null);
+        return;
+      }
+      
+      await executeExcessLuggagePayment(luggageId);
+    } catch (e: any) {
+      setError(e?.message || "Failed to initialize payment");
+      setPayingLuggageId(null);
+    }
+  }
+
+  async function executeExcessLuggagePayment(luggageId: string) {
     setPayingLuggageId(luggageId);
     setError("");
     try {
@@ -180,6 +207,26 @@ export default function BookingDetailPage() {
       return;
     }
 
+    setInitializingPayment(true);
+    setError("");
+    
+    try {
+      const preview = await getConversionPreview(Number(booking.totalPrice), booking.transport.currency || 'USD', method);
+      if (preview.requiresConversion) {
+        setConversionPreview(preview);
+        setPreviewingType("BOOKING");
+        setInitializingPayment(false);
+        return;
+      }
+      
+      await executeBookingPayment();
+    } catch (e: any) {
+      setError(e?.message || "Failed to initialize payment");
+      setInitializingPayment(false);
+    }
+  }
+
+  async function executeBookingPayment() {
     setInitializingPayment(true);
     setError("");
     try {
@@ -621,6 +668,65 @@ export default function BookingDetailPage() {
         </div>
       )}
 
+
+      {/* Conversion Approval Modal */}
+      {portalReady && conversionPreview && createPortal(
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+            <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-zinc-900 mb-2">{t("Currency Conversion Required")}</h3>
+            <p className="text-sm text-slate-500 mb-4">
+              {t("Your selected payment gateway requires this transaction to be processed in ")} <span className="font-semibold text-zinc-900">{conversionPreview.paymentCurrency}</span>.
+            </p>
+            
+            <div className="bg-slate-50 rounded-xl p-4 space-y-3 mb-6">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-500">{t("Original Amount")}</span>
+                <span className="font-semibold text-zinc-900">{formatPrice(conversionPreview.originalAmount, conversionPreview.originalCurrency)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-500">{t("Exchange Rate")}</span>
+                <span className="text-zinc-700 font-mono text-[11px]">1 {conversionPreview.originalCurrency} ≈ {conversionPreview.exchangeRate} {conversionPreview.paymentCurrency}</span>
+              </div>
+              <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
+                <span className="font-medium text-zinc-900">{t("Amount to Pay")}</span>
+                <span className="text-lg font-bold text-emerald-600">{formatPrice(conversionPreview.paymentAmount, conversionPreview.paymentCurrency)}</span>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setConversionPreview(null);
+                  setPreviewingType(null);
+                  setPreviewingLuggageId(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition-colors"
+              >
+                {t("Cancel")}
+              </button>
+              <button
+                onClick={() => {
+                  setConversionPreview(null);
+                  if (previewingType === "BOOKING") {
+                    executeBookingPayment();
+                  } else if (previewingType === "LUGGAGE" && previewingLuggageId) {
+                    executeExcessLuggagePayment(previewingLuggageId);
+                  }
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-zinc-900 text-white font-semibold text-sm hover:bg-zinc-800 transition-colors"
+              >
+                {t("Approve & Pay")}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
     </div>
   );

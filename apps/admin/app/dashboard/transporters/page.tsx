@@ -12,7 +12,7 @@ type TransporterProfile = {
   bankName: string | null;
   bankAccountNumber: string | null;
   bankAccountHolderName: string | null;
-  businessCertificateUrl: string | null;
+  businessCertificateUrls: string[];
 };
 
 type AdminVehicle = {
@@ -124,7 +124,7 @@ export default function TransportersPage() {
     bankName: "",
     bankAccountNumber: "",
     bankAccountHolderName: "",
-    businessCertificateUrl: "",
+    businessCertificateUrls: [] as string[],
   });
 
   // Simulated state for fleet, routes, withdrawals
@@ -273,7 +273,7 @@ export default function TransportersPage() {
           bankName: form.bankName,
           bankAccountNumber: form.bankAccountNumber,
           bankAccountHolderName: form.bankAccountHolderName,
-          businessCertificateUrl: form.businessCertificateUrl,
+          businessCertificateUrls: form.businessCertificateUrls,
         },
       };
       setTransporters((curr) => [mockTransporter, ...curr]);
@@ -332,7 +332,7 @@ export default function TransportersPage() {
       bankName: "",
       bankAccountNumber: "",
       bankAccountHolderName: "",
-      businessCertificateUrl: "",
+      businessCertificateUrls: [],
     });
   };
 
@@ -716,24 +716,27 @@ export default function TransportersPage() {
                   </div>
                 </div>
 
-                {/* Business Certificate */}
+                {/* Business Certificates */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
-                  <h4 className="text-xs font-bold text-zinc-950 uppercase tracking-wide">Business Certificate / Permission</h4>
-                  <div className="text-xs">
-                    {selected.profile?.businessCertificateUrl ? (
-                      <a 
-                        href={selected.profile.businessCertificateUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="inline-flex items-center gap-2 font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        View Legal Document
-                      </a>
+                  <h4 className="text-xs font-bold text-zinc-950 uppercase tracking-wide">Business Certificates / Permission</h4>
+                  <div className="text-xs space-y-2">
+                    {selected.profile?.businessCertificateUrls && selected.profile.businessCertificateUrls.length > 0 ? (
+                      selected.profile.businessCertificateUrls.map((url, index) => (
+                        <a 
+                          key={index}
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="inline-flex items-center gap-2 font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl transition-colors w-max"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          View Legal Document {index + 1}
+                        </a>
+                      ))
                     ) : (
-                      <p className="text-slate-400 italic">No document uploaded</p>
+                      <p className="text-slate-400 italic">No documents uploaded</p>
                     )}
                   </div>
                 </div>

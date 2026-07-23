@@ -90,6 +90,6 @@ export class UpdateProfileDto {
   bankAccountHolderName?: string;
 
   @IsOptional()
-  @IsUrl()
-  businessCertificateUrl?: string;
+  @IsString({ each: true })
+  businessCertificateUrls?: string[];
 }

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createVehicle } from "@/lib/api";
+import { compressImage } from "@/lib/imageCompression";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -23,6 +24,7 @@ export default function AddVehiclePage() {
   const [error, setError] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [form, setForm] = useState({
     name: "",
     model: "",
@@ -59,7 +61,7 @@ export default function AddVehiclePage() {
     setForm(f => ({ ...f, [field]: value }));
   }
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
@@ -68,36 +70,46 @@ export default function AddVehiclePage() {
       return;
     }
 
-    const validFiles: File[] = [];
-
-    for (const file of files) {
-      const isImage = file.type.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(file.name);
-      if (!isImage) {
-        setError("Please upload a valid image file (JPG, PNG, GIF, WEBP).");
-        return;
-      }
-      if (file.size > 50 * 1024 * 1024) {
-        setError("Each image must be less than 50MB");
-        return;
-      }
-      validFiles.push(file);
-    }
-
-    setImages(prev => [...prev, ...validFiles]);
+    setIsCompressing(true);
     setError("");
 
-    validFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        if (ev.target?.result) {
-          setImagePreviews(prev => [...prev, ev.target?.result as string]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      const validFiles: File[] = [];
 
-    // Reset target value so the change event triggers even if the same file is selected again
-    e.target.value = "";
+      for (const file of files) {
+        const isImage = file.type.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(file.name);
+        if (!isImage) {
+          setError("Please upload a valid image file (JPG, PNG, GIF, WEBP).");
+          setIsCompressing(false);
+          return;
+        }
+        if (file.size > 50 * 1024 * 1024) {
+          setError("Each image must be less than 50MB");
+          setIsCompressing(false);
+          return;
+        }
+        
+        const compressed = await compressImage(file);
+        validFiles.push(compressed);
+      }
+
+      setImages(prev => [...prev, ...validFiles]);
+
+      validFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          if (ev.target?.result) {
+            setImagePreviews(prev => [...prev, ev.target?.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to compress images");
+    } finally {
+      setIsCompressing(false);
+      e.target.value = "";
+    }
   }
 
   function removeImage(index: number) {
@@ -141,11 +153,16 @@ export default function AddVehiclePage() {
             {images.length < 5 && (
               <button
                 type="button"
+                disabled={isCompressing}
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100/50 hover:bg-emerald-100/50 transition-all"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100/50 hover:bg-emerald-100/50 transition-all disabled:opacity-50"
               >
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                Add Photos
+                {isCompressing ? (
+                  <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" className="opacity-75"></path></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                )}
+                {isCompressing ? "Compressing..." : "Add Photos"}
               </button>
             )}
           </div>
@@ -153,14 +170,19 @@ export default function AddVehiclePage() {
           {imagePreviews.length === 0 ? (
             <button
               type="button"
+              disabled={isCompressing}
               onClick={() => fileInputRef.current?.click()}
-              className="w-full border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-slate-400 transition-all cursor-pointer"
+              className="w-full border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-slate-400 transition-all cursor-pointer disabled:opacity-50"
             >
               <div className="space-y-2">
-                <svg className="w-8 h-8 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <p className="text-base font-medium text-zinc-900">Upload images</p>
+                {isCompressing ? (
+                   <svg className="w-8 h-8 mx-auto text-emerald-600 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" className="opacity-75"></path></svg>
+                ) : (
+                   <svg className="w-8 h-8 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                   </svg>
+                )}
+                <p className="text-base font-medium text-zinc-900">{isCompressing ? "Compressing images..." : "Upload images"}</p>
                 <p className="text-sm font-bold text-zinc-500">Only JPG, PNG or GIF (Max 50MB each)</p>
               </div>
             </button>

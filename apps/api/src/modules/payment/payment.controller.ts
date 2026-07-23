@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Req,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
@@ -17,6 +18,15 @@ import { User } from '@prisma/client';
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
+
+  @Get('conversion-preview')
+  getConversionPreview(
+    @Query('amount') amount: number,
+    @Query('currency') currency: string,
+    @Query('gateway') gateway: string,
+  ) {
+    return this.paymentService.calculateConversion(amount, currency, gateway);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post('initialize')

@@ -466,20 +466,25 @@ export default function UsersPage() {
                       <p className="font-semibold text-zinc-950 mt-1">—</p>
                     )}
                   </div>
-                  {selectedUser.profile?.businessCertificateUrl && (
+                  {selectedUser.profile?.businessCertificateUrls?.length > 0 && (
                     <div className="rounded-xl bg-slate-50 p-3 col-span-2">
-                      <p className="text-slate-400">Business Certificate</p>
-                      <a 
-                        href={selectedUser.profile.businessCertificateUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="inline-flex items-center gap-1 font-semibold text-emerald-600 hover:text-emerald-700 mt-1"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        View Legal Document
-                      </a>
+                      <p className="text-slate-400">Business Certificates</p>
+                      <div className="flex flex-col gap-2 mt-1">
+                        {selectedUser.profile.businessCertificateUrls.map((url: string, index: number) => (
+                          <a 
+                            key={index}
+                            href={url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="inline-flex items-center gap-1 font-semibold text-emerald-600 hover:text-emerald-700 w-max"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            View Legal Document {index + 1}
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

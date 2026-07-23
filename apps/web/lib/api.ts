@@ -233,9 +233,11 @@ export async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
   return response.json();
 }
 
-export async function uploadBusinessCertificate(file: File): Promise<{ certificateUrl: string }> {
+export async function uploadBusinessCertificate(files: File[]): Promise<{ certificateUrls: string[] }> {
   const formData = new FormData();
-  formData.append('file', file);
+  files.forEach((file) => {
+    formData.append('files', file);
+  });
 
   const url = new URL('/users/profile/upload-certificate', API_BASE_URL).toString();
   const token = getAuthToken();
@@ -252,7 +254,7 @@ export async function uploadBusinessCertificate(file: File): Promise<{ certifica
 
   if (!response.ok) {
     const error = await response.json();
-    throw new ApiError(error.message || 'Failed to upload business certificate', response.status, error);
+    throw new ApiError(error.message || 'Failed to upload business certificates', response.status, error);
   }
   return response.json();
 }
@@ -365,6 +367,17 @@ export async function updatePaymentMethod(id: string, paymentMethod: string): Pr
 export async function initializePayment(bookingId: string, callbackUrl?: string): Promise<{ authorization_url: string; access_code: string; reference: string }> {
   const finalCallbackUrl = callbackUrl || (typeof window !== 'undefined' ? window.location.href.split('?')[0] : undefined);
   return apiPost<any>('/payment/initialize', { bookingId, callbackUrl: finalCallbackUrl });
+}
+
+export async function getConversionPreview(amount: number, currency: string, gateway: string): Promise<{
+  requiresConversion: boolean;
+  originalCurrency: string;
+  originalAmount: number;
+  paymentCurrency: string;
+  paymentAmount: number;
+  exchangeRate: number;
+}> {
+  return apiGet<any>(`/payment/conversion-preview?amount=${amount}&currency=${currency}&gateway=${gateway}`);
 }
 
 export async function verifyPayment(reference: string): Promise<{ success: boolean; status: string; bookingId?: string }> {

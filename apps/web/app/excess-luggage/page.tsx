@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { formatPrice } from "@/lib/currencies";
+import { getConversionPreview } from "@/lib/api";
+import { createPortal } from "react-dom";
 import { PageHeader, Reveal } from "@/app/dashboard/_Components/ui";
 
 export default function ExcessLuggagePaymentPage() {
@@ -11,6 +13,8 @@ export default function ExcessLuggagePaymentPage() {
   const [charges, setCharges] = useState<any[]>([]);
   const [searched, setSearched] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null);
+  const [conversionPreview, setConversionPreview] = useState<any>(null);
+  const [previewingLuggageId, setPreviewingLuggageId] = useState<string | null>(null);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -39,6 +43,29 @@ export default function ExcessLuggagePaymentPage() {
   }
 
   async function handlePay(chargeId: string) {
+    const charge = charges.find((c: any) => c.id === chargeId);
+    if (!charge) return;
+    
+    setPaymentLoading(chargeId);
+    setError("");
+
+    try {
+      const preview = await getConversionPreview(Number(charge.amount), charge.currency || 'USD', 'PAYSTACK');
+      if (preview.requiresConversion) {
+        setConversionPreview(preview);
+        setPreviewingLuggageId(chargeId);
+        setPaymentLoading(null);
+        return;
+      }
+
+      await executePayment(chargeId);
+    } catch (err: any) {
+      setError(err.message);
+      setPaymentLoading(null);
+    }
+  }
+
+  async function executePayment(chargeId: string) {
     setPaymentLoading(chargeId);
     setError("");
 
@@ -146,6 +173,62 @@ export default function ExcessLuggagePaymentPage() {
           )}
         </div>
       </Reveal>
+
+      {/* Conversion Approval Modal */}
+      {conversionPreview && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+            <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-zinc-900 mb-2">Currency Conversion Required</h3>
+            <p className="text-sm text-slate-500 mb-4">
+              Your selected payment gateway requires this transaction to be processed in <span className="font-semibold text-zinc-900">{conversionPreview.paymentCurrency}</span>.
+            </p>
+            
+            <div className="bg-slate-50 rounded-xl p-4 space-y-3 mb-6">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-500">Original Amount</span>
+                <span className="font-semibold text-zinc-900">{formatPrice(conversionPreview.originalAmount, conversionPreview.originalCurrency)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-500">Exchange Rate</span>
+                <span className="text-zinc-700 font-mono text-[11px]">1 {conversionPreview.originalCurrency} ≈ {conversionPreview.exchangeRate} {conversionPreview.paymentCurrency}</span>
+              </div>
+              <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
+                <span className="font-medium text-zinc-900">Amount to Pay</span>
+                <span className="text-lg font-bold text-emerald-600">{formatPrice(conversionPreview.paymentAmount, conversionPreview.paymentCurrency)}</span>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setConversionPreview(null);
+                  setPreviewingLuggageId(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setConversionPreview(null);
+                  if (previewingLuggageId) {
+                    executePayment(previewingLuggageId);
+                  }
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-zinc-900 text-white font-semibold text-sm hover:bg-zinc-800 transition-colors"
+              >
+                Approve & Pay
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

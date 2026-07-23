@@ -21,6 +21,7 @@ export interface ProfileData {
   bankName?: string;
   bankAccountNumber?: string;
   bankAccountHolderName?: string;
+  businessCertificateUrls?: string[];
 }
 
 export interface EmergencyContact {
