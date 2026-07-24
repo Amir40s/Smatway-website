@@ -405,13 +405,7 @@ export class PaymentService {
           }
 
           if (booking.paymentStatus !== PaymentStatus.PAID) {
-            await this.prisma.booking.update({
-              where: { id: bookingId },
-              data: {
-                paymentStatus: PaymentStatus.PAID,
-                paymentMethod: 'FLUTTERWAVE',
-              },
-            });
+            await this.confirmBookingOnPayment(bookingId, 'FLUTTERWAVE');
           }
 
           return { success: true, status: data.status, bookingId };
